@@ -7,5 +7,6 @@ environment:
   domain: cabbage.town
 tasks:
 - build: |
-    tar -cvzf "site.tar.gz" -C ${repo} .
+    cd ${repo}
+    tar -cvzf "site.tar.gz" -C public .
     hut pages publish -d ${domain} -p HTTPS site.tar.gz
