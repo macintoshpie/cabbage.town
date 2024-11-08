@@ -3,11 +3,16 @@
 
 <head>
     <title>c.t</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
-            background-color: rgb(234, 215, 228);
+            background: linear-gradient(to right, rgb(134, 120, 255), rgb(253, 255, 122));
             color: black;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            cursor:
+                url(cursor-tnt-0.png) 4 12,
+                auto;
         }
 
         .circular-blur {
@@ -22,20 +27,36 @@
 
         .main {
             text-align: center;
-            margin-top: 10%;
+            height: 100vh;
+            padding-top: 10px;
         }
     </style>
 </head>
 
 <body>
 
+    <div class="main">
+        <img src="kidpix-cabbagetown-cropped.png" style="max-width: 100%; width: auto; height: auto;" alt="cabbage">
+
+        <p>welcome to our homepage</p>
+        <h2>coming soon...</h2>
+        <p><em>music and news internet radio:</em> <a href="https://radio.cabbage.town">radio.cabbage.town</a></p>
+    </div>
+
 </body>
-<div class="main">
-    <h1>cabbage.town</h1>
-    <img class="circular-blur" src="cabbage.jpg" width="200px" alt="cabbage">
-    <p>welcome to our homepage.</p>
-    <h2>coming soon...</h2>
-    <p><em>music and news internet radio:</em> <a href="https://radio.cabbage.town">radio.cabbage.town</a></p>
-</div>
+<script>
+    const cursors = [
+        'url(cursor-tnt-0.png) 3 0, auto',
+        'url(cursor-paint-brush.png) 15 15, auto',
+        'url(cursor-pencil.png) 5 12, auto',
+        'url(tool-ptr-bucket-fill.png) 18 20, auto',
+    ]
+    let currentCursor = 0;
+    const body = document.querySelector('body');
+    body.addEventListener('click', () => {
+        currentCursor = (currentCursor + 1) % cursors.length;
+        body.style.cursor = cursors[currentCursor];
+    });
+</script>
 
 </html>
