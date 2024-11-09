@@ -1,0 +1,4 @@
+- create /for-djs.html
+  - explain how to stream in browser or using butts and background music app
+- start bugging people to see if they wanna stream
+
