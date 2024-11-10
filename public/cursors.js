@@ -4,9 +4,6 @@ const cursors = [
   "url(cursor-pencil.png) 5 12, auto",
   "url(tool-ptr-bucket-fill.png) 18 20, auto",
 ];
-let currentCursor = 0;
+let randomCursor = Math.floor(Math.random() * cursors.length);
 const body = document.querySelector("body");
-body.addEventListener("click", () => {
-  currentCursor = (currentCursor + 1) % cursors.length;
-  body.style.cursor = cursors[currentCursor];
-});
+body.style.cursor = cursors[randomCursor];
