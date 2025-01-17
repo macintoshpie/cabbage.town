@@ -6,7 +6,6 @@
     <link rel="icon" href="icon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="reset.css">
-    <link rel="stylesheet" href="styles.css">
     <style>
         @font-face {
             font-family: 'Cooper Black Regular';
@@ -15,9 +14,49 @@
             src: local('Cooper Black Regular'), url('COOPBL.woff') format('woff');
         }
 
+        :root {
+            --dagreen: rgb(36, 221, 35);
+            --dayellow: rgb(255, 237, 182);
+            --daorange: rgb(250, 134, 37);
+        }
+
         .syne-mono-regular {
             font-family: "Cooper Black Regular", monospace;
             font-style: normal;
+        }
+
+        body {
+            /* background: rgb(241, 179, 255); */
+            background: var(--dayellow);
+            color: black;
+            font-family: 'Courier New', Courier, monospace;
+            /* font-family: 'Arial', sans-serif; */
+            margin: 0;
+            cursor:
+              url(cursor-tnt-0.png) 4 12,
+              auto;
+          }
+          
+          i {
+            font-style: italic;
+          }
+          
+          em {
+            font-weight: bold;
+          }
+          
+          h2 {
+            font-size: 2em;
+            margin: 0;
+          }
+
+          .bullet {
+            list-style: circle;
+            list-style-position: inside;
+          }
+
+        .live {
+            text-decoration: dashed underline;
         }
 
         .main {
@@ -50,10 +89,10 @@
 
         .embedded-iframe {
             /* colors configured in admin dash: https://radio.cabbage.town/station/1/branding */
-            border: 3px solid rgb(36, 221, 35);
-            padding: 10px;
-            background-color: rgb(255, 237, 182);
-            border-radius: 8px;
+            border: 16px ridge var(--daorange);
+            padding: 16px;
+            background-color: var(--dayellow);
+            border-radius: 4px;
         }
 
         .sched-day {
@@ -75,6 +114,10 @@
         .nlt {
             color: rgb(116, 22, 184);
         }
+
+        .posted-up {
+            color: rgb(168, 168, 168);
+        }
     </style>
 </head>
 
@@ -90,17 +133,25 @@
             <iframe class="embedded-iframe" src="https://radio.cabbage.town/public/cabbage.town/embed" frameborder="0"
             allowtransparency="true" style="max-width: 100%; height: 110px;"></iframe>
 
-            <p >submit a song to <span class="tune-tank">tune tank</span> for theme <span
-                    class="syne-mono-regular">Cities</span>
+            <p >submit a song to <span class="tune-tank">tune tank</span>:
+                
             </p>
+            <ul class="bullet">
+                <li>theme: COLORS</li>
+                <li>due: jan 23rd 11pm</li>
+                <li>submit: <a href="/tank">click here</a></li>
+            </ul>
 
             <p>
             <h2 class="syne-mono-regular">schedule</h2>
+            <p class="live" style="text-align: center;">
+                (LIVE) = live broadcast
+            </p>
             <ul>
                 <li class="sched-day">monday
                     <ul>
                         <li class="tune-tank">8pm - 9pm: tune tank</li>
-                        <li class="mulch-channel">9pm - 10pm: the mulch channel w/ ted</li>
+                        <li class="live mulch-channel">9pm - 10pm: (LIVE) the mulch channel w/ ted</li>
                     </ul>
                 </li>
                 <li class="sched-day">tuesday
@@ -116,7 +167,7 @@
                 <li class="sched-day">thursday
                     <ul>
                         <li class="tune-tank">8pm - 9pm: tune tank</li>
-                        <li class="nlt">9pm - 10pm: late nights like these w/ nights like these</li>
+                        <li class="live nlt">9pm - 10pm: (LIVE) late nights like these w/ nights like these</li>
                     </ul>
                 </li>
                 <li class="sched-day">friday
@@ -126,6 +177,7 @@
                 </li>
                 <li class="sched-day">saturday
                     <ul>
+                        <li class="posted-up">3am - 4am: "posted up"</li>
                         <li class="tune-tank">8pm - 9pm: tune tank</li>
                     </ul>
                 </li>
