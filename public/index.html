@@ -122,7 +122,7 @@
 </head>
 
 <body>
-
+    <marquee scrollamount="3" id="live-show-banner" style="display: none; background-color: var(--daorange); color: white; font-weight: bold; padding: 4px;" behavior="alternate"></marquee>
     <div class="main">
         <img src="the-cabbage.png" style="width: 80px; height: auto" alt="cabbage">
         <h2 class="syne-mono-regular">cabbage.town</h2>
@@ -133,9 +133,7 @@
             <iframe class="embedded-iframe" src="https://radio.cabbage.town/public/cabbage.town/embed" frameborder="0"
             allowtransparency="true" style="max-width: 100%; height: 110px;"></iframe>
 
-            <p >submit a song to <span class="tune-tank">tune tank</span>:
-                
-            </p>
+            <p >submit a song to <span class="tune-tank">tune tank</span>:</p>
             <ul class="bullet">
                 <li>theme: MONEY</li>
                 <li>due: jan 30th 11pm</li>
@@ -212,5 +210,51 @@
 
 </body>
 <script src="cursors.js"></script>
+<script>
+    // !!All dates/times are in utc!!
+    // https://www.worldtimebuddy.com/
+    const liveShows = [{
+        name: "late nights like these",
+        dj: "nights like these",
+        startHour:   2,
+        dayOfWeek:  5,
+    }, {
+        name: "the mulch channel",
+        dj: "ted",
+        startHour: 2,
+        dayOfWeek: 2,
+    }]
 
+    const dayOfWeek = new Date().getUTCDay()
+    const hour = new Date().getUTCHours()
+    let liveShow = undefined;
+
+    const checkForLiveShows = () => {
+        liveShow = liveShows.find(show => {
+            return show.dayOfWeek === dayOfWeek && hour === show.startHour
+        })
+
+        if (liveShow) {
+            updateLiveShowBanner()
+        }
+    }
+
+    const updateLiveShowBanner = () => {
+        const liveShowBanner = document.getElementById('live-show-banner')
+        if (!liveShowBanner) {
+            return;
+        }
+    
+        if (!liveShow) {
+            liveShowBanner.style.display = 'none';
+            return;
+        }
+
+        liveShowBanner.innerHTML = `(LIVE) ${liveShow.name} w/ ${liveShow.dj}`
+        liveShowBanner.style.display = 'block';
+    }
+
+    checkForLiveShows();
+    setInterval(checkForLiveShows, 1000 * 60)
+</script>
 </html>
