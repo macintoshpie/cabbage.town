@@ -132,13 +132,54 @@
         .posted-up {
             color: rgb(168, 168, 168);
         }
+
+        :root {
+            --marquee-speed: 10s;
+            /* default, will be overridden */
+        }
+
+        @media (min-width: 600px) {
+            :root {
+                --marquee-speed: 15s;
+            }
+        }
+
+        @media (min-width: 1000px) {
+            :root {
+                --marquee-speed: 20s;
+            }
+        }
+
+
+        .scrolling-banner {
+            overflow: hidden;
+            position: relative;
+            height: 1em;
+        }
+
+        .scrolling-text {
+            display: inline-block;
+            white-space: nowrap;
+            position: absolute;
+            animation: scroll var(--marquee-speed, 10s) linear infinite alternate;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(calc(100vw - 100%));
+            }
+        }
     </style>
 </head>
 
 <body>
-    <marquee scrollamount="3" id="live-show-banner"
-        style="display: none; background-color: var(--daorange); color: white; font-weight: bold; padding: 4px;"
-        behavior="alternate"></marquee>
+    <div class="scrolling-banner" style="background-color: var(--daorange); color: white; font-weight: bold;">
+        <div class="scrolling-text" id="live-show-banner"></div>
+    </div>
     <div class="main">
         <img src="the-cabbage.png" style="width: 80px; height: auto" alt="cabbage">
         <h2 class="syne-mono-regular">cabbage.town</h2>
@@ -291,7 +332,7 @@
         }
 
         liveShowBanner.innerHTML = `(LIVE) ${liveShow.name} w/ ${liveShow.dj}`
-        liveShowBanner.style.display = 'block';
+        liveShowBanner.style.display = 'inline-block';
     }
 
     checkForLiveShows();
