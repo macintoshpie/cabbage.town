@@ -125,6 +125,10 @@
             color: rgb(141, 61, 61);
         }
 
+        .reginajingles-channel {
+            color: rgb(53, 174, 43);
+        }
+
         .nlt {
             color: rgb(116, 22, 184);
         }
@@ -185,6 +189,19 @@
         <h2 class="syne-mono-regular">cabbage.town</h2>
         <p style="text-align: center; font-size: small;"><i>atlanta's only organic internet radio station</i></p>
 
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <img src="leftlight.gif" width="100" />
+            <p style="font-style: italic; text-align: center; max-width: 300px;">
+                <em>!!! new dj alert !!!</em>
+                <br />
+                <br />
+                <em>reginajingles</em> has entered the cabbage.town cabbage patch
+                <br />
+                tune in <em>wednesdays 9-10pm</em>
+            </p>
+            <img src="rightlight.gif" width="100" />
+        </div>
+
         <div class="content">
             <br>
             <iframe class="embedded-iframe" src="https://radio.cabbage.town/public/cabbage.town/embed" frameborder="0"
@@ -210,6 +227,7 @@
                 <li class="sched-day">wednesday
                     <ul>
                         <li class="tune-tank">8pm - 9pm: tune tank</li>
+                        <li class="live reginajingles-channel">9pm - 10pm: (LIVE) coming soon w/ reginajingles</li>
                     </ul>
                 </li>
                 <li class="sched-day">thursday
@@ -283,7 +301,8 @@
             <br />
 
             <p style="font-size: 0.8em; color: grey;">want to host a show? we're always looking for new cabbages, dm us
-                on <a href="https://www.instagram.com/radio.cabbage.town/" target="_blank">instagram</a>!
+                on <a href="https://www.instagram.com/radio.cabbage.town/" target="_blank">instagram</a> or email us at
+                <a href="mailto:cabbagedotradio@gmail.com">cabbagedotradio@gmail.com</a>
             </p>
             <p style="font-size: 0.8em; color: grey;">all show times are eastern.</p>
         </div>
@@ -297,13 +316,18 @@
     const liveShows = [{
         name: "late nights like these",
         dj: "nights like these",
-        startHour: 2,
+        startHour: 1,
         dayOfWeek: 5,
     }, {
         name: "the mulch channel",
         dj: "ted",
-        startHour: 2,
+        startHour: 1,
         dayOfWeek: 2,
+    }, {
+        name: "the reginajingles show",
+        dj: "reginajingles",
+        startHour: 1,
+        dayOfWeek: 4,
     }]
 
     const dayOfWeek = new Date().getUTCDay()
