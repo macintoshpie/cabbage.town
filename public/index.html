@@ -76,7 +76,7 @@
             flex-direction: column;
             justify-content: center;
             max-width: 500px;
-            gap: 10px;
+            gap: 16px;
             padding-left: 16px;
             padding-right: 16px;
         }
@@ -92,12 +92,28 @@
             color: blue;
         }
 
-        .embedded-iframe {
+        .song-details-container {
             /* colors configured in admin dash: https://radio.cabbage.town/station/1/branding */
             border: 16px ridge var(--daorange);
-            padding: 16px;
-            background-color: var(--dayellow);
-            border-radius: 4px;
+            padding: 8px;
+            border-radius: 16px;
+            background-color: white;
+        }
+
+        .now-playing-container {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .now-playing-container {
+                flex-direction: column;
+                align-items: center;
+                /* optional, for centering */
+                gap: 8px;
+                /* optional spacing between stacked elements */
+            }
         }
 
         .sched-day {
@@ -109,7 +125,7 @@
         }
 
         .tune-tank {
-            color: rgb(0, 111, 166);
+            color: rgb(168, 168, 168);
         }
 
         .tune-tank-item {
@@ -127,6 +143,10 @@
 
         .reginajingles-channel {
             color: rgb(53, 174, 43);
+        }
+
+        .ben {
+            color: rgb(0, 111, 166);
         }
 
         .nlt {
@@ -177,6 +197,17 @@
                 transform: translateX(calc(100vw - 100%));
             }
         }
+
+        button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .the-producer {
+            color: rgb(255, 0, 0);
+        }
     </style>
 </head>
 
@@ -187,25 +218,94 @@
     <div class="main">
         <img src="the-cabbage.png" style="width: 80px; height: auto" alt="cabbage">
         <h2 class="syne-mono-regular">cabbage.town</h2>
-        <p style="text-align: center; font-size: small;"><i>atlanta's only organic internet radio station</i></p>
+        <p style="text-align: center; font-size: small;"><i>atlanta's #1 organic internet radio station</i></p>
 
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <img src="leftlight.gif" width="100" />
-            <p style="font-style: italic; text-align: center; max-width: 300px;">
-                <em>!!! new dj alert !!!</em>
-                <br />
-                <br />
-                <em>reginajingles</em> has entered the cabbage.town cabbage patch
-                <br />
-                tune in <em>wednesdays 9-10pm</em>
-            </p>
-            <img src="rightlight.gif" width="100" />
-        </div>
-
-        <div class="content">
+        <div class="content" style="padding-top: 16px;">
             <br>
-            <iframe class="embedded-iframe" src="https://radio.cabbage.town/public/cabbage.town/embed" frameborder="0"
-                allowtransparency="true" style="max-width: 100%; max-height: 120px;"></iframe>
+            <div class="now-playing-container">
+                <img class="song-details-container" id="nowPlayingArtwork" src="the-cabbage.png"
+                    alt="now playing artwork"
+                    style="max-height: 150px; border-radius: 16px; width: 100%; aspect-ratio: 1 / 1; object-fit:contain; border-radius: 16px; max-width: 150px;" />
+                <div class="song-details-container"
+                    style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; flex-grow: 1; height: fit-content;">
+                    <div
+                        style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start; flex-grow: 1;">
+                        <p id="liveStreamerName" class="live"
+                            style="font-size: 1.25em; word-break: break-word; overflow-wrap: break-word; display: none;">
+                            .... .... ....
+                        </p>
+                        <p id="nowPlayingArtist"
+                            style="font-size: 1.25em; word-break: break-word; overflow-wrap: break-word;">.... .... ....
+                        </p>
+                        <p id="nowPlayingTitle"
+                            style="font-size: 1.25em; word-break: break-word; overflow-wrap: break-word;">.... .... ....
+                        </p>
+                    </div>
+
+
+                    <button id="play" style="display: flex; gap: 8px; align-items: center;">
+                        <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="45" fill="#2e7d32" />
+                            <path d="M40,30 L70,50 L40,70 Z" fill="white" />
+                        </svg>
+                    </button>
+
+                    <button id="stop" style="display: none; gap: 8px; align-items: center;">
+                        <svg width="50" height="50" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="45" fill="#d32f2f" />
+                            <rect x="35" y="35" width="30" height="30" fill="white" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <audio id="radio" src="https://radio.cabbage.town:8000/radio.mp3"></audio>
+
+            <script>
+                const radio = document.getElementById("radio");
+                document.getElementById("play").onclick = () => {
+                    radio.play();
+                    document.getElementById("play").style.display = "none";
+                    document.getElementById("stop").style.display = "flex";
+                }
+                document.getElementById("stop").onclick = () => {
+                    radio.pause();
+                    document.getElementById("play").style.display = "flex";
+                    document.getElementById("stop").style.display = "none";
+                }
+            </script>
+
+            <h3 class="syne-mono-regular">news</h3>
+            <div
+                style="display: flex; gap: 8px; align-items: flex-start; flex-direction: column; background-color: white; border-radius: 16px; padding: 10px; font-size: 0.8em;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <p style="flex-grow: 1; font-style: italic; text-align: start;">
+                        <em class="ben">DJ Chicago Style</em> has entered the cabbage patch (new dj!)
+                        <br />
+                        &nbsp;<em style="align-self: flex-end;">tune in tuesdays
+                            8-9pm</em>
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <p style="flex-grow: 1; font-style: italic; text-align: start;">
+                        <em class="reginajingles-channel">reginajingles</em> has entered the cabbage patch (new dj!)
+                        <br />
+                        &nbsp;<em>tune in wednesdays 9-10pm</em>
+                    </p>
+                </div>
+                <hr width="100%" style="border: 1px solid black; margin: 0; opacity: 0.2;" />
+                <div style="display: flex; gap: 10px; align-items: center;">
+
+                    <p style="flex-grow: 1; text-align: start;">
+                        <em class="the-producer"> <img src="the-cabbage.png" alt="the cabbage"
+                                style="width: 1em; height: auto;" /> The Producer:</em>
+                        We're doing our first community program, "Hey Hey It's Saturday," April 26th. We'll set up a
+                        tent
+                        and mobile
+                        studio in Cabbagetown Park from 12p til 3p, taking song
+                        requests and having YOU start your own show. Drop by and say hi!
+                    </p>
+                </div>
+            </div>
 
             <p>
             <h3 class="syne-mono-regular">schedule</h3>
@@ -221,19 +321,21 @@
                 </li>
                 <li class="sched-day">tuesday
                     <ul>
-                        <li class="tune-tank">8pm - 9pm: tune tank</li>
+                        <li class="tune-tank">7pm - 8pm: tune tank</li>
+                        <li class="live ben">8pm - 9pm: (LIVE) DJ Chicago Style Presents: The IS WiLD hour</li>
                     </ul>
                 </li>
                 <li class="sched-day">wednesday
                     <ul>
                         <li class="tune-tank">8pm - 9pm: tune tank</li>
-                        <li class="live reginajingles-channel">9pm - 10pm: (LIVE) coming soon w/ reginajingles</li>
+                        <li class="live reginajingles-channel">9pm - 10pm: (LIVE) The reginajingles Show w/
+                            reginajingles</li>
                     </ul>
                 </li>
                 <li class="sched-day">thursday
                     <ul>
                         <li class="tune-tank">8pm - 9pm: tune tank</li>
-                        <li class="live nlt">9pm - 10pm: (LIVE) late nights like these w/ nights like these</li>
+                        <li class="live nlt">9pm - 10pm: (LIVE) Late Nights Like These w/ Nights Like These</li>
                     </ul>
                 </li>
                 <li class="sched-day">friday
@@ -257,25 +359,26 @@
             </p>
 
             <h3 class="syne-mono-regular">tune tank</h3>
-            <p style="font-size: 0.8em">We throw out a theme, you share your best song picks, and we play them on the
-                air
+            <p style="font-size: 0.8em">
+                We throw out a theme, you share your best song picks, and we play them on the air
                 from 8-9pm every night.
                 Maybe The Cabbage picks a winner. Maybe it's just vibes. Either way, hear what your fellow cabbages are
                 listening to.</p>
             <ul>
                 <li class="tune-tank-item">theme
                     <ul>
-                        <li>Love Hangover - songs about romance, heartbreak, or moving on.</li>
+                        <!-- <li>Love Hangover - songs about romance, heartbreak, or moving on.</li> -->
+                        <li>We'll have a new theme soon, check back later!</li>
                     </ul>
                 </li>
-                <li class="tune-tank-item">due
+                <!-- <li class="tune-tank-item">due
                     <ul>
                         <li>march 3rd 11pm</li>
                     </ul>
-                </li>
+                </li> -->
             </ul>
 
-            <a href="/tank">submit tune tank songs here</a>
+            <!-- <a href="/tank">submit tune tank songs here</a> -->
 
             <br />
 
@@ -314,20 +417,25 @@
     // !!All dates/times are in utc!!
     // https://www.worldtimebuddy.com/
     const liveShows = [{
-        name: "late nights like these",
-        dj: "nights like these",
-        startHour: 1,
-        dayOfWeek: 5,
-    }, {
         name: "the mulch channel",
         dj: "ted",
-        startHour: 1,
         dayOfWeek: 2,
+        startHour: 1,
+    }, {
+        name: "The IS WiLD hour",
+        dj: "DJ Chicago Style",
+        dayOfWeek: 3,
+        startHour: 0,
     }, {
         name: "the reginajingles show",
         dj: "reginajingles",
-        startHour: 1,
         dayOfWeek: 4,
+        startHour: 1,
+    }, {
+        name: "late nights like these",
+        dj: "nights like these",
+        dayOfWeek: 5,
+        startHour: 1,
     }]
 
     const dayOfWeek = new Date().getUTCDay()
@@ -361,6 +469,54 @@
 
     checkForLiveShows();
     setInterval(checkForLiveShows, 1000 * 60)
+</script>
+<script>
+    async function updateNowPlaying() {
+        const res = await fetch('https://radio.cabbage.town/api/nowplaying/cabbage.town', {
+            method: 'GET'
+        });
+
+        if (!res.ok) {
+            console.error('Error fetching now playing data:', res.statusText);
+            return;
+        }
+
+        const data = await res.json();
+        console.log('Now playing data:', data);
+        const live = data.live;
+        if (live.is_live) {
+            const streamerName = live.streamer_name;
+            const art = live.art;
+
+            const liveStreamerName = document.getElementById('liveStreamerName');
+            liveStreamerName.innerHTML = `(LIVE) <strong>${streamerName}</strong>`;
+            liveStreamerName.style.display = 'block';
+            const nowPlayingArtwork = document.getElementById('nowPlayingArtwork');
+            nowPlayingArtwork.src = art;
+            nowPlayingArtwork.alt = `${streamerName}`;
+
+            return;
+        }
+
+        const song = data.now_playing.song;
+        const artist = song.artist;
+        const title = song.title;
+        const art = song.art
+
+        console.log('Now playing:', artist, '-', title);
+        const nowPlayingArtwork = document.getElementById('nowPlayingArtwork');
+        nowPlayingArtwork.src = art;
+        nowPlayingArtwork.alt = `${artist} - ${title}`;
+        const nowPlayingArtist = document.getElementById('nowPlayingArtist');
+        nowPlayingArtist.innerHTML = `<strong>${artist}</strong>`;
+        const nowPlayingTitle = document.getElementById('nowPlayingTitle');
+        nowPlayingTitle.innerHTML = `<em>${title}</em>`;
+    }
+
+    (async () => {
+        await updateNowPlaying();
+        setInterval(updateNowPlaying, 1000 * 15);
+    })();
 </script>
 
 </html>
