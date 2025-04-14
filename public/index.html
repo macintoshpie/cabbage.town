@@ -3,14 +3,14 @@
 
 <head>
     <title>c.t</title>
-    <meta http-equiv="Content-Security-Policy" content="
+    <!-- <meta http-equiv="Content-Security-Policy" content="
   default-src 'self' data: blob:;
   script-src 'self' 'unsafe-inline';
   style-src 'self' 'unsafe-inline';
   connect-src 'self' https://radio.cabbage.town;
   media-src 'self' https://radio.cabbage.town:8000;
   font-src 'self' data:;
-">
+"> -->
     <link rel="icon" href="icon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="reset.css">
@@ -100,12 +100,19 @@
             color: blue;
         }
 
-        .song-details-container {
-            /* colors configured in admin dash: https://radio.cabbage.town/station/1/branding */
+        /* .song-details-container {
             border: 16px ridge var(--daorange);
             padding: 8px;
             border-radius: 16px;
             background-color: white;
+        } */
+
+        .embedded-iframe {
+            /* colors configured in admin dash: https://radio.cabbage.town/station/1/branding */
+            border: 16px ridge var(--daorange);
+            padding: 16px;
+            background-color: var(--dayellow);
+            border-radius: 4px;
         }
 
         .now-playing-container {
@@ -230,7 +237,7 @@
 
         <div class="content" style="padding-top: 16px;">
             <br>
-            <div class="now-playing-container">
+            <!-- <div class="now-playing-container">
                 <img class="song-details-container" id="nowPlayingArtwork" src="the-cabbage.png"
                     alt="now playing artwork"
                     style="max-height: 150px; border-radius: 16px; width: 100%; aspect-ratio: 1 / 1; object-fit:contain; border-radius: 16px; max-width: 150px;" />
@@ -280,7 +287,10 @@
                     document.getElementById("play").style.display = "flex";
                     document.getElementById("stop").style.display = "none";
                 }
-            </script>
+            </script> -->
+
+            <iframe class="embedded-iframe" src="https://radio.cabbage.town/public/cabbage.town/embed" frameborder="0"
+                allowtransparency="true" style="max-width: 100%; max-height: 120px;"></iframe>
 
             <h3 class="syne-mono-regular">news</h3>
             <div
