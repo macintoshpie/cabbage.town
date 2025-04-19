@@ -258,20 +258,65 @@
                     </button>
                 </div>
             </div>
-            <audio id="radio" src="https://radio.cabbage.town:8000/radio.mp3"></audio>
+            <audio id="radio" src="https://radio.cabbage.town:8000/radio.mp3" preload="none"></audio>
+
 
             <script>
+                // partially borrowed logic from original azuracast player
+                // https://github.com/AzuraCast/AzuraCast/blob/8783383563a538b3e06f3dca4dbe65b2202cec99/frontend/components/Common/AudioPlayer.vue
                 const radio = document.getElementById("radio");
-                document.getElementById("play").onclick = () => {
-                    radio.play();
-                    document.getElementById("play").style.display = "none";
-                    document.getElementById("stop").style.display = "flex";
-                }
-                document.getElementById("stop").onclick = () => {
+                const playBtn = document.getElementById("play");
+                const stopBtn = document.getElementById("stop");
+
+                let isPlaying = false;
+
+                function stopRadio() {
                     radio.pause();
-                    document.getElementById("play").style.display = "flex";
-                    document.getElementById("stop").style.display = "none";
+                    radio.src = "";
+                    radio.load();
+                    isPlaying = false;
+
+                    playBtn.style.display = "flex";
+                    stopBtn.style.display = "none";
                 }
+
+                function playRadio() {
+                    // force fresh stream each time
+                    let url = "https://radio.cabbage.town:8000/radio.mp3";
+                    if (navigator.userAgent.includes("Firefox")) {
+                        url += "?refresh=" + Date.now(); // bust cache
+                    }
+
+                    radio.src = url;
+                    radio.load();
+
+                    radio.play().then(() => {
+                        isPlaying = true;
+                        playBtn.style.display = "none";
+                        stopBtn.style.display = "flex";
+                    }).catch(err => {
+                        console.warn("playback failed", err);
+                    });
+                }
+
+                playBtn.onclick = () => {
+                    if (isPlaying) stopRadio();
+                    playRadio();
+                };
+
+                stopBtn.onclick = () => {
+                    stopRadio();
+                };
+
+                radio.onerror = (e) => {
+                    const err = radio.error;
+                    if (err?.code === MediaError.MEDIA_ERR_NETWORK) {
+                        console.log("stream error, retrying in 5s...");
+                        setTimeout(playRadio, 5000);
+                    }
+                };
+
+                radio.onended = stopRadio;
             </script>
 
             <h3 class="syne-mono-regular">news</h3>
