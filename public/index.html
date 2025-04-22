@@ -208,6 +208,15 @@
         .the-producer {
             color: rgb(255, 0, 0);
         }
+
+        #liveStreamerName {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--dagreen);
+            text-align: center;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
     </style>
 </head>
 
@@ -531,22 +540,18 @@
         const live = data.live;
         if (live.is_live) {
             const streamerName = live.streamer_name;
-            const art = live.art;
-
             const liveStreamerName = document.getElementById('liveStreamerName');
             liveStreamerName.innerHTML = `(LIVE) <strong>${streamerName}</strong>`;
             liveStreamerName.style.display = 'block';
-            const nowPlayingArtwork = document.getElementById('nowPlayingArtwork');
-            nowPlayingArtwork.src = art;
-            nowPlayingArtwork.alt = `${streamerName}`;
-
-            return;
+        } else {
+            const liveStreamerName = document.getElementById('liveStreamerName');
+            liveStreamerName.style.display = 'none';
         }
 
         const song = data.now_playing.song;
         const artist = song.artist;
         const title = song.title;
-        const art = song.art
+        const art = song.art;
 
         console.log('Now playing:', artist, '-', title);
         const nowPlayingArtwork = document.getElementById('nowPlayingArtwork');
