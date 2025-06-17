@@ -60,9 +60,7 @@
             list-style-position: inside;
         }
 
-        .live {
-            text-decoration: dashed underline;
-        }
+        .live {}
 
         .main {
             display: flex;
@@ -149,6 +147,10 @@
             color: rgb(0, 111, 166);
         }
 
+        .terminus {
+            color: rgb(180, 32, 234);
+        }
+
         .nlt {
             color: rgb(116, 22, 184);
         }
@@ -159,6 +161,11 @@
 
         .posted-up {
             color: rgb(168, 168, 168);
+        }
+
+        .show {
+            font-size: 20px;
+            font-weight: bold;
         }
 
         :root {
@@ -339,7 +346,15 @@
 
             <h3 class="syne-mono-regular">news</h3>
             <div
-                style="display: flex; gap: 8px; align-items: flex-start; flex-direction: column; background-color: white; border-radius: 16px; padding: 10px; font-size: 0.8em;">
+                style="display: flex; gap: 8px; align-items: flex-start; flex-direction: column; background-color: white; border-radius: 32px; padding: 32px; font-size: 0.8em;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <p style="flex-grow: 1; font-style: italic; text-align: start;">
+                        <em class="terminus">The Conductor</em> has entered the cabbage patch (new dj!)
+                        <br />
+                        &nbsp;<em style="align-self: flex-end;">tune in tuesdays
+                            10pm-11pm</em>
+                    </p>
+                </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <p style="flex-grow: 1; font-style: italic; text-align: start;">
                         <em class="home-cooking">Home Cooking</em> has entered the cabbage patch (new curated show!)
@@ -383,49 +398,50 @@
             <p class="live" style="text-align: center;">
                 (LIVE) = live broadcast
             </p>
-            <ul>
+            <ul style="background-color: white; border-radius: 32px; padding: 32px">
                 <li class="sched-day">monday
                     <ul>
-                        <li class="tune-tank">8pm - 9pm: tune tank</li>
-                        <li class="live mulch-channel">9pm - 10pm: (LIVE) the mulch channel w/ ted</li>
+                        <!-- <li class="tune-tank">8pm - 9pm: tune tank</li> -->
+                        <li class="live show mulch-channel">9pm - 10pm: (LIVE) the mulch channel w/ ted</li>
                     </ul>
                 </li>
                 <li class="sched-day">tuesday
                     <ul>
-                        <li class="tune-tank">7pm - 8pm: tune tank</li>
-                        <li class="live ben">8pm - 9pm: (LIVE) DJ Chicago Style Presents: The IS WiLD hour</li>
+                        <!-- <li class="tune-tank">7pm - 8pm: tune tank</li> -->
+                        <li class="live show ben">8pm - 9pm: (LIVE) DJ Chicago Style Presents: The IS WiLD hour</li>
+                        <li class="live show terminus">10pm - 11pm: (LIVE) Tracks from Terminus w/ The Conductor</li>
                     </ul>
                 </li>
                 <li class="sched-day">wednesday
                     <ul>
-                        <li class="tune-tank">8pm - 9pm: tune tank</li>
-                        <li class="live reginajingles-channel">9pm - 10pm: (LIVE) The reginajingles Show w/
+                        <!-- <li class="tune-tank">8pm - 9pm: tune tank</li> -->
+                        <li class="live show reginajingles-channel">9pm - 10pm: (LIVE) The reginajingles Show w/
                             reginajingles</li>
                     </ul>
                 </li>
                 <li class="sched-day">thursday
                     <ul>
-                        <li class="tune-tank">8pm - 9pm: tune tank</li>
-                        <li class="live nlt">9pm - 10pm: (LIVE) Late Nights Like These w/ Nights Like These</li>
+                        <!-- <li class="tune-tank">8pm - 9pm: tune tank</li> -->
+                        <li class="live show nlt">9pm - 10pm: (LIVE) Late Nights Like These w/ Nights Like These</li>
                     </ul>
                 </li>
                 <li class="sched-day">friday
                     <ul>
-                        <li class="home-cooking">8:30-10:30am: (CURATED) Home Cooking w/ Seth</li>
-                        <li class="tune-tank">8pm - 9pm: tune tank</li>
+                        <li class="home-cooking show">8:30-10:30am: (CURATED) Home Cooking w/ Seth</li>
+                        <!-- <li class="tune-tank">8pm - 9pm: tune tank</li> -->
                     </ul>
                 </li>
                 <li class="sched-day">saturday
                     <ul>
                         <li class="posted-up">3am - 4am: "posted up"</li>
-                        <li class="home-cooking">8:30-10:30am: (CURATED) Home Cooking w/ Seth</li>
-                        <li class="tune-tank">8pm - 9pm: tune tank</li>
+                        <li class="home-cooking show">8:30-10:30am: (CURATED) Home Cooking w/ Seth</li>
+                        <!-- <li class="tune-tank">8pm - 9pm: tune tank</li> -->
                     </ul>
                 </li>
                 <li class="sched-day">sunday
                     <ul>
-                        <li class="home-cooking">8:30-10:30am: (CURATED) Home Cooking w/ Seth</li>
-                        <li class="tune-tank">8pm - 9pm: tune tank</li>
+                        <li class="home-cooking show">8:30-10:30am: (CURATED) Home Cooking w/ Seth</li>
+                        <!-- <li class="tune-tank">8pm - 9pm: tune tank</li> -->
                     </ul>
                 </li>
             </ul>
