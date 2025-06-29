@@ -9,8 +9,8 @@
     <atom:link href="https://cabbage.town/feed.xml" rel="self" type="application/rss+xml"></atom:link>
     <description>Live recordings from Cabbage Town Radio</description>
     <language>en-us</language>
-    <pubDate>Sun, 29 Jun 2025 17:49:47 -0400</pubDate>
-    <lastBuildDate>Sun, 29 Jun 2025 17:49:47 -0400</lastBuildDate>
+    <pubDate>Sun, 29 Jun 2025 17:57:21 -0400</pubDate>
+    <lastBuildDate>Sun, 29 Jun 2025 17:57:21 -0400</lastBuildDate>
     <generator>Cabbage Town Radio Feed Generator</generator>
     <itunes:author>Cabbage Town Radio</itunes:author>
     <itunes:owner>
@@ -62,16 +62,6 @@
       <itunes:duration>3600</itunes:duration>
       <itunes:explicit>false</itunes:explicit>
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250623-210011.mp3" length="0" type="audio/mpeg"></enclosure>
-    </item>
-    <item>
-      <title>mulch channel with dj ted</title>
-      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250622-204335.mp3</link>
-      <description>Episode of mulch channel with dj ted, recorded on June 22, 2025</description>
-      <pubDate>Sun, 22 Jun 2025 00:00:00 +0000</pubDate>
-      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250622-204335.mp3</guid>
-      <itunes:duration>3600</itunes:duration>
-      <itunes:explicit>false</itunes:explicit>
-      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250622-204335.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
   </channel>
 </rss>
