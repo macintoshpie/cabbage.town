@@ -280,11 +280,13 @@
             </div>
             <audio id="radio" src="https://radio.cabbage.town:8000/radio.mp3" preload="none"></audio>
 
-            <p style="text-align: center;">
-                <a href="https://www.dropbox.com/scl/fo/r9eu2s9wh078vsmarrd85/ANjXorjwGhg8ViLofX1gFOY?rlkey=q9os22gk4hputjp9xhconp7pl&st=cxzoh6q8&dl=0"
-                    target="_blank">Listen
-                    to previous live shows</a>
-            </p>
+            <h3 class="syne-mono-regular">previous shows</h3>
+            <div id="recordings-container"
+                style="max-height: 300px; overflow-y: auto; background: white; border-radius: 32px; padding: 32px;">
+                <div id="recordings-list" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Shows will be populated here -->
+                </div>
+            </div>
 
             <script>
                 // partially borrowed logic from original azuracast player
@@ -342,6 +344,177 @@
                 };
 
                 radio.onended = stopRadio;
+            </script>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const mainRadio = document.getElementById('radio');
+                    const recordingPlayers = [];
+
+                    async function fetchAndDisplayRecordings() {
+                        try {
+                            const response = await fetch('/feed.xml');
+                            const text = await response.text();
+                            const parser = new DOMParser();
+                            const xmlDoc = parser.parseFromString(text, 'text/xml');
+                            const items = xmlDoc.getElementsByTagName('item');
+
+                            const recordingsList = document.getElementById('recordings-list');
+                            recordingsList.innerHTML = ''; // Clear existing content
+
+                            Array.from(items).forEach(item => {
+                                const title = item.getElementsByTagName('title')[0].textContent;
+                                const date = new Date(item.getElementsByTagName('pubDate')[0].textContent);
+                                const audioUrl = item.getElementsByTagName('enclosure')[0].getAttribute('url');
+
+                                const formattedDate = date.toLocaleDateString('en-US', {
+                                    month: 'long',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                });
+
+                                const showElement = document.createElement('div');
+                                showElement.style.cssText = `
+                                    display: flex;
+                                    justify-content: space-between;
+                                    align-items: center;
+                                    gap: 8px;
+                                    padding: 4px;
+                                    border-radius: 8px;
+                                    transition: background-color 0.2s;
+                                `;
+
+                                // Create info section (left side)
+                                const infoSection = document.createElement('div');
+                                infoSection.style.cssText = `
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 4px;
+                                    flex-grow: 1;
+                                `;
+                                infoSection.innerHTML = `
+                                    <div style="font-family: 'Courier New', monospace; font-weight: bold;">${title}</div>
+                                    <div style="color: #666; font-family: 'Courier New', monospace;">${formattedDate}</div>
+                                `;
+
+                                // Create play button (right side)
+                                const playButton = document.createElement('button');
+                                playButton.style.cssText = `
+                                    background: black;
+                                    border: none;
+                                    border-radius: 50%;
+                                    width: 20px;
+                                    height: 20px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: pointer;
+                                    flex-shrink: 0;
+                                    padding: 0;
+                                `;
+
+                                // Add play icon SVG
+                                playButton.innerHTML = `
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M8 5v14l11-7z" fill="white"/>
+                                    </svg>
+                                `;
+
+                                let audioElement = null;
+
+                                playButton.onclick = () => {
+                                    if (!audioElement) {
+                                        // Create audio element only when first clicked
+                                        audioElement = document.createElement('audio');
+                                        audioElement.style.display = 'none';
+
+                                        // When a recording starts playing
+                                        audioElement.onplay = () => {
+                                            // Stop the main radio using the existing stopRadio function
+                                            if (typeof stopRadio === 'function') {
+                                                stopRadio();
+                                            }
+
+                                            // Stop other recordings
+                                            recordingPlayers.forEach(player => {
+                                                if (player !== audioElement) {
+                                                    player.pause();
+                                                    player.currentTime = 0;
+                                                }
+                                            });
+
+                                            // Update button to pause icon
+                                            playButton.innerHTML = `
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="white"/>
+                                                </svg>
+                                            `;
+                                        };
+
+                                        audioElement.onpause = () => {
+                                            // Update button back to play icon
+                                            playButton.innerHTML = `
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M8 5v14l11-7z" fill="white"/>
+                                                </svg>
+                                            `;
+                                        };
+
+                                        // Add source and load only when clicked
+                                        const source = document.createElement('source');
+                                        source.src = audioUrl;
+                                        source.type = 'audio/mpeg';
+                                        audioElement.appendChild(source);
+
+                                        // Handle loading states
+                                        playButton.style.opacity = '0.5';
+
+                                        audioElement.onloadeddata = () => {
+                                            playButton.style.opacity = '1';
+                                            audioElement.play();
+                                        };
+
+                                        // Handle loading error
+                                        audioElement.onerror = () => {
+                                            playButton.style.opacity = '1';
+                                            playButton.style.backgroundColor = '#d32f2f';
+                                        };
+
+                                        recordingPlayers.push(audioElement);
+                                        showElement.appendChild(audioElement);
+                                    } else {
+                                        // Toggle play/pause if audio element exists
+                                        if (audioElement.paused) {
+                                            audioElement.play();
+                                        } else {
+                                            audioElement.pause();
+                                        }
+                                    }
+                                };
+
+                                showElement.appendChild(infoSection);
+                                showElement.appendChild(playButton);
+                                recordingsList.appendChild(showElement);
+                            });
+
+                            // Add listener to main radio to stop recordings when it plays
+                            mainRadio.addEventListener('play', () => {
+                                recordingPlayers.forEach(player => {
+                                    player.pause();
+                                    player.currentTime = 0;
+                                });
+                            });
+
+                        } catch (error) {
+                            console.error('Error fetching recordings:', error);
+                            const recordingsList = document.getElementById('recordings-list');
+                            recordingsList.innerHTML = '<p style="color: red;">Error loading recordings. Please try again later.</p>';
+                        }
+                    }
+
+                    // Load recordings list when the page loads
+                    fetchAndDisplayRecordings();
+                });
             </script>
 
             <h3 class="syne-mono-regular">news</h3>
