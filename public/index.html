@@ -436,7 +436,7 @@
                 </div>
             </div>
 
-            <script>
+            <script id="radio-script">
                 // partially borrowed logic from original azuracast player
                 // https://github.com/AzuraCast/AzuraCast/blob/8783383563a538b3e06f3dca4dbe65b2202cec99/frontend/components/Common/AudioPlayer.vue
                 const radio = document.getElementById("radio");
@@ -453,6 +453,11 @@
 
                     playBtn.style.display = "flex";
                     stopBtn.style.display = "none";
+
+                    // Update media session
+                    if ('mediaSession' in navigator) {
+                        navigator.mediaSession.playbackState = 'paused';
+                    }
                 }
 
                 function playRadio() {
@@ -469,6 +474,28 @@
                         isPlaying = true;
                         playBtn.style.display = "none";
                         stopBtn.style.display = "flex";
+
+                        // Set up media session
+                        if ('mediaSession' in navigator) {
+                            // Initial metadata will be updated by updateNowPlaying
+                            navigator.mediaSession.metadata = new MediaMetadata({
+                                title: 'Live Radio',
+                                artist: 'cabbage.town',
+                                artwork: [
+                                    { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
+                                ]
+                            });
+
+                            // Add action handlers
+                            navigator.mediaSession.setActionHandler('play', () => {
+                                playRadio();
+                            });
+                            navigator.mediaSession.setActionHandler('pause', () => {
+                                stopRadio();
+                            });
+
+                            navigator.mediaSession.playbackState = 'playing';
+                        }
                     }).catch(err => {
                         console.warn("playback failed", err);
                     });
@@ -619,29 +646,13 @@
                                             updateFooterPlayButton(true);
 
                                             // Add Media Session metadata
-                                            if ('mediaSession' in navigator) {
+                                            if ('mediaSession' in navigator && isPlaying) {
                                                 navigator.mediaSession.metadata = new MediaMetadata({
-                                                    title: title,
+                                                    title: `LIVE: ${title}`,
                                                     artist: 'cabbage.town',
-                                                    album: formattedDate,
                                                     artwork: [
                                                         { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
                                                     ]
-                                                });
-
-                                                // Add action handlers for media controls
-                                                navigator.mediaSession.setActionHandler('play', () => {
-                                                    audioElement.play();
-                                                });
-                                                navigator.mediaSession.setActionHandler('pause', () => {
-                                                    audioElement.pause();
-                                                });
-                                                navigator.mediaSession.setActionHandler('seekto', (details) => {
-                                                    if (details.fastSeek && 'fastSeek' in audioElement) {
-                                                        audioElement.fastSeek(details.seekTime);
-                                                        return;
-                                                    }
-                                                    audioElement.currentTime = details.seekTime;
                                                 });
                                             }
 
@@ -654,7 +665,7 @@
 
                                         audioElement.onpause = () => {
                                             updateFooterPlayButton(false);
-                                            if ('mediaSession' in navigator) {
+                                            if ('mediaSession' in navigator && isPlaying) {
                                                 navigator.mediaSession.playbackState = 'paused';
                                             }
                                             playButton.innerHTML = `
@@ -976,6 +987,17 @@
             const liveStreamerName = document.getElementById('liveStreamerName');
             liveStreamerName.innerHTML = `(LIVE) <strong>${streamerName}</strong>`;
             liveStreamerName.style.display = 'block';
+
+            // Update media session for live show
+            if ('mediaSession' in navigator && isPlaying) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: `LIVE: ${streamerName}`,
+                    artist: 'cabbage.town',
+                    artwork: [
+                        { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
+                    ]
+                });
+            }
         } else {
             const liveStreamerName = document.getElementById('liveStreamerName');
             liveStreamerName.style.display = 'none';
@@ -994,6 +1016,17 @@
         nowPlayingArtist.innerHTML = `<strong>${artist}</strong>`;
         const nowPlayingTitle = document.getElementById('nowPlayingTitle');
         nowPlayingTitle.innerHTML = `<em>${title}</em>`;
+
+        // Update media session for regular song
+        if ('mediaSession' in navigator && isPlaying) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: title,
+                artist: artist,
+                artwork: [
+                    { src: art, sizes: '512x512', type: 'image/png' }
+                ]
+            });
+        }
     }
 
     (async () => {
