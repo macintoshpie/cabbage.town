@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -323,7 +324,8 @@ func parseRecordingInfo(url string) (Recording, error) {
 	}
 
 	filename := parts[len(parts)-1]
-	dateStr := filename[7:15] // Extract date from filename
+	// Extract date from filename by finding the last occurrence of YYYYMMDD pattern
+	dateStr := regexp.MustCompile(`(\d{8})-\d{6}`).FindString(filename)[:8] // Extract date from filename
 
 	// Parse the date string
 	date, err := time.Parse("20060102", dateStr)
@@ -354,6 +356,8 @@ func getShowName(dj string) (string, string, error) {
 		return "tracks from terminus", "the conductor", nil
 	case "katherine":
 		return "The reginajingles show", "reginajingles", nil
+	case "seth":
+		return "Home Cooking Show", "Seth", nil
 	default:
 		return "", "", fmt.Errorf("unknown DJ: %s", dj)
 	}
