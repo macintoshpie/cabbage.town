@@ -1,4 +1,4 @@
-name: Update Recording ACLs
+name: Update Recordings and Playlists
 
 on:
   schedule:
@@ -7,8 +7,8 @@ on:
   workflow_dispatch: # Allow manual triggers
 
 jobs:
-  update-acls:
-    name: Update Recording ACLs
+  update-recordings:
+    name: Update Recording ACLs and Playlists
     runs-on: ubuntu-latest
 
     steps:
@@ -22,9 +22,16 @@ jobs:
           check-latest: true
           cache: true
 
-      - name: Run ACL updater
+      - name: Update ACLs
         env:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
         working-directory: scripts/trellis
         run: go run cmd/update_acls/main.go
+
+      - name: Update Playlists
+        env:
+          DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
+          DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
+        working-directory: scripts/trellis
+        run: go run cmd/trellis/main.go
