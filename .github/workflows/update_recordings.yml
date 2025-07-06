@@ -6,6 +6,10 @@ on:
     - cron: "0 5 * * *"
   workflow_dispatch: # Allow manual triggers
 
+# Add explicit permissions
+permissions:
+  contents: write # Needed for pushing to the repository
+
 jobs:
   update-recordings:
     name: Update Recording ACLs and Playlists
@@ -14,6 +18,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: main # Explicitly checkout main branch
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -29,9 +35,23 @@ jobs:
         working-directory: scripts/trellis
         run: go run cmd/update_acls/main.go
 
-      - name: Update Playlists
+      - name: Update Playlists and Feed
         env:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
         working-directory: scripts/trellis
         run: go run cmd/trellis/main.go
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions@github.com'
+          git add public/playlists/*.m3u public/feed.xml
+
+          # Only commit and push if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to playlists or feed"
+          else
+            git commit -m "Update playlists and feed [skip ci]"
+            git push origin main
+          fi
