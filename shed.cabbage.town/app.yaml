@@ -1,0 +1,28 @@
+name: shed-cabbage-town
+services:
+  - name: web
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: macintoshpie/cabbage.town
+    source_dir: shed.cabbage.town
+    build_command: go build -o server ./cmd/server
+    run_command: ./server
+    envs:
+      - key: SESSION_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: DO_ACCESS_KEY_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: DO_SECRET_ACCESS_KEY
+        scope: RUN_TIME
+        type: SECRET
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xs
+    routes:
+      - path: /
+    health_check:
+      http_path: /
+      initial_delay_seconds: 30
