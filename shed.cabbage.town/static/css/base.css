@@ -1,0 +1,352 @@
+/* Base styles */
+:root {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --danger-color: #dc2626;
+  --danger-hover: #b91c1c;
+  --success-color: #4CAF50;
+  --success-hover: #45a049;
+  --background: #f5f6fa;
+  --surface: #ffffff;
+  --text: #2c3e50;
+  --text-light: #6b7280;
+  --border: #e0e0e0;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--background);
+  min-height: 100vh;
+}
+
+/* Navigation */
+nav {
+  background: var(--text);
+  padding: 1rem 2rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-right: 1rem;
+  transition: all 0.2s ease;
+}
+
+nav a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Container layouts */
+.login-container,
+.upload-container,
+.admin-container,
+.files-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s ease;
+}
+
+.login-container {
+  max-width: 400px;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header h2 {
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.login-header p {
+  color: var(--text-light);
+}
+
+/* Headers */
+h1,
+h2,
+h3 {
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 1.8em;
+}
+
+h3 {
+  font-size: 1.4em;
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="datetime-local"],
+input[type="file"] {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="datetime-local"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Buttons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  min-width: 100px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.button.delete {
+  background: var(--danger-color);
+}
+
+.button.delete:hover {
+  background: var(--danger-hover);
+}
+
+.button.success {
+  background: var(--success-color);
+}
+
+.button.success:hover {
+  background: var(--success-hover);
+}
+
+/* Tables */
+.table-container {
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+th,
+td {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-weight: 500;
+  color: var(--text-light);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+tr:hover {
+  background: rgba(0, 0, 0, 0.01);
+}
+
+/* File list */
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.file-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 500px;
+}
+
+.file-owner {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.file-access {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.file-access.public {
+  background: var(--success-color);
+  color: white;
+}
+
+.file-access.private {
+  background: var(--danger-color);
+  color: white;
+}
+
+.file-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+/* Admin specific */
+.add-user-form {
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: var(--background);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.user-list {
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+/* Checkbox styling */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 4px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .file-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .file-info {
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .file-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .file-actions .button {
+    flex: 1;
+  }
+
+  nav {
+    padding: 1rem;
+  }
+
+  nav a {
+    display: block;
+    margin: 0.5rem 0;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}

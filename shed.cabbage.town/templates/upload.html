@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Upload - Cabbage Town</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+</head>
+
+<body>
+  <nav>
+    <a href="/files">Files</a>
+    {{if .IsAdmin}}
+    <a href="/admin/users">Users</a>
+    {{end}}
+    <a href="/upload">Upload</a>
+    <a href="/logout">Logout</a>
+  </nav>
+
+  <div class="upload-container">
+    <h2>Upload Recording</h2>
+    <form action="/api/upload" method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="file">Recording File:</label>
+        <input type="file" id="file" name="file" accept="audio/*" required>
+      </div>
+      <div class="form-group">
+        <label for="date">Recording Date:</label>
+        <input type="datetime-local" id="date" name="date" required>
+      </div>
+      <p>Reminder: Your recording will be private after upload. Make it public from the Files page after upload.</p>
+      <button type="submit" class="button">Upload</button>
+    </form>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Users - Cabbage Town</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+</head>
+
+<body>
+  <nav>
+    <a href="/files">Files</a>
+    {{if .IsAdmin}}
+    <a href="/admin/users">Users</a>
+    {{end}}
+    <a href="/upload">Upload</a>
+    <a href="/logout">Logout</a>
+  </nav>
+
+  <div class="admin-container">
+    <h2>Manage Users</h2>
+
+    <div class="add-user-form">
+      <h3>Add New User</h3>
+      <form id="addUserForm">
+        <div class="form-group">
+          <label for="newUsername">Username:</label>
+          <input type="text" id="newUsername" required>
+        </div>
+        <div class="form-group">
+          <label for="newPassword">Password:</label>
+          <input type="password" id="newPassword" required>
+        </div>
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="isAdmin">
+            <label for="isAdmin">Admin User</label>
+          </div>
+        </div>
+        <button type="submit" class="button">Add User</button>
+      </form>
+    </div>
+
+    <div class="user-list">
+      <h3>Current Users</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Admin Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range $username, $user := .Users}}
+            <tr>
+              <td>{{$username}}</td>
+              <td>
+                <button onclick="toggleAdmin('{{$username}}', {{not $user.IsAdmin}})"
+                  class="button {{if $user.IsAdmin}}danger{{else}}success{{end}}">
+                  {{if $user.IsAdmin}}Remove Admin{{else}}Make Admin{{end}}
+                </button>
+              </td>
+              <td>
+                <button onclick="deleteUser('{{$username}}')" class="button delete">Delete</button>
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('addUserForm').onsubmit = function (e) {
+      e.preventDefault();
+      const username = document.getElementById('newUsername').value;
+      const password = document.getElementById('newPassword').value;
+      const isAdmin = document.getElementById('isAdmin').checked;
+
+      fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          isAdmin: isAdmin
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to add user');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to add user');
+        });
+    };
+
+    function toggleAdmin(username, makeAdmin) {
+      fetch(`/api/admin/users/${username}/toggle-admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          isAdmin: makeAdmin
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to update user');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to update user');
+        });
+    }
+
+    function deleteUser(username) {
+      if (!confirm(`Are you sure you want to delete user ${username}?`)) {
+        return;
+      }
+
+      fetch(`/api/admin/users/${username}`, {
+        method: 'DELETE'
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to delete user');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to delete user');
+        });
+    }
+  </script>
+</body>
+
+</html>

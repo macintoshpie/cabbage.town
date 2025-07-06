@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Files - Cabbage Town</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <style>
+    .files-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .file-item {
+      background: white;
+      margin-bottom: 12px;
+      padding: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .file-item:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .file-info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+      /* Allows text truncation to work */
+    }
+
+    .file-name {
+      font-weight: 500;
+      color: #2c3e50;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 500px;
+    }
+
+    .file-owner {
+      color: #666;
+      font-size: 0.9em;
+      white-space: nowrap;
+    }
+
+    .file-access {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 0.85em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .file-access.public {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .file-access.private {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .file-actions {
+      display: flex;
+      gap: 8px;
+      margin-left: 16px;
+    }
+
+    .button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9em;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 100px;
+    }
+
+    .button:not(.make-public):not(.make-private) {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .button:not(.make-public):not(.make-private):hover {
+      background-color: #1976D2;
+    }
+
+    .button.make-public {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .button.make-private {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .button.make-public:hover {
+      background-color: #45a049;
+      transform: translateY(-1px);
+    }
+
+    .button.make-private:hover {
+      background-color: #da190b;
+      transform: translateY(-1px);
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 24px;
+      font-size: 1.8em;
+    }
+
+    nav {
+      background: #2c3e50;
+      padding: 16px;
+      margin-bottom: 32px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      margin-right: 8px;
+    }
+
+    nav a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      background-color: #f5f6fa;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="/files">Files</a>
+    {{if .IsAdmin}}
+    <a href="/admin/users">Users</a>
+    {{end}}
+    <a href="/upload">Upload</a>
+    <a href="/logout">Logout</a>
+  </nav>
+
+  <div class="files-container">
+    <h2>Your Files</h2>
+    {{range .Files}}
+    <div class="file-item">
+      <div class="file-info">
+        <span class="file-name">{{.Key}}</span>
+        <span class="file-owner">Owner: {{.Owner}}</span>
+        <span class="file-access {{if .IsPublic}}public{{else}}private{{end}}">
+          {{if .IsPublic}}Public{{else}}Private{{end}}
+        </span>
+      </div>
+      <div class="file-actions">
+        <a href="/files/{{.Key}}" class="button">View</a>
+        <button onclick="toggleAccess('{{.Key}}', {{not .IsPublic}})"
+          class="button {{if .IsPublic}}make-private{{else}}make-public{{end}}">
+          {{if .IsPublic}}Make Private{{else}}Make Public{{end}}
+        </button>
+      </div>
+    </div>
+    {{end}}
+  </div>
+
+  <script>
+    function toggleAccess(key, makePublic) {
+      fetch('/api/files/toggle-access', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          key: key,
+          makePublic: makePublic
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to update file access');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to update file access');
+        });
+    }
+  </script>
+</body>
+
+</html>
