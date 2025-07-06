@@ -11,14 +11,16 @@ func main() {
 	// Define the configuration with paths relative to the current working directory
 	outputDir := filepath.Join("..", "..", "public")
 	outputFile := filepath.Join("playlists", "recordings.m3u")
+	sethPlaylistFile := filepath.Join("playlists", "home_cooking.m3u")
 	rssFile := filepath.Join("feed.xml")
 
 	config := trellis.Config{
-		BucketURL:  "https://cabbagetown.nyc3.digitaloceanspaces.com",
-		ListURL:    "https://cabbagetown.nyc3.digitaloceanspaces.com/?prefix=recordings/&max-keys=1000",
-		OutputDir:  outputDir,
-		OutputFile: outputFile,
-		RSSFile:    rssFile,
+		BucketURL:        "https://cabbagetown.nyc3.digitaloceanspaces.com",
+		ListURL:          "https://cabbagetown.nyc3.digitaloceanspaces.com/?prefix=recordings/&max-keys=1000",
+		OutputDir:        outputDir,
+		OutputFile:       outputFile,
+		SethPlaylistFile: sethPlaylistFile,
+		RSSFile:          rssFile,
 	}
 
 	// Run the trellis command with the configuration

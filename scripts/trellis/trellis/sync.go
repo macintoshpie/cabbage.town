@@ -14,11 +14,12 @@ import (
 )
 
 type Config struct {
-	BucketURL  string
-	ListURL    string
-	OutputDir  string
-	OutputFile string
-	RSSFile    string
+	BucketURL        string
+	ListURL          string
+	OutputDir        string
+	OutputFile       string
+	RSSFile          string
+	SethPlaylistFile string // Additional playlist file for Seth's recordings only
 }
 
 type ListBucketResult struct {
@@ -111,9 +112,20 @@ func Run(config Config) error {
 
 	recordings := filterUnavailableRecordings(allRecordings)
 
-	err = updatePlaylist(recordings, config)
+	// Update main playlist with all recordings
+	err = updatePlaylist(recordings, config.OutputFile, config, nil)
 	if err != nil {
-		return fmt.Errorf("failed to update playlist: %v", err)
+		return fmt.Errorf("failed to update main playlist: %v", err)
+	}
+
+	// Update Seth's playlist with only his recordings
+	if config.SethPlaylistFile != "" {
+		err = updatePlaylist(recordings, config.SethPlaylistFile, config, func(r Recording) bool {
+			return r.DJ == "Seth"
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update Seth's playlist: %v", err)
+		}
 	}
 
 	err = updateRssFeed(recordings, config)
@@ -121,7 +133,7 @@ func Run(config Config) error {
 		return fmt.Errorf("failed to update RSS feed: %v", err)
 	}
 
-	fmt.Println("Playlist update complete.")
+	fmt.Println("Playlist updates complete.")
 	return nil
 }
 
@@ -185,23 +197,25 @@ func filterUnavailableRecordings(recordings []Recording) []Recording {
 	return availableRecordings
 }
 
-func updatePlaylist(recordings []Recording, config Config) error {
+func updatePlaylist(recordings []Recording, outputFile string, config Config, filter func(Recording) bool) error {
 	// Create directory for output file
 	if err := os.MkdirAll(config.OutputDir, os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create directory: %v", err)
 	}
 
 	// Initialize playlist file
-	outputFilePath := filepath.Join(config.OutputDir, config.OutputFile)
+	outputFilePath := filepath.Join(config.OutputDir, outputFile)
 	if err := ioutil.WriteFile(outputFilePath, []byte("#EXTM3U\n"), 0644); err != nil {
 		return fmt.Errorf("failed to initialize playlist file: %v", err)
 	}
 
-	// Update playlist with sorted recordings
+	// Update playlist with sorted recordings that match the filter
 	for _, recording := range recordings {
-		entry := fmt.Sprintf("#EXTINF:-1,%s - %s (%s)\n%s\n", recording.Show, recording.DJ, recording.Date, recording.URL)
-		if err := appendToFile(outputFilePath, entry); err != nil {
-			return fmt.Errorf("failed to append to playlist file: %v", err)
+		if filter == nil || filter(recording) {
+			entry := fmt.Sprintf("#EXTINF:-1,%s - %s (%s)\n%s\n", recording.Show, recording.DJ, recording.Date, recording.URL)
+			if err := appendToFile(outputFilePath, entry); err != nil {
+				return fmt.Errorf("failed to append to playlist file: %v", err)
+			}
 		}
 	}
 
