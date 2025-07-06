@@ -1,10 +1,10 @@
 name: shed-cabbage-town
 services:
   - name: web
-    github:
+    git:
       branch: main
       deploy_on_push: true
-      repo: macintoshpie/cabbage.town
+      repo_clone_url: https://github.com/macintoshpie/cabbage.town
     source_dir: shed.cabbage.town
     build_command: go build -o server ./cmd/server
     run_command: ./server
