@@ -33,7 +33,7 @@ type UserStore struct {
 // Client wraps an S3 client with our bucket-specific operations
 type Client struct {
 	s3Client *s3.S3
-	bucket   string
+	Bucket   string
 }
 
 // NewClient creates a new bucket client
@@ -57,14 +57,14 @@ func NewClient() (*Client, error) {
 
 	return &Client{
 		s3Client: s3.New(sess),
-		bucket:   BucketName,
+		Bucket:   BucketName,
 	}, nil
 }
 
 // GetObject retrieves an object from the bucket
 func (c *Client) GetObject(key string) (*s3.GetObjectOutput, error) {
 	return c.s3Client.GetObject(&s3.GetObjectInput{
-		Bucket: aws.String(c.bucket),
+		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(key),
 	})
 }
@@ -72,7 +72,7 @@ func (c *Client) GetObject(key string) (*s3.GetObjectOutput, error) {
 // PutObject uploads an object to the bucket
 func (c *Client) PutObject(key string, body []byte, contentType string) error {
 	input := &s3.PutObjectInput{
-		Bucket:      aws.String(c.bucket),
+		Bucket:      aws.String(c.Bucket),
 		Key:         aws.String(key),
 		Body:        bytes.NewReader(body),
 		ContentType: aws.String(contentType),
@@ -85,7 +85,7 @@ func (c *Client) PutObject(key string, body []byte, contentType string) error {
 // GetObjectACL gets the ACL for an object
 func (c *Client) GetObjectACL(key string) (*s3.GetObjectAclOutput, error) {
 	return c.s3Client.GetObjectAcl(&s3.GetObjectAclInput{
-		Bucket: aws.String(c.bucket),
+		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(key),
 	})
 }
@@ -93,7 +93,7 @@ func (c *Client) GetObjectACL(key string) (*s3.GetObjectAclOutput, error) {
 // PutObjectACL sets the ACL for an object
 func (c *Client) PutObjectACL(key string, acl string) error {
 	_, err := c.s3Client.PutObjectAcl(&s3.PutObjectAclInput{
-		Bucket: aws.String(c.bucket),
+		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(key),
 		ACL:    aws.String(acl),
 	})
@@ -105,7 +105,7 @@ func (c *Client) ListObjects(prefix string) ([]*s3.Object, error) {
 	var objects []*s3.Object
 
 	err := c.s3Client.ListObjectsV2Pages(&s3.ListObjectsV2Input{
-		Bucket: aws.String(c.bucket),
+		Bucket: aws.String(c.Bucket),
 		Prefix: aws.String(prefix),
 	}, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
 		objects = append(objects, page.Contents...)
@@ -118,7 +118,7 @@ func (c *Client) ListObjects(prefix string) ([]*s3.Object, error) {
 // GetPresignedURL generates a presigned URL for an object that expires after the specified duration
 func (c *Client) GetPresignedURL(key string, expires time.Duration) (string, error) {
 	req, _ := c.s3Client.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(c.bucket),
+		Bucket: aws.String(c.Bucket),
 		Key:    aws.String(key),
 	})
 
@@ -128,7 +128,7 @@ func (c *Client) GetPresignedURL(key string, expires time.Duration) (string, err
 // PutObjectStreaming uploads a file from a reader to the bucket
 func (c *Client) PutObjectStreaming(key string, reader io.Reader, contentType string) error {
 	input := &s3.PutObjectInput{
-		Bucket:      aws.String(c.bucket),
+		Bucket:      aws.String(c.Bucket),
 		Key:         aws.String(key),
 		Body:        aws.ReadSeekCloser(reader),
 		ContentType: aws.String(contentType),
@@ -141,9 +141,14 @@ func (c *Client) PutObjectStreaming(key string, reader io.Reader, contentType st
 // GetPresignedPutURL generates a presigned URL for uploading a file
 func (c *Client) GetPresignedPutURL(key, contentType string, expires time.Duration) (string, error) {
 	req, _ := c.s3Client.PutObjectRequest(&s3.PutObjectInput{
-		Bucket:      aws.String(c.bucket),
+		Bucket:      aws.String(c.Bucket),
 		Key:         aws.String(key),
 		ContentType: aws.String(contentType),
 	})
 	return req.Presign(expires)
+}
+
+// CopyObject copies an object within the bucket, allowing metadata updates
+func (c *Client) CopyObject(input *s3.CopyObjectInput) (*s3.CopyObjectOutput, error) {
+	return c.s3Client.CopyObject(input)
 }

@@ -16,6 +16,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
@@ -28,6 +30,7 @@ const (
 	sessionName   = "cabbage-session"
 	userFile      = "shed/users.json"
 	maxUploadSize = 500 * 1024 * 1024 // 500MB
+	bucketName    = "cabbagetown"     // Add bucket name constant
 )
 
 type UserStore struct {
@@ -463,6 +466,7 @@ func toggleAccessHandler(w http.ResponseWriter, r *http.Request) {
 		acl = "public-read"
 	}
 
+	// First update the ACL
 	err := bucketClient.PutObjectACL(req.Key, acl)
 	if err != nil {
 		log.Printf("Error updating ACL: %v", err)
@@ -471,6 +475,21 @@ func toggleAccessHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "Failed to update file access",
 		})
 		return
+	}
+
+	// Update metadata based on privacy setting
+	_, err = bucketClient.CopyObject(&s3.CopyObjectInput{
+		Bucket:            aws.String(bucketClient.Bucket),
+		CopySource:        aws.String(fmt.Sprintf("%s/%s", bucketClient.Bucket, req.Key)),
+		Key:               aws.String(req.Key),
+		MetadataDirective: aws.String("REPLACE"),
+		Metadata: map[string]*string{
+			"manually-privated": aws.String(fmt.Sprintf("%v", !req.MakePublic)), // true if private, false if public
+			"privacy-timestamp": aws.String(time.Now().UTC().Format(time.RFC3339)),
+		},
+	})
+	if err != nil {
+		log.Printf("Warning: Failed to update privacy metadata: %v", err)
 	}
 
 	json.NewEncoder(w).Encode(ToggleAccessResponse{

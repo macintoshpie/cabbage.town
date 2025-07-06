@@ -141,6 +141,25 @@ func main() {
 					}
 
 					if isPrivate {
+						// Check for manual privacy metadata
+						headOutput, err := svc.HeadObject(&s3.HeadObjectInput{
+							Bucket: aws.String(bucketName),
+							Key:    obj.Key,
+						})
+						if err == nil && headOutput.Metadata != nil {
+							if manuallyPrivated, ok := headOutput.Metadata["manually-privated"]; ok && *manuallyPrivated == "true" {
+								if privacyTimestamp, ok := headOutput.Metadata["privacy-timestamp"]; ok {
+									if ts, err := time.Parse(time.RFC3339, *privacyTimestamp); err == nil {
+										// If privacy setting is newer than file modification, respect it
+										if ts.After(*obj.LastModified) {
+											log.Printf("File was manually set to private, respecting setting: %s\n", *obj.Key)
+											continue
+										}
+									}
+								}
+							}
+						}
+
 						log.Printf("File is private, making public: %s\n", *obj.Key)
 						_, err = svc.PutObjectAcl(&s3.PutObjectAclInput{
 							Bucket: aws.String(bucketName),
