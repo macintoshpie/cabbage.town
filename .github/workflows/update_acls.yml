@@ -1,0 +1,30 @@
+name: Update Recording ACLs
+
+on:
+  schedule:
+    # Run at midnight Eastern Time (05:00 UTC)
+    - cron: "0 5 * * *"
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  update-acls:
+    name: Update Recording ACLs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+          check-latest: true
+          cache: true
+
+      - name: Run ACL updater
+        env:
+          DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
+          DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
+        working-directory: scripts/trellis
+        run: go run cmd/update_acls/main.go
