@@ -52,6 +52,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to playlists or feed"
           else
-            git commit -m "Update playlists and feed [skip ci]"
+            git commit -m "Update playlists and feed via automated workflow"
             git push origin main
           fi
