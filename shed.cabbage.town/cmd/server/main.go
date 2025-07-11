@@ -466,30 +466,25 @@ func toggleAccessHandler(w http.ResponseWriter, r *http.Request) {
 		acl = "public-read"
 	}
 
-	// First update the ACL
-	err := bucketClient.PutObjectACL(req.Key, acl)
+	// Do everything in one CopyObject operation
+	_, err := bucketClient.CopyObject(&s3.CopyObjectInput{
+		Bucket:            aws.String(bucketClient.Bucket),
+		CopySource:        aws.String(fmt.Sprintf("%s/%s", bucketClient.Bucket, req.Key)),
+		Key:               aws.String(req.Key),
+		MetadataDirective: aws.String("REPLACE"),
+		ACL:               aws.String(acl), // Set the ACL here
+		Metadata: map[string]*string{
+			"manually-privated": aws.String(fmt.Sprintf("%v", !req.MakePublic)),
+			"privacy-timestamp": aws.String(time.Now().UTC().Format(time.RFC3339)),
+		},
+	})
 	if err != nil {
-		log.Printf("Error updating ACL: %v", err)
+		log.Printf("Error updating object: %v", err)
 		json.NewEncoder(w).Encode(ToggleAccessResponse{
 			Success: false,
 			Message: "Failed to update file access",
 		})
 		return
-	}
-
-	// Update metadata based on privacy setting
-	_, err = bucketClient.CopyObject(&s3.CopyObjectInput{
-		Bucket:            aws.String(bucketClient.Bucket),
-		CopySource:        aws.String(fmt.Sprintf("%s/%s", bucketClient.Bucket, req.Key)),
-		Key:               aws.String(req.Key),
-		MetadataDirective: aws.String("REPLACE"),
-		Metadata: map[string]*string{
-			"manually-privated": aws.String(fmt.Sprintf("%v", !req.MakePublic)), // true if private, false if public
-			"privacy-timestamp": aws.String(time.Now().UTC().Format(time.RFC3339)),
-		},
-	})
-	if err != nil {
-		log.Printf("Warning: Failed to update privacy metadata: %v", err)
 	}
 
 	json.NewEncoder(w).Encode(ToggleAccessResponse{
