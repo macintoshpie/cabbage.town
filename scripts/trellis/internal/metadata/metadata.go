@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/joho/godotenv"
 
 	"cabbage.town/shed.cabbage.town/pkg/bucket"
 	"cabbage.town/trellis/trellis"
@@ -22,13 +21,8 @@ func UpdateMetadata(bucketClient *bucket.Client, dryRun bool) error {
 		log.Printf("[METADATA] Starting ID3 metadata update process")
 	}
 
-	// Load .env file from parent directory
-	log.Printf("[METADATA] Loading .env file from parent directory...")
-	if err := godotenv.Load("../../.env"); err != nil {
-		log.Printf("[METADATA] WARNING: Could not load .env file: %v", err)
-	} else {
-		log.Printf("[METADATA] Successfully loaded .env file")
-	}
+	// Assume .env has already been loaded by the calling workflow
+	log.Printf("[METADATA] Using environment variables (loaded by workflow)")
 
 	// Use provided bucket client
 	log.Printf("[METADATA] Using provided bucket client for recordings listing")
@@ -55,6 +49,10 @@ func UpdateMetadata(bucketClient *bucket.Client, dryRun bool) error {
 		log.Printf("[METADATA] Processing recording %d/%d: %s", i+1, len(recentRecordings), recording.Key)
 		err := addID3Metadata(recording, bucketClient, dryRun)
 		if err != nil {
+			if err.Error() == "SKIP_ALREADY_PROCESSED" {
+				skipped++
+				continue
+			}
 			log.Printf("[METADATA] ERROR: Failed to add metadata to %s: %v", recording.URL, err)
 			failed++
 			continue
@@ -113,10 +111,15 @@ func addID3Metadata(recording trellis.Recording, bucketClient *bucket.Client, dr
 	}
 	log.Printf("[METADATA] Retrieved metadata, found %d metadata fields", len(headOutput.Metadata))
 
-	// Check if already processed
+	// Check if already processed (check both lowercase and capitalized versions)
+	// Check both possible cases since AWS metadata keys can be capitalized
 	if processed, exists := headOutput.Metadata["id3-processed"]; exists && *processed == "true" {
 		log.Printf("[METADATA] File already processed, skipping: %s", key)
-		return nil
+		return fmt.Errorf("SKIP_ALREADY_PROCESSED")
+	}
+	if processed, exists := headOutput.Metadata["Id3-Processed"]; exists && *processed == "true" {
+		log.Printf("[METADATA] File already processed, skipping: %s", key)
+		return fmt.Errorf("SKIP_ALREADY_PROCESSED")
 	}
 	log.Printf("[METADATA] File not yet processed, proceeding with ID3 metadata addition")
 

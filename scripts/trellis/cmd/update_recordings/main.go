@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/joho/godotenv"
+
 	"cabbage.town/shed.cabbage.town/pkg/bucket"
 	"cabbage.town/trellis/internal/acls"
 	"cabbage.town/trellis/internal/metadata"
@@ -73,11 +75,21 @@ func main() {
 	log.Printf("[WORKFLOW] - Skip metadata: %v", *skipMetadata)
 	log.Printf("[WORKFLOW] - Skip playlists: %v", *skipPlaylists)
 
+	// Load environment variables from .env file
+	log.Printf("[WORKFLOW] Loading environment variables...")
+	if err := godotenv.Load("../../.env"); err != nil {
+		log.Printf("[WORKFLOW] WARNING: Could not load .env file: %v", err)
+		log.Printf("[WORKFLOW] Will attempt to use environment variables directly")
+	} else {
+		log.Printf("[WORKFLOW] Successfully loaded .env file")
+	}
+
 	// Initialize shared bucket client
 	log.Printf("[WORKFLOW] Initializing shared bucket client...")
 	bucketClient, err := bucket.NewClient()
 	if err != nil {
 		log.Printf("[WORKFLOW] ERROR: Failed to create bucket client: %v", err)
+		log.Printf("[WORKFLOW] Please ensure DO_ACCESS_KEY_ID and DO_SECRET_ACCESS_KEY are set")
 		os.Exit(1)
 	}
 	log.Printf("[WORKFLOW] Successfully created shared bucket client")
