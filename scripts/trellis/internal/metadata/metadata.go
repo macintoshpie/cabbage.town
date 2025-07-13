@@ -15,7 +15,7 @@ import (
 	"cabbage.town/trellis/trellis"
 )
 
-func UpdateMetadata(dryRun bool) error {
+func UpdateMetadata(bucketClient *bucket.Client, dryRun bool) error {
 	if dryRun {
 		log.Printf("[METADATA] Starting ID3 metadata update process (DRY RUN)")
 	} else {
@@ -30,18 +30,11 @@ func UpdateMetadata(dryRun bool) error {
 		log.Printf("[METADATA] Successfully loaded .env file")
 	}
 
-	// Initialize bucket client
-	log.Printf("[METADATA] Initializing bucket client...")
-	bucketClient, err := bucket.NewClient()
-	if err != nil {
-		log.Printf("[METADATA] ERROR: Creating bucket client: %v", err)
-		return fmt.Errorf("error creating bucket client: %v", err)
-	}
-	log.Printf("[METADATA] Successfully created bucket client")
+	// Use provided bucket client
+	log.Printf("[METADATA] Using provided bucket client for recordings listing")
 
 	config := trellis.Config{
-		BucketURL: "https://cabbagetown.nyc3.digitaloceanspaces.com",
-		ListURL:   "https://cabbagetown.nyc3.digitaloceanspaces.com/?prefix=recordings/&max-keys=1000",
+		BucketClient: bucketClient,
 	}
 
 	log.Printf("[METADATA] Listing all recordings...")

@@ -12,25 +12,18 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"cabbage.town/shed.cabbage.town/pkg/bucket"
 )
 
 type Config struct {
-	BucketURL        string
-	ListURL          string
+	BucketClient     *bucket.Client
 	OutputDir        string
 	OutputFile       string
 	RSSFile          string
 	SethPlaylistFile string // Additional playlist file for Seth's recordings only
 }
 
-type ListBucketResult struct {
-	Contents []Content `xml:"Contents"`
-}
-
-type Content struct {
-	Key          string    `xml:"Key"`
-	LastModified time.Time `xml:"LastModified"`
-}
 
 type Recording struct {
 	URL          string
@@ -108,7 +101,6 @@ type Enclosure struct {
 
 func Run(config Config) error {
 	log.Printf("[TRELLIS] Starting playlist and RSS feed update process")
-	log.Printf("[TRELLIS] Config - BucketURL: %s", config.BucketURL)
 	log.Printf("[TRELLIS] Config - OutputDir: %s", config.OutputDir)
 
 	log.Printf("[TRELLIS] Listing all recordings...")
@@ -184,57 +176,45 @@ func FilterRecentRecordings(recordings []Recording) []Recording {
 }
 
 func ListRecordings(config Config) ([]Recording, error) {
-	// Fetch list of recordings
-	log.Printf("[TRELLIS] Fetching recordings list from: %s", config.ListURL)
-	resp, err := http.Get(config.ListURL)
-	if err != nil {
-		log.Printf("[TRELLIS] ERROR: Failed to fetch list of recordings: %v", err)
-		return nil, fmt.Errorf("failed to fetch list of recordings: %v", err)
-	}
-	defer resp.Body.Close()
-	log.Printf("[TRELLIS] Successfully fetched recordings list (status: %s)", resp.Status)
+	// Use provided bucket client
+	log.Printf("[TRELLIS] Using provided bucket client for recordings listing")
 
-	log.Printf("[TRELLIS] Reading response body...")
-	body, err := ioutil.ReadAll(resp.Body)
+	// List objects with recordings prefix
+	log.Printf("[TRELLIS] Listing objects with prefix: recordings/")
+	objects, err := config.BucketClient.ListObjects("recordings/")
 	if err != nil {
-		log.Printf("[TRELLIS] ERROR: Failed to read response body: %v", err)
-		return nil, fmt.Errorf("failed to read response body: %v", err)
+		log.Printf("[TRELLIS] ERROR: Failed to list objects: %v", err)
+		return nil, fmt.Errorf("failed to list objects: %v", err)
 	}
-	log.Printf("[TRELLIS] Read %d bytes from response", len(body))
-
-	// Parse XML response
-	log.Printf("[TRELLIS] Parsing XML response...")
-	var result ListBucketResult
-	if err := xml.Unmarshal(body, &result); err != nil {
-		log.Printf("[TRELLIS] ERROR: Failed to parse XML: %v", err)
-		return nil, fmt.Errorf("failed to parse XML: %v", err)
-	}
-	log.Printf("[TRELLIS] Found %d items in bucket listing", len(result.Contents))
+	log.Printf("[TRELLIS] Found %d objects in bucket", len(objects))
 
 	var recordings []Recording
 	var skipped int
-	for _, content := range result.Contents {
-		if content.Key != "" && len(content.Key) > 4 && content.Key[len(content.Key)-4:] == ".mp3" {
-			fullURL := config.BucketURL + "/" + content.Key
-			log.Printf("[TRELLIS] Processing MP3: %s", content.Key)
+	for _, obj := range objects {
+		if obj.Key != nil && len(*obj.Key) > 4 && (*obj.Key)[len(*obj.Key)-4:] == ".mp3" {
+			// Construct URL using the standard bucket URL
+			fullURL := "https://cabbagetown.nyc3.digitaloceanspaces.com/" + *obj.Key
+			log.Printf("[TRELLIS] Processing MP3: %s", *obj.Key)
 			recording, err := parseRecordingInfo(fullURL)
 			if err != nil {
 				log.Printf("[TRELLIS] WARNING: Failed to parse recording info for %s: %v", fullURL, err)
 				skipped++
 				continue
 			}
-			recording.Key = content.Key
-			recording.LastModified = content.LastModified
+			recording.Key = *obj.Key
+			if obj.LastModified != nil {
+				recording.LastModified = *obj.LastModified
+			}
 			recordings = append(recordings, recording)
 			log.Printf("[TRELLIS] Added recording: %s by %s (%s)", recording.Show, recording.DJ, recording.Date)
 		} else {
-			if content.Key != "" {
-				log.Printf("[TRELLIS] Skipping non-MP3 file: %s", content.Key)
+			if obj.Key != nil && *obj.Key != "" {
+				log.Printf("[TRELLIS] Skipping non-MP3 file: %s", *obj.Key)
 			}
 		}
 	}
 
-	log.Printf("[TRELLIS] Processed %d MP3 files, %d parsed successfully, %d skipped", len(result.Contents), len(recordings), skipped)
+	log.Printf("[TRELLIS] Processed %d total objects, %d MP3s parsed successfully, %d skipped", len(objects), len(recordings), skipped)
 
 	// Sort recordings by date in descending order
 	log.Printf("[TRELLIS] Sorting recordings by date (newest first)...")

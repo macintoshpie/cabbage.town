@@ -41,7 +41,7 @@ jobs:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
         working-directory: scripts/trellis
-        run: go run cmd/update_recordings/main.go
+        run: go run cmd/update_recordings/main.go all
 
       - name: Commit and push changes
         run: |
