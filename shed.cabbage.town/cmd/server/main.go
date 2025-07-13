@@ -23,7 +23,7 @@ import (
 	"github.com/joho/godotenv"
 	"golang.org/x/time/rate"
 
-	"cabbage.town/shed.cabbage.town/internal/bucket"
+	"cabbage.town/shed.cabbage.town/pkg/bucket"
 )
 
 const (

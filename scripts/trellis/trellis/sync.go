@@ -27,14 +27,17 @@ type ListBucketResult struct {
 }
 
 type Content struct {
-	Key string `xml:"Key"`
+	Key          string    `xml:"Key"`
+	LastModified time.Time `xml:"LastModified"`
 }
 
 type Recording struct {
-	URL  string
-	DJ   string
-	Show string
-	Date string
+	URL          string
+	Key          string
+	DJ           string
+	Show         string
+	Date         string
+	LastModified time.Time
 }
 
 type RSS struct {
@@ -105,7 +108,7 @@ type Enclosure struct {
 func Run(config Config) error {
 	fmt.Println("🌱 tending the patch...")
 
-	allRecordings, err := listRecordings(config)
+	allRecordings, err := ListRecordings(config)
 	if err != nil {
 		return fmt.Errorf("failed to list recordings: %v", err)
 	}
@@ -137,7 +140,21 @@ func Run(config Config) error {
 	return nil
 }
 
-func listRecordings(config Config) ([]Recording, error) {
+func FilterRecentRecordings(recordings []Recording) []Recording {
+	// Filter to only recordings modified in last 72 hours
+	cutoffTime := time.Now().Add(-72 * time.Hour)
+	var recentRecordings []Recording
+
+	for _, recording := range recordings {
+		if recording.LastModified.After(cutoffTime) {
+			recentRecordings = append(recentRecordings, recording)
+		}
+	}
+
+	return recentRecordings
+}
+
+func ListRecordings(config Config) ([]Recording, error) {
 	// Fetch list of recordings
 	resp, err := http.Get(config.ListURL)
 	if err != nil {
@@ -165,6 +182,8 @@ func listRecordings(config Config) ([]Recording, error) {
 				fmt.Printf("Failed to parse recording info for %s: %v\n", fullURL, err)
 				continue
 			}
+			recording.Key = content.Key
+			recording.LastModified = content.LastModified
 			recordings = append(recordings, recording)
 		}
 	}

@@ -28,12 +28,27 @@ jobs:
           check-latest: true
           cache: true
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install ID3 tools
+        run: pip install eyeD3
+
       - name: Update ACLs
         env:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
         working-directory: scripts/trellis
         run: go run cmd/update_acls/main.go
+
+      - name: Add ID3 metadata to MP3 files
+        env:
+          DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
+          DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
+        working-directory: scripts/trellis
+        run: go run cmd/add_metadata/main.go
 
       - name: Update Playlists and Feed
         env:

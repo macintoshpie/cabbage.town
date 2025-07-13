@@ -10,7 +10,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"cabbage.town/shed.cabbage.town/internal/bucket"
+	"cabbage.town/shed.cabbage.town/pkg/bucket"
 )
 
 const userFile = "shed/users.json"

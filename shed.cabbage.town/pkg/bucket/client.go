@@ -152,3 +152,26 @@ func (c *Client) GetPresignedPutURL(key, contentType string, expires time.Durati
 func (c *Client) CopyObject(input *s3.CopyObjectInput) (*s3.CopyObjectOutput, error) {
 	return c.s3Client.CopyObject(input)
 }
+
+// HeadObject gets metadata for an object without downloading the content
+func (c *Client) HeadObject(key string) (*s3.HeadObjectOutput, error) {
+	return c.s3Client.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(c.Bucket),
+		Key:    aws.String(key),
+	})
+}
+
+// PutObjectWithMetadata uploads a file with specified metadata and ACL
+func (c *Client) PutObjectWithMetadata(key string, reader io.Reader, contentType string, metadata map[string]*string, acl string) error {
+	input := &s3.PutObjectInput{
+		Bucket:      aws.String(c.Bucket),
+		Key:         aws.String(key),
+		Body:        aws.ReadSeekCloser(reader),
+		ContentType: aws.String(contentType),
+		Metadata:    metadata,
+		ACL:         aws.String(acl),
+	}
+
+	_, err := c.s3Client.PutObject(input)
+	return err
+}
