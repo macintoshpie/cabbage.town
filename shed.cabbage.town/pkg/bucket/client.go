@@ -149,6 +149,9 @@ func (c *Client) GetPresignedPutURL(key, contentType string, expires time.Durati
 }
 
 // CopyObject copies an object within the bucket, allowing metadata updates
+// WARNING: When using MetadataDirective="REPLACE", ensure you preserve existing 
+// metadata by first calling HeadObject() and merging existing metadata with your updates.
+// Otherwise, all existing metadata will be lost.
 func (c *Client) CopyObject(input *s3.CopyObjectInput) (*s3.CopyObjectOutput, error) {
 	return c.s3Client.CopyObject(input)
 }
@@ -162,6 +165,9 @@ func (c *Client) HeadObject(key string) (*s3.HeadObjectOutput, error) {
 }
 
 // PutObjectWithMetadata uploads a file with specified metadata and ACL
+// WARNING: This completely replaces all metadata on the object. If you want to 
+// preserve existing metadata, use UpdateObjectMetadata instead or manually merge 
+// existing metadata before calling this method.
 func (c *Client) PutObjectWithMetadata(key string, reader io.Reader, contentType string, metadata map[string]*string, acl string) error {
 	input := &s3.PutObjectInput{
 		Bucket:      aws.String(c.Bucket),
@@ -174,4 +180,54 @@ func (c *Client) PutObjectWithMetadata(key string, reader io.Reader, contentType
 
 	_, err := c.s3Client.PutObject(input)
 	return err
+}
+
+// UpdateObjectMetadata updates specific metadata fields while preserving existing metadata.
+// This method fetches existing metadata, merges it with the provided updates, and re-uploads
+// the object with the combined metadata.
+func (c *Client) UpdateObjectMetadata(key string, metadataUpdates map[string]*string) error {
+	// Get current object metadata
+	headOutput, err := c.HeadObject(key)
+	if err != nil {
+		return fmt.Errorf("failed to get existing metadata: %v", err)
+	}
+
+	// Get current object content
+	getOutput, err := c.GetObject(key)
+	if err != nil {
+		return fmt.Errorf("failed to get object content: %v", err)
+	}
+	defer getOutput.Body.Close()
+
+	// Get current ACL
+	aclOutput, err := c.GetObjectACL(key)
+	if err != nil {
+		return fmt.Errorf("failed to get object ACL: %v", err)
+	}
+
+	// Merge existing metadata with updates
+	mergedMetadata := make(map[string]*string)
+	for k, v := range headOutput.Metadata {
+		mergedMetadata[k] = v
+	}
+	for k, v := range metadataUpdates {
+		mergedMetadata[k] = v
+	}
+
+	// Determine current ACL setting
+	acl := "private" // default
+	for _, grant := range aclOutput.Grants {
+		if grant.Grantee.URI != nil && *grant.Grantee.URI == "http://acs.amazonaws.com/groups/global/AllUsers" {
+			acl = "public-read"
+			break
+		}
+	}
+
+	// Re-upload with merged metadata
+	contentType := "application/octet-stream" // default
+	if headOutput.ContentType != nil {
+		contentType = *headOutput.ContentType
+	}
+
+	return c.PutObjectWithMetadata(key, getOutput.Body, contentType, mergedMetadata, acl)
 }
