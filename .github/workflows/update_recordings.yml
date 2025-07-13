@@ -28,19 +28,20 @@ jobs:
           check-latest: true
           cache: true
 
-      - name: Update ACLs
-        env:
-          DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
-          DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
-        working-directory: scripts/trellis
-        run: go run cmd/update_acls/main.go
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-      - name: Update Playlists and Feed
+      - name: Install ID3 tools
+        run: pip install eyeD3
+
+      - name: Update Recordings
         env:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
         working-directory: scripts/trellis
-        run: go run cmd/trellis/main.go
+        run: go run cmd/update_recordings/main.go all
 
       - name: Commit and push changes
         run: |

@@ -23,7 +23,7 @@ import (
 	"github.com/joho/godotenv"
 	"golang.org/x/time/rate"
 
-	"cabbage.town/shed.cabbage.town/internal/bucket"
+	"cabbage.town/shed.cabbage.town/pkg/bucket"
 )
 
 const (
@@ -466,17 +466,33 @@ func toggleAccessHandler(w http.ResponseWriter, r *http.Request) {
 		acl = "public-read"
 	}
 
-	// Do everything in one CopyObject operation
-	_, err := bucketClient.CopyObject(&s3.CopyObjectInput{
+	// Get existing metadata to preserve it while adding privacy flags
+	headOutput, err := bucketClient.HeadObject(req.Key)
+	if err != nil {
+		log.Printf("Error getting object metadata: %v", err)
+		json.NewEncoder(w).Encode(ToggleAccessResponse{
+			Success: false,
+			Message: "Failed to get file metadata",
+		})
+		return
+	}
+
+	// Merge existing metadata with privacy updates
+	mergedMetadata := make(map[string]*string)
+	for k, v := range headOutput.Metadata {
+		mergedMetadata[k] = v
+	}
+	mergedMetadata["manually-privated"] = aws.String(fmt.Sprintf("%v", !req.MakePublic))
+	mergedMetadata["privacy-timestamp"] = aws.String(time.Now().UTC().Format(time.RFC3339))
+
+	// Update object with merged metadata and new ACL
+	_, err = bucketClient.CopyObject(&s3.CopyObjectInput{
 		Bucket:            aws.String(bucketClient.Bucket),
 		CopySource:        aws.String(fmt.Sprintf("%s/%s", bucketClient.Bucket, req.Key)),
 		Key:               aws.String(req.Key),
 		MetadataDirective: aws.String("REPLACE"),
-		ACL:               aws.String(acl), // Set the ACL here
-		Metadata: map[string]*string{
-			"manually-privated": aws.String(fmt.Sprintf("%v", !req.MakePublic)),
-			"privacy-timestamp": aws.String(time.Now().UTC().Format(time.RFC3339)),
-		},
+		ACL:               aws.String(acl),
+		Metadata:          mergedMetadata,
 	})
 	if err != nil {
 		log.Printf("Error updating object: %v", err)

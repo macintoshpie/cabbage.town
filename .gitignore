@@ -1,3 +1,7 @@
 .DS_Store
 .env
 tmp/
+
+# Built executables
+scripts/trellis/bin/
+scripts/trellis/update_recordings
