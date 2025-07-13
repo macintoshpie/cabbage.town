@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -106,94 +107,143 @@ type Enclosure struct {
 }
 
 func Run(config Config) error {
-	fmt.Println("🌱 tending the patch...")
+	log.Printf("[TRELLIS] Starting playlist and RSS feed update process")
+	log.Printf("[TRELLIS] Config - BucketURL: %s", config.BucketURL)
+	log.Printf("[TRELLIS] Config - OutputDir: %s", config.OutputDir)
 
+	log.Printf("[TRELLIS] Listing all recordings...")
 	allRecordings, err := ListRecordings(config)
 	if err != nil {
+		log.Printf("[TRELLIS] ERROR: Failed to list recordings: %v", err)
 		return fmt.Errorf("failed to list recordings: %v", err)
 	}
+	log.Printf("[TRELLIS] Found %d total recordings", len(allRecordings))
 
+	log.Printf("[TRELLIS] Filtering unavailable recordings...")
 	recordings := filterUnavailableRecordings(allRecordings)
+	log.Printf("[TRELLIS] %d recordings available after filtering", len(recordings))
 
 	// Update main playlist with all recordings
+	log.Printf("[TRELLIS] Updating main playlist: %s", config.OutputFile)
 	err = updatePlaylist(recordings, config.OutputFile, config, nil)
 	if err != nil {
+		log.Printf("[TRELLIS] ERROR: Failed to update main playlist: %v", err)
 		return fmt.Errorf("failed to update main playlist: %v", err)
 	}
+	log.Printf("[TRELLIS] Successfully updated main playlist")
 
 	// Update Seth's playlist with only his recordings
 	if config.SethPlaylistFile != "" {
+		log.Printf("[TRELLIS] Updating Seth's playlist: %s", config.SethPlaylistFile)
+		sethRecordings := 0
+		for _, r := range recordings {
+			if r.DJ == "Seth" {
+				sethRecordings++
+			}
+		}
+		log.Printf("[TRELLIS] Found %d recordings by Seth", sethRecordings)
+		
 		err = updatePlaylist(recordings, config.SethPlaylistFile, config, func(r Recording) bool {
 			return r.DJ == "Seth"
 		})
 		if err != nil {
+			log.Printf("[TRELLIS] ERROR: Failed to update Seth's playlist: %v", err)
 			return fmt.Errorf("failed to update Seth's playlist: %v", err)
 		}
+		log.Printf("[TRELLIS] Successfully updated Seth's playlist")
+	} else {
+		log.Printf("[TRELLIS] Skipping Seth's playlist (not configured)")
 	}
 
+	log.Printf("[TRELLIS] Updating RSS feed: %s", config.RSSFile)
 	err = updateRssFeed(recordings, config)
 	if err != nil {
+		log.Printf("[TRELLIS] ERROR: Failed to update RSS feed: %v", err)
 		return fmt.Errorf("failed to update RSS feed: %v", err)
 	}
+	log.Printf("[TRELLIS] Successfully updated RSS feed")
 
-	fmt.Println("Playlist updates complete.")
+	log.Printf("[TRELLIS] Playlist and RSS feed updates complete")
 	return nil
 }
 
 func FilterRecentRecordings(recordings []Recording) []Recording {
 	// Filter to only recordings modified in last 72 hours
 	cutoffTime := time.Now().Add(-72 * time.Hour)
+	log.Printf("[TRELLIS] Filtering recordings modified after: %s", cutoffTime.Format(time.RFC3339))
+	
 	var recentRecordings []Recording
-
 	for _, recording := range recordings {
 		if recording.LastModified.After(cutoffTime) {
 			recentRecordings = append(recentRecordings, recording)
 		}
 	}
 
+	log.Printf("[TRELLIS] Found %d recent recordings out of %d total", len(recentRecordings), len(recordings))
 	return recentRecordings
 }
 
 func ListRecordings(config Config) ([]Recording, error) {
 	// Fetch list of recordings
+	log.Printf("[TRELLIS] Fetching recordings list from: %s", config.ListURL)
 	resp, err := http.Get(config.ListURL)
 	if err != nil {
+		log.Printf("[TRELLIS] ERROR: Failed to fetch list of recordings: %v", err)
 		return nil, fmt.Errorf("failed to fetch list of recordings: %v", err)
 	}
 	defer resp.Body.Close()
+	log.Printf("[TRELLIS] Successfully fetched recordings list (status: %s)", resp.Status)
 
+	log.Printf("[TRELLIS] Reading response body...")
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		log.Printf("[TRELLIS] ERROR: Failed to read response body: %v", err)
 		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
+	log.Printf("[TRELLIS] Read %d bytes from response", len(body))
 
 	// Parse XML response
+	log.Printf("[TRELLIS] Parsing XML response...")
 	var result ListBucketResult
 	if err := xml.Unmarshal(body, &result); err != nil {
+		log.Printf("[TRELLIS] ERROR: Failed to parse XML: %v", err)
 		return nil, fmt.Errorf("failed to parse XML: %v", err)
 	}
+	log.Printf("[TRELLIS] Found %d items in bucket listing", len(result.Contents))
 
 	var recordings []Recording
+	var skipped int
 	for _, content := range result.Contents {
-		if content.Key != "" && content.Key[len(content.Key)-4:] == ".mp3" {
+		if content.Key != "" && len(content.Key) > 4 && content.Key[len(content.Key)-4:] == ".mp3" {
 			fullURL := config.BucketURL + "/" + content.Key
+			log.Printf("[TRELLIS] Processing MP3: %s", content.Key)
 			recording, err := parseRecordingInfo(fullURL)
 			if err != nil {
-				fmt.Printf("Failed to parse recording info for %s: %v\n", fullURL, err)
+				log.Printf("[TRELLIS] WARNING: Failed to parse recording info for %s: %v", fullURL, err)
+				skipped++
 				continue
 			}
 			recording.Key = content.Key
 			recording.LastModified = content.LastModified
 			recordings = append(recordings, recording)
+			log.Printf("[TRELLIS] Added recording: %s by %s (%s)", recording.Show, recording.DJ, recording.Date)
+		} else {
+			if content.Key != "" {
+				log.Printf("[TRELLIS] Skipping non-MP3 file: %s", content.Key)
+			}
 		}
 	}
 
+	log.Printf("[TRELLIS] Processed %d MP3 files, %d parsed successfully, %d skipped", len(result.Contents), len(recordings), skipped)
+
 	// Sort recordings by date in descending order
+	log.Printf("[TRELLIS] Sorting recordings by date (newest first)...")
 	sort.Slice(recordings, func(i, j int) bool {
 		dateI, _ := time.Parse("January 02, 2006", recordings[i].Date)
 		dateJ, _ := time.Parse("January 02, 2006", recordings[j].Date)
 		return dateI.After(dateJ)
 	})
+	log.Printf("[TRELLIS] Recordings sorted successfully")
 
 	return recordings, nil
 }

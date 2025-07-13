@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -20,55 +20,64 @@ func main() {
 	flag.Parse()
 
 	if *dryRun {
-		fmt.Println("🔍 DRY RUN: Update recordings workflow")
+		log.Printf("[WORKFLOW] 🔍 Starting recordings update workflow (DRY RUN)")
 	} else {
-		fmt.Println("🎵 Starting recordings update workflow...")
+		log.Printf("[WORKFLOW] 🎵 Starting recordings update workflow")
 	}
+
+	log.Printf("[WORKFLOW] Configuration:")
+	log.Printf("[WORKFLOW] - Dry run: %v", *dryRun)
+	log.Printf("[WORKFLOW] - Skip ACL: %v", *skipACL)
+	log.Printf("[WORKFLOW] - Skip metadata: %v", *skipMetadata)
+	log.Printf("[WORKFLOW] - Skip playlists: %v", *skipPlaylists)
 
 	// Step 1: Update ACLs for recent recordings
 	if !*skipACL {
-		fmt.Println("\n📋 Step 1: Updating ACLs for recent recordings...")
+		log.Printf("[WORKFLOW] 📋 Step 1: Updating ACLs for recent recordings...")
 		err := acls.UpdateACLs(*dryRun)
 		if err != nil {
-			fmt.Printf("Error updating ACLs: %v\n", err)
+			log.Printf("[WORKFLOW] ERROR: Step 1 failed: %v", err)
 			os.Exit(1)
 		}
+		log.Printf("[WORKFLOW] ✅ Step 1 completed successfully")
 	} else {
-		fmt.Println("\n📋 Step 1: Skipping ACL updates")
+		log.Printf("[WORKFLOW] ⏭️  Step 1: Skipping ACL updates")
 	}
 
 	// Step 2: Add ID3 metadata to recent recordings
 	if !*skipMetadata {
-		fmt.Println("\n🏷️  Step 2: Adding ID3 metadata to recent recordings...")
+		log.Printf("[WORKFLOW] 🏷️  Step 2: Adding ID3 metadata to recent recordings...")
 		err := metadata.UpdateMetadata(*dryRun)
 		if err != nil {
-			fmt.Printf("Error updating metadata: %v\n", err)
+			log.Printf("[WORKFLOW] ERROR: Step 2 failed: %v", err)
 			os.Exit(1)
 		}
+		log.Printf("[WORKFLOW] ✅ Step 2 completed successfully")
 	} else {
-		fmt.Println("\n🏷️  Step 2: Skipping metadata updates")
+		log.Printf("[WORKFLOW] ⏭️  Step 2: Skipping metadata updates")
 	}
 
 	// Step 3: Generate playlists and RSS feed
 	if !*skipPlaylists {
-		fmt.Println("\n📻 Step 3: Updating playlists and RSS feed...")
+		log.Printf("[WORKFLOW] 📻 Step 3: Updating playlists and RSS feed...")
 		if *dryRun {
-			fmt.Println("   Would regenerate playlists and RSS feed")
+			log.Printf("[WORKFLOW] DRY RUN: Would regenerate playlists and RSS feed")
 		} else {
 			err := updatePlaylists()
 			if err != nil {
-				fmt.Printf("Error updating playlists: %v\n", err)
+				log.Printf("[WORKFLOW] ERROR: Step 3 failed: %v", err)
 				os.Exit(1)
 			}
 		}
+		log.Printf("[WORKFLOW] ✅ Step 3 completed successfully")
 	} else {
-		fmt.Println("\n📻 Step 3: Skipping playlist updates")
+		log.Printf("[WORKFLOW] ⏭️  Step 3: Skipping playlist updates")
 	}
 
 	if *dryRun {
-		fmt.Println("\n✅ Dry run complete - no changes were made")
+		log.Printf("[WORKFLOW] 🎯 Dry run complete - no changes were made")
 	} else {
-		fmt.Println("\n✅ Recordings update workflow complete!")
+		log.Printf("[WORKFLOW] 🎉 Recordings update workflow complete!")
 	}
 }
 
