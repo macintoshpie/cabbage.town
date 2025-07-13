@@ -39,34 +39,53 @@ Automated tools for managing Cabbage Town Radio recordings, playlists, and metad
 
 ## Usage
 
-### Generate playlists and RSS feed
+### Full recordings update workflow (recommended)
+```bash
+# Run complete workflow
+go run ./cmd/update_recordings
+
+# Dry run to see what would be changed
+go run ./cmd/update_recordings -dry-run
+
+# Skip specific steps
+go run ./cmd/update_recordings -skip-acl
+go run ./cmd/update_recordings -skip-metadata  
+go run ./cmd/update_recordings -skip-playlists
+```
+
+### Individual commands (for development/debugging)
+
+#### Generate playlists and RSS feed only
 ```bash
 go run ./cmd/trellis
 ```
 
-### Update ACLs for recent recordings
+#### Update ACLs for recent recordings only
 ```bash
 go run ./cmd/update_acls
 ```
 
-### Add ID3 metadata to recent recordings
+#### Add ID3 metadata to recent recordings only
 ```bash
 go run ./cmd/add_metadata
-```
 
-### Test metadata processing (dry run)
-```bash
+# Test metadata processing (dry run)
 go run ./cmd/add_metadata -dry-run
 ```
-This downloads files, applies metadata, and saves them locally without uploading back to the bucket.
 
 ## Automated Workflow
 
-The GitHub Actions workflow runs daily at midnight ET and:
-1. Updates ACLs for recordings modified in the last 72 hours
-2. Adds ID3 metadata (title, artist, album, year, genre) to recent recordings that haven't been processed yet
-3. Regenerates playlists and RSS feed
-4. Commits changes to the repository
+The GitHub Actions workflow runs daily at midnight ET using the unified `update_recordings` command:
+1. **Update ACLs** - Makes recent recordings public (respects manual privacy settings)
+2. **Add ID3 metadata** - Adds title, artist, album, year, genre to unprocessed files
+3. **Generate playlists/feed** - Updates M3U playlists and RSS feed
+4. **Commit changes** - Automatically commits updated playlists/feed to git
+
+You can run the same workflow locally:
+```bash
+go run ./cmd/update_recordings -dry-run  # Test first
+go run ./cmd/update_recordings           # Run for real
+```
 
 ## Metadata Processing Notes
 

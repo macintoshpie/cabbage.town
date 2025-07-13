@@ -36,26 +36,12 @@ jobs:
       - name: Install ID3 tools
         run: pip install eyeD3
 
-      - name: Update ACLs
+      - name: Update Recordings
         env:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
         working-directory: scripts/trellis
-        run: go run cmd/update_acls/main.go
-
-      - name: Add ID3 metadata to MP3 files
-        env:
-          DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
-          DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
-        working-directory: scripts/trellis
-        run: go run cmd/add_metadata/main.go
-
-      - name: Update Playlists and Feed
-        env:
-          DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
-          DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
-        working-directory: scripts/trellis
-        run: go run cmd/trellis/main.go
+        run: go run cmd/update_recordings/main.go
 
       - name: Commit and push changes
         run: |
