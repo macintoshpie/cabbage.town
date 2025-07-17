@@ -553,7 +553,7 @@
 
                     async function fetchAndDisplayRecordings() {
                         try {
-                            const response = await fetch('/feed.xml');
+                            const response = await fetch('/feed.xml?_=' + Date.now());
                             const text = await response.text();
                             const parser = new DOMParser();
                             const xmlDoc = parser.parseFromString(text, 'text/xml');
