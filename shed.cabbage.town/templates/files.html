@@ -152,6 +152,36 @@
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
     }
+
+    .file-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .metadata-section {
+      margin-top: 8px;
+      font-family: monospace;
+      font-size: 0.85em;
+      color: #555;
+      background: #f8f9fa;
+      padding: 8px;
+      border-radius: 4px;
+      max-height: 100px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .file-size {
+      color: #2196F3;
+      font-weight: 500;
+    }
+
+    .last-modified {
+      color: #666;
+    }
   </style>
 </head>
 
@@ -170,8 +200,20 @@
     {{range .Files}}
     <div class="file-item">
       <div class="file-info">
-        <span class="file-name">{{.Key}}</span>
-        <span class="file-owner">Owner: {{.Owner}}</span>
+        <div>
+          <div class="file-name">{{.Key}}</div>
+          <div class="file-details">
+            <span class="file-owner">Owner: {{.Owner}}</span>
+            <span class="file-size">Size: {{printf "%.2f" .SizeMB}} MB</span>
+            <span class="last-modified">Modified: {{.LastModified.Format "Jan 02, 2006 15:04:05 MST"}}</span>
+            <div class="metadata-section">
+              <strong>Metadata:</strong>
+              {{range $key, $value := .Metadata}}
+              {{$key}}: {{$value}}
+              {{end}}
+            </div>
+          </div>
+        </div>
         <span class="file-access {{if .IsPublic}}public{{else}}private{{end}}">
           {{if .IsPublic}}Public{{else}}Private{{end}}
         </span>

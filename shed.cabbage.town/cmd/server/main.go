@@ -103,9 +103,12 @@ type ToggleAdminRequest struct {
 }
 
 type FileInfo struct {
-	Key      string `json:"key"`
-	IsPublic bool   `json:"isPublic"`
-	Owner    string `json:"owner"`
+	Key          string             `json:"key"`
+	IsPublic     bool               `json:"isPublic"`
+	Owner        string             `json:"owner"`
+	SizeMB       float64            `json:"sizeMB"` // Changed from SizeBytes
+	LastModified time.Time          `json:"lastModified"`
+	Metadata     map[string]*string `json:"metadata"`
 }
 
 type ToggleAccessRequest struct {
@@ -228,6 +231,13 @@ func listFilesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		// Get object metadata
+		headOutput, err := bucketClient.HeadObject(*obj.Key)
+		if err != nil {
+			log.Printf("Error getting object metadata for %s: %v", *obj.Key, err)
+			continue
+		}
+
 		// Extract owner username from the path
 		pathParts := strings.Split(*obj.Key, "/")
 		var owner string
@@ -235,10 +245,16 @@ func listFilesHandler(w http.ResponseWriter, r *http.Request) {
 			owner = pathParts[1] // recordings/<username>/file.mp3
 		}
 
+		// Convert size to MB with 2 decimal precision
+		sizeMB := float64(*headOutput.ContentLength) / 1048576.0 // 1024 * 1024
+
 		files = append(files, FileInfo{
-			Key:      *obj.Key,
-			IsPublic: isPublic,
-			Owner:    owner,
+			Key:          *obj.Key,
+			IsPublic:     isPublic,
+			Owner:        owner,
+			SizeMB:       sizeMB,
+			LastModified: *headOutput.LastModified,
+			Metadata:     headOutput.Metadata,
 		})
 	}
 
