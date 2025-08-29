@@ -9,8 +9,8 @@
     <atom:link href="https://cabbage.town/feed.xml" rel="self" type="application/rss+xml"></atom:link>
     <description>Live recordings from Cabbage Town Radio</description>
     <language>en-us</language>
-    <pubDate>Thu, 28 Aug 2025 05:04:51 +0000</pubDate>
-    <lastBuildDate>Thu, 28 Aug 2025 05:04:51 +0000</lastBuildDate>
+    <pubDate>Fri, 29 Aug 2025 05:04:48 +0000</pubDate>
+    <lastBuildDate>Fri, 29 Aug 2025 05:04:48 +0000</lastBuildDate>
     <generator>Cabbage Town Radio Feed Generator</generator>
     <itunes:author>Cabbage Town Radio</itunes:author>
     <itunes:owner>
@@ -23,6 +23,16 @@
     </itunes:category>
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
+    <item>
+      <title>Late Nights Like These with Nights Like These</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250828-205726.mp3</link>
+      <description>Episode of Late Nights Like These with Nights Like These, recorded on August 28, 2025</description>
+      <pubDate>Thu, 28 Aug 2025 00:00:00 +0000</pubDate>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250828-205726.mp3</guid>
+      <itunes:duration>3600</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250828-205726.mp3" length="0" type="audio/mpeg"></enclosure>
+    </item>
     <item>
       <title>IS WiLD hour with DJ CHICAGO STYLE</title>
       <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250826-200012.mp3</link>
@@ -84,16 +94,6 @@
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150005.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
-      <title>IS WiLD hour with DJ CHICAGO STYLE</title>
-      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3</link>
-      <description>Episode of IS WiLD hour with DJ CHICAGO STYLE, recorded on August 12, 2025</description>
-      <pubDate>Tue, 12 Aug 2025 00:00:00 +0000</pubDate>
-      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3</guid>
-      <itunes:duration>3600</itunes:duration>
-      <itunes:explicit>false</itunes:explicit>
-      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3" length="0" type="audio/mpeg"></enclosure>
-    </item>
-    <item>
       <title>tracks from terminus with the conductor</title>
       <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150816.mp3</link>
       <description>Episode of tracks from terminus with the conductor, recorded on August 12, 2025</description>
@@ -102,6 +102,16 @@
       <itunes:duration>3600</itunes:duration>
       <itunes:explicit>false</itunes:explicit>
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150816.mp3" length="0" type="audio/mpeg"></enclosure>
+    </item>
+    <item>
+      <title>IS WiLD hour with DJ CHICAGO STYLE</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3</link>
+      <description>Episode of IS WiLD hour with DJ CHICAGO STYLE, recorded on August 12, 2025</description>
+      <pubDate>Tue, 12 Aug 2025 00:00:00 +0000</pubDate>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3</guid>
+      <itunes:duration>3600</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
       <title>mulch channel with dj ted</title>
@@ -225,16 +235,6 @@
     </item>
     <item>
       <title>Late Nights Like These with Nights Like These</title>
-      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-205938.mp3</link>
-      <description>Episode of Late Nights Like These with Nights Like These, recorded on July 17, 2025</description>
-      <pubDate>Thu, 17 Jul 2025 00:00:00 +0000</pubDate>
-      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-205938.mp3</guid>
-      <itunes:duration>3600</itunes:duration>
-      <itunes:explicit>false</itunes:explicit>
-      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-205938.mp3" length="0" type="audio/mpeg"></enclosure>
-    </item>
-    <item>
-      <title>Late Nights Like These with Nights Like These</title>
       <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-210301.mp3</link>
       <description>Episode of Late Nights Like These with Nights Like These, recorded on July 17, 2025</description>
       <pubDate>Thu, 17 Jul 2025 00:00:00 +0000</pubDate>
@@ -242,6 +242,16 @@
       <itunes:duration>3600</itunes:duration>
       <itunes:explicit>false</itunes:explicit>
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-210301.mp3" length="0" type="audio/mpeg"></enclosure>
+    </item>
+    <item>
+      <title>Late Nights Like These with Nights Like These</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-205938.mp3</link>
+      <description>Episode of Late Nights Like These with Nights Like These, recorded on July 17, 2025</description>
+      <pubDate>Thu, 17 Jul 2025 00:00:00 +0000</pubDate>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-205938.mp3</guid>
+      <itunes:duration>3600</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-205938.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
       <title>Home Cooking Show with Seth</title>
