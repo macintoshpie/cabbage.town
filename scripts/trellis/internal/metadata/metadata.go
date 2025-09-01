@@ -76,7 +76,7 @@ func UpdateMetadata(bucketClient *bucket.Client, dryRun bool) error {
 
 func addID3Metadata(recording trellis.Recording, bucketClient *bucket.Client, dryRun bool) error {
 	log.Printf("[METADATA] Processing file: %s", recording.Key)
-	
+
 	// Create temporary directory
 	log.Printf("[METADATA] Creating temporary directory...")
 	tempDir, err := os.MkdirTemp("", "id3_processing")
@@ -85,7 +85,7 @@ func addID3Metadata(recording trellis.Recording, bucketClient *bucket.Client, dr
 		return fmt.Errorf("failed to create temp dir: %v", err)
 	}
 	log.Printf("[METADATA] Created temp directory: %s", tempDir)
-	
+
 	// Only clean up temp dir if not in dry run mode
 	if !dryRun {
 		defer func() {
@@ -111,12 +111,7 @@ func addID3Metadata(recording trellis.Recording, bucketClient *bucket.Client, dr
 	}
 	log.Printf("[METADATA] Retrieved metadata, found %d metadata fields", len(headOutput.Metadata))
 
-	// Check if already processed (check both lowercase and capitalized versions)
-	// Check both possible cases since AWS metadata keys can be capitalized
-	if processed, exists := headOutput.Metadata["id3-processed"]; exists && *processed == "true" {
-		log.Printf("[METADATA] File already processed, skipping: %s", key)
-		return fmt.Errorf("SKIP_ALREADY_PROCESSED")
-	}
+	// Check if already processed
 	if processed, exists := headOutput.Metadata["Id3-Processed"]; exists && *processed == "true" {
 		log.Printf("[METADATA] File already processed, skipping: %s", key)
 		return fmt.Errorf("SKIP_ALREADY_PROCESSED")
@@ -177,7 +172,7 @@ func addID3Metadata(recording trellis.Recording, bucketClient *bucket.Client, dr
 	log.Printf("[METADATA] - Album: Cabbage Town Radio")
 	log.Printf("[METADATA] - Year: %s", year)
 	log.Printf("[METADATA] - Genre: Electronic")
-	
+
 	cmd := exec.Command("eyeD3",
 		"-t", title,
 		"-a", recording.DJ,
@@ -209,7 +204,7 @@ func addID3Metadata(recording trellis.Recording, bucketClient *bucket.Client, dr
 		for k, v := range headOutput.Metadata {
 			updatedMetadata[k] = v
 		}
-		updatedMetadata["id3-processed"] = aws.String("true")
+		updatedMetadata["Id3-Processed"] = aws.String("true")
 		log.Printf("[METADATA] Added id3-processed=true flag, total metadata fields: %d", len(updatedMetadata))
 
 		// Determine ACL from existing permissions

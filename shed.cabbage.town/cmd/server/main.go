@@ -516,8 +516,8 @@ func toggleAccessHandler(w http.ResponseWriter, r *http.Request) {
 	for k, v := range headOutput.Metadata {
 		mergedMetadata[k] = v
 	}
-	mergedMetadata["manually-privated"] = aws.String(fmt.Sprintf("%v", !req.MakePublic))
-	mergedMetadata["privacy-timestamp"] = aws.String(time.Now().UTC().Format(time.RFC3339))
+	mergedMetadata["Manually-Privated"] = aws.String(fmt.Sprintf("%v", !req.MakePublic))
+	mergedMetadata["Privacy-Timestamp"] = aws.String(time.Now().UTC().Format(time.RFC3339))
 
 	// Update object with merged metadata and new ACL
 	_, err = bucketClient.CopyObject(&s3.CopyObjectInput{

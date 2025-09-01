@@ -110,22 +110,10 @@ func UpdateACLs(dryRun bool) error {
 							Key:    obj.Key,
 						})
 						if err == nil && headOutput.Metadata != nil {
-							if manuallyPrivated, ok := headOutput.Metadata["manually-privated"]; ok && *manuallyPrivated == "true" {
+							if manuallyPrivated, ok := headOutput.Metadata["Manually-Privated"]; ok && *manuallyPrivated == "true" {
 								log.Printf("[ACL] File has manually-privated=true metadata: %s", *obj.Key)
-								if privacyTimestamp, ok := headOutput.Metadata["privacy-timestamp"]; ok {
-									if ts, err := time.Parse(time.RFC3339, *privacyTimestamp); err == nil {
-										if ts.After(*obj.LastModified) {
-											log.Printf("[ACL] Privacy timestamp (%s) is newer than file modification (%s), respecting manual privacy setting: %s", ts.Format(time.RFC3339), obj.LastModified.Format(time.RFC3339), *obj.Key)
-											continue
-										} else {
-											log.Printf("[ACL] Privacy timestamp (%s) is older than file modification (%s), proceeding with public ACL: %s", ts.Format(time.RFC3339), obj.LastModified.Format(time.RFC3339), *obj.Key)
-										}
-									} else {
-										log.Printf("[ACL] WARNING: Could not parse privacy timestamp for %s: %v", *obj.Key, err)
-									}
-								} else {
-									log.Printf("[ACL] File has manually-privated=true but no privacy-timestamp: %s", *obj.Key)
-								}
+								// Simply respect the manual privacy setting
+								continue
 							} else {
 								log.Printf("[ACL] File does not have manual privacy metadata: %s", *obj.Key)
 							}
