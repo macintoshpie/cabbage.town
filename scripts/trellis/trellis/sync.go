@@ -24,7 +24,6 @@ type Config struct {
 	SethPlaylistFile string // Additional playlist file for Seth's recordings only
 }
 
-
 type Recording struct {
 	URL          string
 	Key          string
@@ -32,6 +31,7 @@ type Recording struct {
 	Show         string
 	Date         string
 	LastModified time.Time
+	DisplayName  string
 }
 
 type RSS struct {
@@ -90,6 +90,7 @@ type Item struct {
 	GUID        string    `xml:"guid"`
 	Duration    string    `xml:"itunes:duration"`
 	Explicit    string    `xml:"itunes:explicit"`
+	Author      string    `xml:"itunes:author"`
 	Enclosure   Enclosure `xml:"enclosure"`
 }
 
@@ -134,7 +135,7 @@ func Run(config Config) error {
 			}
 		}
 		log.Printf("[TRELLIS] Found %d recordings by Seth", sethRecordings)
-		
+
 		err = updatePlaylist(recordings, config.SethPlaylistFile, config, func(r Recording) bool {
 			return r.DJ == "Seth"
 		})
@@ -163,7 +164,7 @@ func FilterRecentRecordings(recordings []Recording) []Recording {
 	// Filter to only recordings modified in last 72 hours
 	cutoffTime := time.Now().Add(-72 * time.Hour)
 	log.Printf("[TRELLIS] Filtering recordings modified after: %s", cutoffTime.Format(time.RFC3339))
-	
+
 	var recentRecordings []Recording
 	for _, recording := range recordings {
 		if recording.LastModified.After(cutoffTime) {
@@ -205,6 +206,16 @@ func ListRecordings(config Config) ([]Recording, error) {
 			if obj.LastModified != nil {
 				recording.LastModified = *obj.LastModified
 			}
+
+			// Get object metadata to check for display name
+			headOutput, err := config.BucketClient.HeadObject(*obj.Key)
+			if err == nil && headOutput.Metadata != nil {
+				log.Printf("[TRELLIS] Metadata: %v", headOutput.Metadata)
+				if displayName, ok := headOutput.Metadata["Display-Name"]; ok && displayName != nil {
+					recording.DisplayName = *displayName
+				}
+			}
+
 			recordings = append(recordings, recording)
 			log.Printf("[TRELLIS] Added recording: %s by %s (%s)", recording.Show, recording.DJ, recording.Date)
 		} else {
@@ -261,7 +272,12 @@ func updatePlaylist(recordings []Recording, outputFile string, config Config, fi
 	// Update playlist with sorted recordings that match the filter
 	for _, recording := range recordings {
 		if filter == nil || filter(recording) {
-			entry := fmt.Sprintf("#EXTINF:-1,%s - %s (%s)\n%s\n", recording.Show, recording.DJ, recording.Date, recording.URL)
+			// Use display name if available, otherwise use default format
+			title := fmt.Sprintf("%s - %s (%s)", recording.Show, recording.DJ, recording.Date)
+			if recording.DisplayName != "" {
+				title = recording.DisplayName
+			}
+			entry := fmt.Sprintf("#EXTINF:-1,%s\n%s\n", title, recording.URL)
 			if err := appendToFile(outputFilePath, entry); err != nil {
 				return fmt.Errorf("failed to append to playlist file: %v", err)
 			}
@@ -317,8 +333,14 @@ func updateRssFeed(recordings []Recording, config Config) error {
 			continue
 		}
 
+		// In the updateRssFeed function, modify the item title generation:
+		title := recording.Show
+		if recording.DisplayName != "" {
+			title = recording.DisplayName
+		}
+
 		item := Item{
-			Title: fmt.Sprintf("%s with %s", recording.Show, recording.DJ),
+			Title: title,
 			Link:  recording.URL,
 			Description: fmt.Sprintf("Episode of %s with %s, recorded on %s",
 				recording.Show, recording.DJ, recording.Date),
@@ -326,6 +348,7 @@ func updateRssFeed(recordings []Recording, config Config) error {
 			GUID:     recording.URL,
 			Duration: "3600",
 			Explicit: "false",
+			Author:   recording.DJ,
 			Enclosure: Enclosure{
 				URL:    recording.URL,
 				Type:   "audio/mpeg",

@@ -111,6 +111,19 @@ type FileInfo struct {
 	Metadata     map[string]*string `json:"metadata"`
 }
 
+// Add this helper method
+func (f FileInfo) DisplayName() string {
+	if displayName, ok := f.Metadata["Display-Name"]; ok && displayName != nil {
+		return *displayName
+	}
+	// Extract filename from key as fallback
+	parts := strings.Split(f.Key, "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return f.Key
+}
+
 type ToggleAccessRequest struct {
 	Key        string `json:"key"`
 	MakePublic bool   `json:"makePublic"`
@@ -121,6 +134,11 @@ type FilePermissionCheck struct {
 	IsAdmin bool
 	Owner   string
 	Key     string
+}
+
+type RenameFileRequest struct {
+	Key         string `json:"key"`
+	DisplayName string `json:"displayName"`
 }
 
 // Auth handlers
@@ -525,6 +543,97 @@ func toggleAccessHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Add this near other file handlers
+func renameFileHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req RenameFileRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if err := sanitizeAndValidateKey(req.Key); err != nil {
+		http.Error(w, "Invalid file path", http.StatusBadRequest)
+		return
+	}
+
+	// Perform atomic permission check
+	permCheck := FilePermissionCheck{
+		IsAdmin: isAdmin(username),
+		Owner:   username,
+		Key:     req.Key,
+	}
+
+	if err := checkFilePermissions(permCheck); err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Get existing metadata
+	headOutput, err := bucketClient.HeadObject(req.Key)
+	if err != nil {
+		log.Printf("Error getting object metadata: %v", err)
+		http.Error(w, "Failed to get file metadata", http.StatusInternalServerError)
+		return
+	}
+
+	// Get existing ACL
+	aclOutput, err := bucketClient.GetObjectACL(req.Key)
+	if err != nil {
+		log.Printf("Error getting ACL for %s: %v", req.Key, err)
+		http.Error(w, "Failed to get file ACL", http.StatusInternalServerError)
+		return
+	}
+
+	// Determine if file is public
+	acl := "private"
+	for _, grant := range aclOutput.Grants {
+		if grant.Grantee.URI != nil && *grant.Grantee.URI == "http://acs.amazonaws.com/groups/global/AllUsers" {
+			acl = "public-read"
+			break
+		}
+	}
+
+	// Merge existing metadata with display name
+	mergedMetadata := make(map[string]*string)
+	for k, v := range headOutput.Metadata {
+		mergedMetadata[k] = v
+	}
+	mergedMetadata["Display-Name"] = aws.String(req.DisplayName)
+	mergedMetadata["Display-Name-Timestamp"] = aws.String(time.Now().UTC().Format(time.RFC3339))
+
+	// Update object with merged metadata and preserve existing ACL
+	_, err = bucketClient.CopyObject(&s3.CopyObjectInput{
+		Bucket:            aws.String(bucketClient.Bucket),
+		CopySource:        aws.String(fmt.Sprintf("%s/%s", bucketClient.Bucket, req.Key)),
+		Key:               aws.String(req.Key),
+		MetadataDirective: aws.String("REPLACE"),
+		ACL:               aws.String(acl),
+		Metadata:          mergedMetadata,
+	})
+	if err != nil {
+		log.Printf("Error updating object: %v", err)
+		http.Error(w, "Failed to update file metadata", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(AdminResponse{
+		Success: true,
+		Message: "File renamed successfully",
+	})
+}
+
 // Admin handlers
 func adminUsersPageHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, sessionName)
@@ -862,6 +971,7 @@ func setupRoutes() *mux.Router {
 	protected.HandleFunc("/upload", uploadPageHandler).Methods("GET")
 	protected.HandleFunc("/api/upload", uploadHandler).Methods("POST")
 	protected.HandleFunc("/api/files/toggle-access", toggleAccessHandler).Methods("POST")
+	protected.HandleFunc("/api/files/rename", renameFileHandler).Methods("POST")
 	protected.HandleFunc("/files/{key:.+}", viewFileHandler).Methods("GET")
 
 	// Admin endpoints

@@ -566,6 +566,7 @@
                                 const title = item.getElementsByTagName('title')[0].textContent;
                                 const date = new Date(item.getElementsByTagName('pubDate')[0].textContent);
                                 const audioUrl = item.getElementsByTagName('enclosure')[0].getAttribute('url');
+                                const author = item.getElementsByTagName('itunes:author')[0]?.textContent || '';
 
                                 const formattedDate = date.toLocaleDateString('en-US', {
                                     month: 'long',
@@ -594,7 +595,9 @@
                                 `;
                                 infoSection.innerHTML = `
                                     <div style="font-family: 'Courier New', monospace; font-weight: bold;">${title}</div>
-                                    <div style="color: #666; font-family: 'Courier New', monospace;">${formattedDate}</div>
+                                    <div style="color: #666; font-family: 'Courier New', monospace;">
+                                        ${author ? `<span style="color: #444;">${author}</span> - ` : ''}${formattedDate}
+                                    </div>
                                 `;
 
                                 // Create play button (right side)
