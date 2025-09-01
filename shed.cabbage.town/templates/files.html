@@ -182,6 +182,45 @@
     .last-modified {
       color: #666;
     }
+
+    /* Add new styles for rename functionality */
+    .rename-input {
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9em;
+      width: 300px;
+      margin-right: 8px;
+    }
+
+    .rename-form {
+      display: none;
+      margin-top: 8px;
+      align-items: center;
+    }
+
+    .rename-form.active {
+      display: flex;
+    }
+
+    .button.rename {
+      background-color: #FF9800;
+      color: white;
+    }
+
+    .button.rename:hover {
+      background-color: #F57C00;
+    }
+
+    .button.save-rename {
+      background-color: #4CAF50;
+      min-width: 60px;
+    }
+
+    .button.cancel-rename {
+      background-color: #9e9e9e;
+      min-width: 60px;
+    }
   </style>
 </head>
 
@@ -198,10 +237,15 @@
   <div class="files-container">
     <h2>Your Files</h2>
     {{range .Files}}
-    <div class="file-item">
+    <div class="file-item" id="file-{{.Key}}">
       <div class="file-info">
         <div>
-          <div class="file-name">{{.Key}}</div>
+          <div class="file-name">{{.DisplayName}}</div>
+          <div class="rename-form">
+            <input type="text" class="rename-input" placeholder="Enter new name" value="{{.DisplayName}}">
+            <button class="button save-rename" onclick="saveRename('{{.Key}}', this)">Save</button>
+            <button class="button cancel-rename" onclick="cancelRename(this)">Cancel</button>
+          </div>
           <div class="file-details">
             <span class="file-owner">Owner: {{.Owner}}</span>
             <span class="file-size">Size: {{printf "%.2f" .SizeMB}} MB</span>
@@ -224,6 +268,7 @@
           class="button {{if .IsPublic}}make-private{{else}}make-public{{end}}">
           {{if .IsPublic}}Make Private{{else}}Make Public{{end}}
         </button>
+        <button onclick="startRename(this)" class="button rename">Rename</button>
       </div>
     </div>
     {{end}}
@@ -252,6 +297,61 @@
         .catch(error => {
           console.error('Error:', error);
           alert('Failed to update file access');
+        });
+    }
+
+    // Add new rename functions
+    function startRename(button) {
+      const fileItem = button.closest('.file-item');
+      const renameForm = fileItem.querySelector('.rename-form');
+      const fileName = fileItem.querySelector('.file-name');
+      const renameInput = renameForm.querySelector('.rename-input');
+
+      renameForm.classList.add('active');
+      renameInput.value = fileName.textContent.trim();
+      fileName.style.display = 'none';
+    }
+
+    function cancelRename(button) {
+      const fileItem = button.closest('.file-item');
+      const renameForm = fileItem.querySelector('.rename-form');
+      const fileName = fileItem.querySelector('.file-name');
+
+      renameForm.classList.remove('active');
+      fileName.style.display = 'block';
+    }
+
+    function saveRename(key, button) {
+      const fileItem = button.closest('.file-item');
+      const renameInput = fileItem.querySelector('.rename-input');
+      const newName = renameInput.value.trim();
+
+      if (!newName) {
+        alert('Please enter a valid name');
+        return;
+      }
+
+      fetch('/api/files/rename', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          key: key,
+          displayName: newName
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to rename file');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to rename file');
         });
     }
   </script>
