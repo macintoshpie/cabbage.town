@@ -148,15 +148,33 @@ func updatePlaylists(bucketClient *bucket.Client) error {
 	// Use existing trellis logic
 	outputDir := filepath.Join("..", "..", "public")
 	outputFile := filepath.Join("playlists", "recordings.m3u")
-	sethPlaylistFile := filepath.Join("playlists", "home_cooking.m3u")
 	rssFile := filepath.Join("feed.xml")
 
+	// Define user playlists
+	userPlaylists := []trellis.UserPlaylist{
+		{
+			Username: "seth",
+			Filename: filepath.Join("playlists", "home_cooking.m3u"),
+			Filter: func(r trellis.Recording) bool {
+				return r.DJ == "Seth"
+			},
+		},
+		{
+			Username: "will",
+			Filename: filepath.Join("playlists", "tracks_from_terminus.m3u"),
+			Filter: func(r trellis.Recording) bool {
+				return r.DJ == "the conductor"
+			},
+		},
+		// Add more user playlists here as needed
+	}
+
 	config := trellis.Config{
-		BucketClient:     bucketClient,
-		OutputDir:        outputDir,
-		OutputFile:       outputFile,
-		SethPlaylistFile: sethPlaylistFile,
-		RSSFile:          rssFile,
+		BucketClient:  bucketClient,
+		OutputDir:     outputDir,
+		OutputFile:    outputFile,
+		RSSFile:       rssFile,
+		UserPlaylists: userPlaylists,
 	}
 
 	return trellis.Run(config)

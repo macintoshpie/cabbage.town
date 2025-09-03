@@ -16,12 +16,19 @@ import (
 	"cabbage.town/shed.cabbage.town/pkg/bucket"
 )
 
+type UserPlaylist struct {
+	Username string
+	Filename string
+	Filter   func(Recording) bool
+}
+
 type Config struct {
 	BucketClient     *bucket.Client
 	OutputDir        string
 	OutputFile       string
 	RSSFile          string
 	SethPlaylistFile string // Additional playlist file for Seth's recordings only
+	UserPlaylists    []UserPlaylist
 }
 
 type Recording struct {
@@ -125,29 +132,27 @@ func Run(config Config) error {
 	}
 	log.Printf("[TRELLIS] Successfully updated main playlist")
 
-	// Update Seth's playlist with only his recordings
-	if config.SethPlaylistFile != "" {
-		log.Printf("[TRELLIS] Updating Seth's playlist: %s", config.SethPlaylistFile)
-		sethRecordings := 0
+	// Update user playlists
+	for _, userPlaylist := range config.UserPlaylists {
+		log.Printf("[TRELLIS] Updating playlist for user %s: %s", userPlaylist.Username, userPlaylist.Filename)
+
+		matchingRecordings := 0
 		for _, r := range recordings {
-			if r.DJ == "Seth" {
-				sethRecordings++
+			if userPlaylist.Filter(r) {
+				matchingRecordings++
 			}
 		}
-		log.Printf("[TRELLIS] Found %d recordings by Seth", sethRecordings)
+		log.Printf("[TRELLIS] Found %d matching recordings for user %s", matchingRecordings, userPlaylist.Username)
 
-		err = updatePlaylist(recordings, config.SethPlaylistFile, config, func(r Recording) bool {
-			return r.DJ == "Seth"
-		})
+		err = updatePlaylist(recordings, userPlaylist.Filename, config, userPlaylist.Filter)
 		if err != nil {
-			log.Printf("[TRELLIS] ERROR: Failed to update Seth's playlist: %v", err)
-			return fmt.Errorf("failed to update Seth's playlist: %v", err)
+			log.Printf("[TRELLIS] ERROR: Failed to update playlist for user %s: %v", userPlaylist.Username, err)
+			return fmt.Errorf("failed to update playlist for user %s: %v", userPlaylist.Username, err)
 		}
-		log.Printf("[TRELLIS] Successfully updated Seth's playlist")
-	} else {
-		log.Printf("[TRELLIS] Skipping Seth's playlist (not configured)")
+		log.Printf("[TRELLIS] Successfully updated playlist for user %s", userPlaylist.Username)
 	}
 
+	// Update RSS feed
 	log.Printf("[TRELLIS] Updating RSS feed: %s", config.RSSFile)
 	err = updateRssFeed(recordings, config)
 	if err != nil {
