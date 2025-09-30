@@ -9,8 +9,8 @@
     <atom:link href="https://cabbage.town/feed.xml" rel="self" type="application/rss+xml"></atom:link>
     <description>Live recordings from Cabbage Town Radio</description>
     <language>en-us</language>
-    <pubDate>Mon, 29 Sep 2025 05:06:02 +0000</pubDate>
-    <lastBuildDate>Mon, 29 Sep 2025 05:06:02 +0000</lastBuildDate>
+    <pubDate>Tue, 30 Sep 2025 05:06:06 +0000</pubDate>
+    <lastBuildDate>Tue, 30 Sep 2025 05:06:06 +0000</lastBuildDate>
     <generator>Cabbage Town Radio Feed Generator</generator>
     <itunes:author>Cabbage Town Radio</itunes:author>
     <itunes:owner>
@@ -23,6 +23,17 @@
     </itunes:category>
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
+    <item>
+      <title>mulch channel</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250929-210016.mp3</link>
+      <description>Episode of mulch channel with dj ted, recorded on September 29, 2025</description>
+      <pubDate>Mon, 29 Sep 2025 00:00:00 +0000</pubDate>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250929-210016.mp3</guid>
+      <itunes:duration>3600</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:author>dj ted</itunes:author>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250929-210016.mp3" length="0" type="audio/mpeg"></enclosure>
+    </item>
     <item>
       <title>Late Nights Like These</title>
       <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250925-205930.mp3</link>
@@ -58,17 +69,6 @@
     </item>
     <item>
       <title>IS WiLD hour</title>
-      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250916-200223.mp3</link>
-      <description>Episode of IS WiLD hour with DJ CHICAGO STYLE, recorded on September 16, 2025</description>
-      <pubDate>Tue, 16 Sep 2025 00:00:00 +0000</pubDate>
-      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250916-200223.mp3</guid>
-      <itunes:duration>3600</itunes:duration>
-      <itunes:explicit>false</itunes:explicit>
-      <itunes:author>DJ CHICAGO STYLE</itunes:author>
-      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250916-200223.mp3" length="0" type="audio/mpeg"></enclosure>
-    </item>
-    <item>
-      <title>IS WiLD hour</title>
       <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250916-195710.mp3</link>
       <description>Episode of IS WiLD hour with DJ CHICAGO STYLE, recorded on September 16, 2025</description>
       <pubDate>Tue, 16 Sep 2025 00:00:00 +0000</pubDate>
@@ -77,6 +77,17 @@
       <itunes:explicit>false</itunes:explicit>
       <itunes:author>DJ CHICAGO STYLE</itunes:author>
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250916-195710.mp3" length="0" type="audio/mpeg"></enclosure>
+    </item>
+    <item>
+      <title>IS WiLD hour</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250916-200223.mp3</link>
+      <description>Episode of IS WiLD hour with DJ CHICAGO STYLE, recorded on September 16, 2025</description>
+      <pubDate>Tue, 16 Sep 2025 00:00:00 +0000</pubDate>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250916-200223.mp3</guid>
+      <itunes:duration>3600</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:author>DJ CHICAGO STYLE</itunes:author>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250916-200223.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
       <title>Streets Alive September 2025</title>
@@ -233,15 +244,15 @@
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250814-205646.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
-      <title>IS WiLD hour</title>
-      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3</link>
-      <description>Episode of IS WiLD hour with DJ CHICAGO STYLE, recorded on August 12, 2025</description>
+      <title>tracks from terminus</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150005.mp3</link>
+      <description>Episode of tracks from terminus with the conductor, recorded on August 12, 2025</description>
       <pubDate>Tue, 12 Aug 2025 00:00:00 +0000</pubDate>
-      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3</guid>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150005.mp3</guid>
       <itunes:duration>3600</itunes:duration>
       <itunes:explicit>false</itunes:explicit>
-      <itunes:author>DJ CHICAGO STYLE</itunes:author>
-      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3" length="0" type="audio/mpeg"></enclosure>
+      <itunes:author>the conductor</itunes:author>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150005.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
       <title>tracks from terminus</title>
@@ -255,15 +266,15 @@
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150816.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
-      <title>tracks from terminus</title>
-      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150005.mp3</link>
-      <description>Episode of tracks from terminus with the conductor, recorded on August 12, 2025</description>
+      <title>IS WiLD hour</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3</link>
+      <description>Episode of IS WiLD hour with DJ CHICAGO STYLE, recorded on August 12, 2025</description>
       <pubDate>Tue, 12 Aug 2025 00:00:00 +0000</pubDate>
-      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150005.mp3</guid>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3</guid>
       <itunes:duration>3600</itunes:duration>
       <itunes:explicit>false</itunes:explicit>
-      <itunes:author>the conductor</itunes:author>
-      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150005.mp3" length="0" type="audio/mpeg"></enclosure>
+      <itunes:author>DJ CHICAGO STYLE</itunes:author>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250812-200044.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
       <title>mulch channel</title>
@@ -519,17 +530,6 @@
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/stream_20250703-155600.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
-      <title>IS WiLD hour</title>
-      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250701-200519.mp3</link>
-      <description>Episode of IS WiLD hour with DJ CHICAGO STYLE, recorded on July 01, 2025</description>
-      <pubDate>Tue, 01 Jul 2025 00:00:00 +0000</pubDate>
-      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250701-200519.mp3</guid>
-      <itunes:duration>3600</itunes:duration>
-      <itunes:explicit>false</itunes:explicit>
-      <itunes:author>DJ CHICAGO STYLE</itunes:author>
-      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250701-200519.mp3" length="0" type="audio/mpeg"></enclosure>
-    </item>
-    <item>
       <title>tracks from terminus</title>
       <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250701-220028.mp3</link>
       <description>Episode of tracks from terminus with the conductor, recorded on July 01, 2025</description>
@@ -539,6 +539,17 @@
       <itunes:explicit>false</itunes:explicit>
       <itunes:author>the conductor</itunes:author>
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250701-220028.mp3" length="0" type="audio/mpeg"></enclosure>
+    </item>
+    <item>
+      <title>IS WiLD hour</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250701-200519.mp3</link>
+      <description>Episode of IS WiLD hour with DJ CHICAGO STYLE, recorded on July 01, 2025</description>
+      <pubDate>Tue, 01 Jul 2025 00:00:00 +0000</pubDate>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250701-200519.mp3</guid>
+      <itunes:duration>3600</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:author>DJ CHICAGO STYLE</itunes:author>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250701-200519.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
       <title>mulch channel</title>
@@ -553,17 +564,6 @@
     </item>
     <item>
       <title>Late Nights Like These</title>
-      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-204143.mp3</link>
-      <description>Episode of Late Nights Like These with Nights Like These, recorded on June 26, 2025</description>
-      <pubDate>Thu, 26 Jun 2025 00:00:00 +0000</pubDate>
-      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-204143.mp3</guid>
-      <itunes:duration>3600</itunes:duration>
-      <itunes:explicit>false</itunes:explicit>
-      <itunes:author>Nights Like These</itunes:author>
-      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-204143.mp3" length="0" type="audio/mpeg"></enclosure>
-    </item>
-    <item>
-      <title>Late Nights Like These</title>
       <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-205633.mp3</link>
       <description>Episode of Late Nights Like These with Nights Like These, recorded on June 26, 2025</description>
       <pubDate>Thu, 26 Jun 2025 00:00:00 +0000</pubDate>
@@ -572,6 +572,17 @@
       <itunes:explicit>false</itunes:explicit>
       <itunes:author>Nights Like These</itunes:author>
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-205633.mp3" length="0" type="audio/mpeg"></enclosure>
+    </item>
+    <item>
+      <title>Late Nights Like These</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-204143.mp3</link>
+      <description>Episode of Late Nights Like These with Nights Like These, recorded on June 26, 2025</description>
+      <pubDate>Thu, 26 Jun 2025 00:00:00 +0000</pubDate>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-204143.mp3</guid>
+      <itunes:duration>3600</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:author>Nights Like These</itunes:author>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-204143.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
       <title>The reginajingles show</title>
@@ -707,17 +718,6 @@
     </item>
     <item>
       <title>Home Cooking Show</title>
-      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3</link>
-      <description>Episode of Home Cooking Show with Seth, recorded on June 01, 2025</description>
-      <pubDate>Sun, 01 Jun 2025 00:00:00 +0000</pubDate>
-      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3</guid>
-      <itunes:duration>3600</itunes:duration>
-      <itunes:explicit>false</itunes:explicit>
-      <itunes:author>Seth</itunes:author>
-      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3" length="0" type="audio/mpeg"></enclosure>
-    </item>
-    <item>
-      <title>Home Cooking Show</title>
       <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 3 20250601-000000.mp3</link>
       <description>Episode of Home Cooking Show with Seth, recorded on June 01, 2025</description>
       <pubDate>Sun, 01 Jun 2025 00:00:00 +0000</pubDate>
@@ -726,6 +726,17 @@
       <itunes:explicit>false</itunes:explicit>
       <itunes:author>Seth</itunes:author>
       <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 3 20250601-000000.mp3" length="0" type="audio/mpeg"></enclosure>
+    </item>
+    <item>
+      <title>Home Cooking Show</title>
+      <link>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3</link>
+      <description>Episode of Home Cooking Show with Seth, recorded on June 01, 2025</description>
+      <pubDate>Sun, 01 Jun 2025 00:00:00 +0000</pubDate>
+      <guid>https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3</guid>
+      <itunes:duration>3600</itunes:duration>
+      <itunes:explicit>false</itunes:explicit>
+      <itunes:author>Seth</itunes:author>
+      <enclosure url="https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3" length="0" type="audio/mpeg"></enclosure>
     </item>
     <item>
       <title>IS WiLD hour</title>
