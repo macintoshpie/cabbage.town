@@ -1,0 +1,117 @@
+.post-container {
+  background: white;
+  border-radius: 32px;
+  padding: 32px;
+}
+
+.post-header {
+  margin-bottom: 24px;
+}
+
+.post-title {
+  font-family: 'Cooper Black Regular', monospace;
+  font-size: 2em;
+  margin-bottom: 8px;
+  color: var(--daorange);
+}
+
+.post-meta {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.post-content {
+  line-height: 1.6;
+}
+
+.post-content h1,
+.post-content h2,
+.post-content h3 {
+  font-family: 'Cooper Black Regular', monospace;
+  color: var(--daorange);
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+.post-content h1 {
+  font-size: 1.8em;
+}
+
+.post-content h2 {
+  font-size: 1.5em;
+}
+
+.post-content h3 {
+  font-size: 1.2em;
+}
+
+.post-content p {
+  margin-bottom: 16px;
+}
+
+.post-content a {
+  color: blue;
+  text-decoration: underline;
+}
+
+.post-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.post-content code {
+  background: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.post-content pre {
+  background: #f4f4f4;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.post-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.post-content ul,
+.post-content ol {
+  margin-bottom: 16px;
+  padding-left: 32px;
+}
+
+.post-content li {
+  margin-bottom: 8px;
+}
+
+.back-link {
+  color: blue;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.recording-player {
+  background: var(--daorange);
+  color: white;
+  margin-bottom: 24px;
+}
+
+.recording-player h3 {
+  margin: 0 0 16px 0;
+  font-family: 'Cooper Black Regular', monospace;
+}
+
+.recording-player audio {
+  width: 100%;
+  border-radius: 8px;
+}

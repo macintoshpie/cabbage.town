@@ -140,9 +140,9 @@ func generateRecordingPlayer(post Post) string {
 	recordingURL := fmt.Sprintf("https://cabbagetown.nyc3.digitaloceanspaces.com/%s", post.Metadata.Recording)
 
 	return fmt.Sprintf(`
-            <div class="post-container" style="margin-bottom: 24px; background: var(--daorange); color: white;">
-                <h3 style="margin: 0 0 16px 0; font-family: 'Cooper Black Regular', monospace;">🎵 Listen to this show</h3>
-                <audio controls style="width: 100%%; border-radius: 8px;">
+            <div class="post-container recording-player">
+                <h3>Listen to this show</h3>
+                <audio controls>
                     <source src="%s" type="audio/mpeg">
                     Your browser does not support the audio element.
                 </audio>
@@ -180,138 +180,12 @@ func GeneratePostHTML(post Post, outputDir string) error {
     <link rel="icon" href="../icon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../reset.css">
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="../post.css">
     <style>
-        @font-face {
-            font-family: 'Cooper Black Regular';
-            font-style: normal;
-            font-weight: normal;
-            src: local('Cooper Black Regular'), url('../COOPBL.woff') format('woff');
-        }
-
-        :root {
-            --dagreen: rgb(36, 221, 35);
-            --dayellow: rgb(255, 237, 182);
-            --daorange: rgb(250, 134, 37);
-        }
-
-        body {
-            background: var(--dayellow);
-            color: black;
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            padding: 8px;
-        }
-
-        .main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
         .content {
-            display: flex;
-            flex-direction: column;
             max-width: 700px;
-            gap: 16px;
-            padding: 16px;
             width: 100%%;
-        }
-
-        .post-container {
-            background: white;
-            border-radius: 32px;
-            padding: 32px;
-        }
-
-        .post-header {
-            margin-bottom: 24px;
-        }
-
-        .post-title {
-            font-family: 'Cooper Black Regular', monospace;
-            font-size: 2em;
-            margin-bottom: 8px;
-            color: var(--daorange);
-        }
-
-        .post-meta {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .post-content {
-            line-height: 1.6;
-        }
-
-        .post-content h1,
-        .post-content h2,
-        .post-content h3 {
-            font-family: 'Cooper Black Regular', monospace;
-            color: var(--daorange);
-            margin-top: 24px;
-            margin-bottom: 12px;
-        }
-
-        .post-content h1 { font-size: 1.8em; }
-        .post-content h2 { font-size: 1.5em; }
-        .post-content h3 { font-size: 1.2em; }
-
-        .post-content p {
-            margin-bottom: 16px;
-        }
-
-        .post-content a {
-            color: blue;
-            text-decoration: underline;
-        }
-
-        .post-content img {
-            max-width: 100%%;
-            height: auto;
-            border-radius: 8px;
-            margin: 16px 0;
-        }
-
-        .post-content code {
-            background: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        .post-content pre {
-            background: #f4f4f4;
-            padding: 16px;
-            border-radius: 8px;
-            overflow-x: auto;
-        }
-
-        .post-content pre code {
-            background: none;
-            padding: 0;
-        }
-
-        .post-content ul, .post-content ol {
-            margin-bottom: 16px;
-            padding-left: 32px;
-        }
-
-        .post-content li {
-            margin-bottom: 8px;
-        }
-
-        .back-link {
-            color: blue;
-            text-decoration: none;
-            font-size: 0.9em;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .syne-mono-regular {
-            font-family: "Cooper Black Regular", monospace;
         }
     </style>
 </head>
@@ -325,13 +199,13 @@ func GeneratePostHTML(post Post, outputDir string) error {
         </a>
 
         <div class="content">
-            <a href="/" class="back-link">back to the patch</a>
+            <a href="/" class="back-link">back to home</a>
             %s
             <div class="post-container">
                 <div class="post-header">
                     <h1 class="post-title">%s</h1>
                     <div class="post-meta">
-                        By <strong>%s</strong> · %s
+                        <strong>%s</strong> - %s
                     </div>
                 </div>
                 
@@ -340,7 +214,7 @@ func GeneratePostHTML(post Post, outputDir string) error {
                 </div>
             </div>
 
-            <a href="/" class="back-link">back to the patch</a>
+            <a href="/" class="back-link">back to home</a>
         </div>
     </div>
 </body>
