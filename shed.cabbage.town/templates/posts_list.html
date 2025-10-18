@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Posts - Cabbage Town</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <style>
+    .posts-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .post-item {
+      background: white;
+      margin-bottom: 12px;
+      padding: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .post-item:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .post-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .post-title {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+
+    .post-title a {
+      color: #2c3e50;
+      text-decoration: none;
+    }
+
+    .post-title a:hover {
+      color: #2196F3;
+    }
+
+    .post-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .post-excerpt {
+      color: #555;
+      font-size: 0.95em;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .post-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 0.85em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .post-status.published {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .post-status.draft {
+      background-color: #FF9800;
+      color: white;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9em;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .button.primary {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .button.primary:hover {
+      background-color: #1976D2;
+    }
+
+    .button.success {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .button.success:hover {
+      background-color: #45a049;
+    }
+
+    .button.danger {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .button.danger:hover {
+      background-color: #da190b;
+    }
+
+    .button.warning {
+      background-color: #FF9800;
+      color: white;
+    }
+
+    .button.warning:hover {
+      background-color: #F57C00;
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    nav {
+      background: #2c3e50;
+      padding: 16px;
+      margin-bottom: 32px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      margin-right: 8px;
+    }
+
+    nav a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      background-color: #f5f6fa;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state h3 {
+      color: #2c3e50;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="/files">Files</a>
+    <a href="/posts">Posts</a>
+    {{if .IsAdmin}}
+    <a href="/admin/users">Users</a>
+    {{end}}
+    <a href="/logout">Logout</a>
+  </nav>
+
+  <div class="posts-container">
+    <div class="header-row">
+      <h2>Posts</h2>
+      <a href="/posts/new" class="button success">Create New Post</a>
+    </div>
+
+    {{if .Posts}}
+    {{range .Posts}}
+    <div class="post-item">
+      <div class="post-header">
+        <div class="post-info">
+          <div class="post-title">
+            <a href="/posts/{{.ID}}">{{.Title}}</a>
+          </div>
+          <div class="post-meta">
+            <span>By {{.Author}}</span>
+            <span>•</span>
+            <span>{{.CreatedAt.Format "Jan 02, 2006"}}</span>
+            {{if ne .CreatedAt .UpdatedAt}}
+            <span>•</span>
+            <span>Updated {{.UpdatedAt.Format "Jan 02, 2006"}}</span>
+            {{end}}
+          </div>
+          {{if .Excerpt}}
+          <div class="post-excerpt">{{.Excerpt}}</div>
+          {{end}}
+        </div>
+        <span class="post-status {{if .Published}}published{{else}}draft{{end}}">
+          {{if .Published}}Published{{else}}Draft{{end}}
+        </span>
+      </div>
+      <div class="post-actions">
+        <a href="/posts/{{.ID}}" class="button primary">View</a>
+        {{if or $.IsAdmin (eq .Author $.Username)}}
+        <a href="/posts/{{.ID}}/edit" class="button warning">Edit</a>
+        <button onclick="deletePost('{{.ID}}')" class="button danger">Delete</button>
+        {{end}}
+      </div>
+    </div>
+    {{end}}
+    {{else}}
+    <div class="empty-state">
+      <h3>No posts yet</h3>
+      <p>Create your first post to get started!</p>
+      <a href="/posts/new" class="button success">Create New Post</a>
+    </div>
+    {{end}}
+  </div>
+
+  <script>
+    function deletePost(id) {
+      if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+        return;
+      }
+
+      fetch('/api/posts/' + id, {
+        method: 'DELETE'
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to delete post');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to delete post');
+        });
+    }
+  </script>
+</body>
+
+</html>

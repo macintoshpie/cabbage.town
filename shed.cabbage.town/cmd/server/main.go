@@ -58,6 +58,9 @@ func parseTemplates() *template.Template {
 		"templates/files.html",
 		"templates/admin_users.html",
 		"templates/upload.html",
+		"templates/posts_list.html",
+		"templates/post_editor.html",
+		"templates/post_view.html",
 	)
 	if err != nil {
 		log.Fatalf("[TEMPLATE] Failed to parse templates: %v", err)
@@ -139,6 +142,49 @@ type FilePermissionCheck struct {
 type RenameFileRequest struct {
 	Key         string `json:"key"`
 	DisplayName string `json:"displayName"`
+}
+
+// Post types
+type Post struct {
+	ID        string       `json:"id"`
+	Title     string       `json:"title"`
+	Slug      string       `json:"slug"`
+	Markdown  string       `json:"markdown"`
+	Author    string       `json:"author"`
+	CreatedAt time.Time    `json:"createdAt"`
+	UpdatedAt time.Time    `json:"updatedAt"`
+	Published bool         `json:"published"`
+	DeletedAt *time.Time   `json:"deletedAt,omitempty"`
+	Metadata  PostMetadata `json:"metadata"`
+}
+
+type PostMetadata struct {
+	Tags     []string `json:"tags"`
+	Category string   `json:"category"`
+	Excerpt  string   `json:"excerpt"`
+}
+
+type PostListItem struct {
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	Slug      string    `json:"slug"`
+	Author    string    `json:"author"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Published bool      `json:"published"`
+	Excerpt   string    `json:"excerpt"`
+}
+
+type CreatePostRequest struct {
+	Title     string `json:"title"`
+	Markdown  string `json:"markdown"`
+	Published bool   `json:"published"`
+}
+
+type UpdatePostRequest struct {
+	Title     string `json:"title"`
+	Markdown  string `json:"markdown"`
+	Published bool   `json:"published"`
 }
 
 // Auth handlers
@@ -782,6 +828,466 @@ func toggleAdminHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Post API handlers
+func listPostsAPIHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	posts, err := listPosts()
+	if err != nil {
+		log.Printf("Error listing posts: %v", err)
+		http.Error(w, "Failed to list posts", http.StatusInternalServerError)
+		return
+	}
+
+	// Filter posts based on permissions
+	var filteredPosts []PostListItem
+	admin := isAdmin(username)
+	for _, post := range posts {
+		// Show all published posts, or drafts owned by user, or all if admin
+		if post.Published || post.Author == username || admin {
+			filteredPosts = append(filteredPosts, post)
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(filteredPosts)
+}
+
+func getPostAPIHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	post, err := loadPost(id)
+	if err != nil {
+		log.Printf("Error loading post %s: %v", id, err)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check if post is deleted
+	if post.DeletedAt != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check view permissions
+	admin := isAdmin(username)
+	if !canViewPost(post, username, admin) {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(post)
+}
+
+func createPostAPIHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req CreatePostRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if req.Title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+
+	// Create new post
+	now := time.Now().UTC()
+	post := Post{
+		ID:        generatePostID(req.Title),
+		Title:     req.Title,
+		Slug:      generateSlug(req.Title),
+		Markdown:  req.Markdown,
+		Author:    username,
+		CreatedAt: now,
+		UpdatedAt: now,
+		Published: req.Published,
+		Metadata: PostMetadata{
+			Tags:     []string{},
+			Category: "",
+			Excerpt:  "",
+		},
+	}
+
+	if err := savePost(&post); err != nil {
+		log.Printf("Error saving post: %v", err)
+		http.Error(w, "Failed to save post", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(post)
+}
+
+func updatePostAPIHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	// Load existing post
+	post, err := loadPost(id)
+	if err != nil {
+		log.Printf("Error loading post %s: %v", id, err)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check if post is deleted
+	if post.DeletedAt != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check edit permissions
+	admin := isAdmin(username)
+	if !checkPostPermissions(post, username, admin) {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
+	var req UpdatePostRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if req.Title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+
+	// Update post
+	post.Title = req.Title
+	post.Slug = generateSlug(req.Title)
+	post.Markdown = req.Markdown
+	post.Published = req.Published
+	post.UpdatedAt = time.Now().UTC()
+
+	if err := savePost(post); err != nil {
+		log.Printf("Error updating post: %v", err)
+		http.Error(w, "Failed to update post", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(post)
+}
+
+func deletePostAPIHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	// Load existing post
+	post, err := loadPost(id)
+	if err != nil {
+		log.Printf("Error loading post %s: %v", id, err)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check if already deleted
+	if post.DeletedAt != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check delete permissions
+	admin := isAdmin(username)
+	if !checkPostPermissions(post, username, admin) {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
+	if err := deletePost(id); err != nil {
+		log.Printf("Error deleting post: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "Post deleted successfully",
+	})
+}
+
+func uploadPostImageHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	postID := vars["id"]
+
+	// Load post to verify ownership
+	post, err := loadPost(postID)
+	if err != nil {
+		log.Printf("Error loading post %s: %v", postID, err)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check if post is deleted
+	if post.DeletedAt != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check edit permissions
+	admin := isAdmin(username)
+	if !checkPostPermissions(post, username, admin) {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
+	// Parse multipart form
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB max
+		http.Error(w, "File too large", http.StatusBadRequest)
+		return
+	}
+
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Failed to get image from request", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Validate file extension
+	ext := filepath.Ext(header.Filename)
+	allowedExts := map[string]bool{
+		".jpg":  true,
+		".jpeg": true,
+		".png":  true,
+		".gif":  true,
+		".webp": true,
+	}
+	if !allowedExts[strings.ToLower(ext)] {
+		http.Error(w, "Invalid image format. Allowed: jpg, jpeg, png, gif, webp", http.StatusBadRequest)
+		return
+	}
+
+	// Generate safe filename
+	timestamp := time.Now().UTC().Format("20060102-150405")
+	safeFilename := regexp.MustCompile(`[^a-zA-Z0-9._-]`).ReplaceAllString(header.Filename, "")
+	filename := fmt.Sprintf("%s-%s", timestamp, safeFilename)
+
+	// Store at posts/images/<post-id>/<filename>
+	key := fmt.Sprintf("posts/images/%s/%s", postID, filename)
+
+	// Upload with public-read ACL
+	contentType := header.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	// Create metadata for the image
+	metadata := map[string]*string{
+		"Post-Id":     aws.String(postID),
+		"Uploaded-By": aws.String(username),
+		"Upload-Time": aws.String(time.Now().UTC().Format(time.RFC3339)),
+	}
+
+	err = bucketClient.PutObjectWithMetadata(key, file, contentType, metadata, "public-read")
+	if err != nil {
+		log.Printf("Error uploading image: %v", err)
+		http.Error(w, "Failed to upload image", http.StatusInternalServerError)
+		return
+	}
+
+	// Return the public URL
+	url := fmt.Sprintf("https://%s.nyc3.digitaloceanspaces.com/%s", bucketClient.Bucket, key)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"url": url,
+	})
+}
+
+// Post page handlers
+func postsListPageHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	posts, err := listPosts()
+	if err != nil {
+		log.Printf("Error listing posts: %v", err)
+		http.Error(w, "Failed to list posts", http.StatusInternalServerError)
+		return
+	}
+
+	// Filter posts based on permissions
+	var filteredPosts []PostListItem
+	admin := isAdmin(username)
+	for _, post := range posts {
+		// Show all published posts, or drafts owned by user, or all if admin
+		if post.Published || post.Author == username || admin {
+			filteredPosts = append(filteredPosts, post)
+		}
+	}
+
+	data := struct {
+		Posts    []PostListItem
+		Username string
+		IsAdmin  bool
+	}{
+		Posts:    filteredPosts,
+		Username: username,
+		IsAdmin:  admin,
+	}
+
+	if err := templates.ExecuteTemplate(w, "posts_list.html", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func postEditorPageHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	admin := isAdmin(username)
+	var post *Post
+	var err error
+
+	if id != "" {
+		// Edit existing post
+		post, err = loadPost(id)
+		if err != nil {
+			log.Printf("Error loading post %s: %v", id, err)
+			http.Error(w, "Post not found", http.StatusNotFound)
+			return
+		}
+
+		// Check if post is deleted
+		if post.DeletedAt != nil {
+			http.Error(w, "Post not found", http.StatusNotFound)
+			return
+		}
+
+		// Check edit permissions
+		if !checkPostPermissions(post, username, admin) {
+			http.Error(w, "Unauthorized", http.StatusForbidden)
+			return
+		}
+	}
+
+	data := struct {
+		Post     *Post
+		Username string
+		IsAdmin  bool
+	}{
+		Post:     post,
+		Username: username,
+		IsAdmin:  admin,
+	}
+
+	if err := templates.ExecuteTemplate(w, "post_editor.html", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func postViewPageHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	post, err := loadPost(id)
+	if err != nil {
+		log.Printf("Error loading post %s: %v", id, err)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check if post is deleted
+	if post.DeletedAt != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Check view permissions
+	admin := isAdmin(username)
+	if !canViewPost(post, username, admin) {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
+		return
+	}
+
+	canEdit := checkPostPermissions(post, username, admin)
+
+	data := struct {
+		Post     *Post
+		Username string
+		IsAdmin  bool
+		CanEdit  bool
+	}{
+		Post:     post,
+		Username: username,
+		IsAdmin:  admin,
+		CanEdit:  canEdit,
+	}
+
+	if err := templates.ExecuteTemplate(w, "post_view.html", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 // Helper functions
 func isValidCredentials(username, password string) bool {
 	users.mu.RLock()
@@ -938,7 +1444,7 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net maxcdn.bootstrapcdn.com; font-src 'self' maxcdn.bootstrapcdn.com; img-src 'self' data: https://cabbagetown.nyc3.digitaloceanspaces.com;")
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 		next.ServeHTTP(w, r)
@@ -973,6 +1479,22 @@ func setupRoutes() *mux.Router {
 	protected.HandleFunc("/api/files/toggle-access", toggleAccessHandler).Methods("POST")
 	protected.HandleFunc("/api/files/rename", renameFileHandler).Methods("POST")
 	protected.HandleFunc("/files/{key:.+}", viewFileHandler).Methods("GET")
+
+	// Post page endpoints
+	protected.HandleFunc("/posts", postsListPageHandler).Methods("GET")
+	protected.HandleFunc("/posts/new", func(w http.ResponseWriter, r *http.Request) {
+		postEditorPageHandler(w, r)
+	}).Methods("GET")
+	protected.HandleFunc("/posts/{id}", postViewPageHandler).Methods("GET")
+	protected.HandleFunc("/posts/{id}/edit", postEditorPageHandler).Methods("GET")
+
+	// Post API endpoints
+	protected.HandleFunc("/api/posts", listPostsAPIHandler).Methods("GET")
+	protected.HandleFunc("/api/posts", createPostAPIHandler).Methods("POST")
+	protected.HandleFunc("/api/posts/{id}", getPostAPIHandler).Methods("GET")
+	protected.HandleFunc("/api/posts/{id}", updatePostAPIHandler).Methods("PUT")
+	protected.HandleFunc("/api/posts/{id}", deletePostAPIHandler).Methods("DELETE")
+	protected.HandleFunc("/api/posts/{id}/images", uploadPostImageHandler).Methods("POST")
 
 	// Admin endpoints
 	admin := protected.PathPrefix("/api/admin").Subrouter()
@@ -1123,4 +1645,162 @@ func sanitizeAndValidateKey(key string) error {
 	}
 
 	return nil
+}
+
+// Post helper functions
+func generateSlug(title string) string {
+	// Convert to lowercase
+	slug := strings.ToLower(title)
+	// Replace spaces with hyphens
+	slug = strings.ReplaceAll(slug, " ", "-")
+	// Remove all non-alphanumeric characters except hyphens
+	slug = regexp.MustCompile(`[^a-z0-9-]+`).ReplaceAllString(slug, "")
+	// Remove multiple consecutive hyphens
+	slug = regexp.MustCompile(`-+`).ReplaceAllString(slug, "-")
+	// Trim hyphens from start and end
+	slug = strings.Trim(slug, "-")
+	// Limit length to 100 characters
+	if len(slug) > 100 {
+		slug = slug[:100]
+	}
+	return slug
+}
+
+func generatePostID(title string) string {
+	timestamp := time.Now().UTC().Format("2006-01-02-150405")
+	slug := generateSlug(title)
+	return fmt.Sprintf("%s-%s", timestamp, slug)
+}
+
+func getPostKey(id string) string {
+	return fmt.Sprintf("posts/%s.json", id)
+}
+
+func loadPost(id string) (*Post, error) {
+	key := getPostKey(id)
+	result, err := bucketClient.GetObject(key)
+	if err != nil {
+		return nil, fmt.Errorf("error getting post: %v", err)
+	}
+	defer result.Body.Close()
+
+	data, err := ioutil.ReadAll(result.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading post: %v", err)
+	}
+
+	var post Post
+	if err := json.Unmarshal(data, &post); err != nil {
+		return nil, fmt.Errorf("error parsing post: %v", err)
+	}
+
+	return &post, nil
+}
+
+func savePost(post *Post) error {
+	data, err := json.MarshalIndent(post, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error encoding post: %v", err)
+	}
+
+	key := getPostKey(post.ID)
+	err = bucketClient.PutObject(key, data, "application/json")
+	if err != nil {
+		return fmt.Errorf("error uploading post: %v", err)
+	}
+
+	return nil
+}
+
+func listPosts() ([]PostListItem, error) {
+	objects, err := bucketClient.ListObjects("posts/")
+	if err != nil {
+		return nil, fmt.Errorf("failed to list posts: %v", err)
+	}
+
+	var posts []PostListItem
+	for _, obj := range objects {
+		// Skip directories and non-JSON files
+		if strings.HasSuffix(*obj.Key, "/") || !strings.HasSuffix(*obj.Key, ".json") {
+			continue
+		}
+
+		// Load the full post to get its data
+		id := strings.TrimPrefix(*obj.Key, "posts/")
+		id = strings.TrimSuffix(id, ".json")
+
+		post, err := loadPost(id)
+		if err != nil {
+			log.Printf("Error loading post %s: %v", id, err)
+			continue
+		}
+
+		// Skip soft-deleted posts
+		if post.DeletedAt != nil {
+			continue
+		}
+
+		// Generate excerpt from markdown (first 200 chars)
+		excerpt := post.Markdown
+		if len(excerpt) > 200 {
+			excerpt = excerpt[:200] + "..."
+		}
+		// Remove newlines from excerpt
+		excerpt = strings.ReplaceAll(excerpt, "\n", " ")
+
+		posts = append(posts, PostListItem{
+			ID:        post.ID,
+			Title:     post.Title,
+			Slug:      post.Slug,
+			Author:    post.Author,
+			CreatedAt: post.CreatedAt,
+			UpdatedAt: post.UpdatedAt,
+			Published: post.Published,
+			Excerpt:   excerpt,
+		})
+	}
+
+	// Sort by created date, newest first
+	for i := 0; i < len(posts); i++ {
+		for j := i + 1; j < len(posts); j++ {
+			if posts[i].CreatedAt.Before(posts[j].CreatedAt) {
+				posts[i], posts[j] = posts[j], posts[i]
+			}
+		}
+	}
+
+	return posts, nil
+}
+
+func deletePost(id string) error {
+	// Load the post
+	post, err := loadPost(id)
+	if err != nil {
+		return fmt.Errorf("post not found: %v", err)
+	}
+
+	// Soft delete: set DeletedAt timestamp
+	now := time.Now().UTC()
+	post.DeletedAt = &now
+
+	// Save the post with the DeletedAt field
+	if err := savePost(post); err != nil {
+		return fmt.Errorf("failed to soft delete post: %v", err)
+	}
+
+	return nil
+}
+
+func checkPostPermissions(post *Post, username string, isAdmin bool) bool {
+	if isAdmin {
+		return true
+	}
+	return post.Author == username
+}
+
+func canViewPost(post *Post, username string, isAdmin bool) bool {
+	if post.Published {
+		return true // Anyone authenticated can view published posts
+	}
+	return post.Author == username || isAdmin // Only author/admin can view drafts
 }

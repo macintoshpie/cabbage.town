@@ -1,0 +1,13 @@
+{
+  // Disable formatting for Go HTML templates in shed.cabbage.town/templates
+  // Keep them as HTML for syntax highlighting, but disable all formatting
+  "[html]": {
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false
+  },
+  // Disable specific formatters for HTML files
+  "html.format.enable": false,
+  "prettier.disableLanguages": ["html"]
+}
+

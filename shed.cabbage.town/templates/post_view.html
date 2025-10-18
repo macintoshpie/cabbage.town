@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Post.Title}} - Cabbage Town</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <style>
+    .post-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .post-header {
+      background: white;
+      padding: 32px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 24px;
+    }
+
+    .post-title {
+      font-size: 2.5em;
+      font-weight: 700;
+      color: #2c3e50;
+      margin: 0 0 16px 0;
+      line-height: 1.2;
+    }
+
+    .post-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 0.95em;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .post-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 0.85em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-block;
+    }
+
+    .post-status.published {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .post-status.draft {
+      background-color: #FF9800;
+      color: white;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .post-content {
+      background: white;
+      padding: 32px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    .post-content pre {
+      background: #f5f6fa;
+      padding: 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+      border: 1px solid #e0e0e0;
+    }
+
+    .post-content code {
+      background: #f5f6fa;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    .post-content pre code {
+      background: none;
+      padding: 0;
+    }
+
+    .post-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 16px 0;
+    }
+
+    .post-content h1,
+    .post-content h2,
+    .post-content h3,
+    .post-content h4,
+    .post-content h5,
+    .post-content h6 {
+      color: #2c3e50;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .post-content h1 {
+      font-size: 2em;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 8px;
+    }
+
+    .post-content h2 {
+      font-size: 1.6em;
+    }
+
+    .post-content h3 {
+      font-size: 1.3em;
+    }
+
+    .post-content p {
+      margin-bottom: 16px;
+    }
+
+    .post-content ul,
+    .post-content ol {
+      margin-bottom: 16px;
+      padding-left: 32px;
+    }
+
+    .post-content li {
+      margin-bottom: 8px;
+    }
+
+    .post-content blockquote {
+      border-left: 4px solid #2196F3;
+      padding-left: 16px;
+      margin: 16px 0;
+      color: #666;
+      font-style: italic;
+    }
+
+    .post-content a {
+      color: #2196F3;
+      text-decoration: none;
+    }
+
+    .post-content a:hover {
+      text-decoration: underline;
+    }
+
+    .post-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+
+    .post-content table th,
+    .post-content table td {
+      border: 1px solid #e0e0e0;
+      padding: 12px;
+      text-align: left;
+    }
+
+    .post-content table th {
+      background: #f5f6fa;
+      font-weight: 600;
+    }
+
+    .button {
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9em;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .button.primary {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .button.primary:hover {
+      background-color: #1976D2;
+    }
+
+    .button.warning {
+      background-color: #FF9800;
+      color: white;
+    }
+
+    .button.warning:hover {
+      background-color: #F57C00;
+    }
+
+    .button.secondary {
+      background-color: #9e9e9e;
+      color: white;
+    }
+
+    .button.secondary:hover {
+      background-color: #757575;
+    }
+
+    nav {
+      background: #2c3e50;
+      padding: 16px;
+      margin-bottom: 32px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      margin-right: 8px;
+    }
+
+    nav a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      background-color: #f5f6fa;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="/files">Files</a>
+    <a href="/posts">Posts</a>
+    {{if .IsAdmin}}
+    <a href="/admin/users">Users</a>
+    {{end}}
+    <a href="/logout">Logout</a>
+  </nav>
+
+  <div class="post-container">
+    <div class="post-header">
+      <h1 class="post-title">{{.Post.Title}}</h1>
+      <div class="post-meta">
+        <span>By {{.Post.Author}}</span>
+        <span>•</span>
+        <span>{{.Post.CreatedAt.Format "January 02, 2006"}}</span>
+        {{if ne .Post.CreatedAt .Post.UpdatedAt}}
+        <span>•</span>
+        <span>Updated {{.Post.UpdatedAt.Format "January 02, 2006"}}</span>
+        {{end}}
+      </div>
+      <span class="post-status {{if .Post.Published}}published{{else}}draft{{end}}">
+        {{if .Post.Published}}Published{{else}}Draft{{end}}
+      </span>
+      <div class="post-actions">
+        <a href="/posts" class="button secondary">Back to Posts</a>
+        {{if or .IsAdmin .CanEdit}}
+        <a href="/posts/{{.Post.ID}}/edit" class="button warning">Edit Post</a>
+        {{end}}
+      </div>
+    </div>
+
+    <div class="post-content">
+      <pre>{{.Post.Markdown}}</pre>
+    </div>
+  </div>
+</body>
+
+</html>
