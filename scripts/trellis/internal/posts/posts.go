@@ -527,9 +527,9 @@ func fetchRecordingsFromS3(client *bucket.Client) ([]Recording, error) {
 			}
 		}
 
-		// If no display name from metadata, construct one
+		// If no display name from metadata, use the show name
 		if recording.DisplayName == "" {
-			recording.DisplayName = fmt.Sprintf("%s - %s", recording.Show, recording.Date)
+			recording.DisplayName = recording.Show
 		}
 
 		recordings = append(recordings, recording)
@@ -559,11 +559,8 @@ func generatePlaylist(recordings []Recording, outputFile string, outputDir strin
 	// Add filtered recordings to playlist
 	for _, recording := range recordings {
 		if filter == nil || filter(recording) {
-			// Use display name if available, otherwise use default format
-			title := recording.DisplayName
-			if title == "" {
-				title = fmt.Sprintf("%s - %s (%s)", recording.Show, recording.DJ, recording.Date)
-			}
+			// For playlists, include the date to distinguish episodes
+			title := fmt.Sprintf("%s - %s", recording.DisplayName, recording.Date)
 			content += fmt.Sprintf("#EXTINF:-1,%s\n%s\n", title, recording.URL)
 		}
 	}
@@ -668,6 +665,7 @@ func GenerateUnifiedFeed(posts []Post, recordings []Recording, outputDir string)
 				Slug:    post.Slug,
 				Excerpt: post.Metadata.Excerpt,
 			}
+			item.Title = post.Title
 			usedPosts[post.ID] = true
 		}
 
