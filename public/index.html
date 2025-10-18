@@ -768,6 +768,15 @@
                 });
             </script>
 
+            <h3 class="syne-mono-regular">from the patch</h3>
+            <div id="posts-container" style="background: white; border-radius: 32px; padding: 32px;">
+                <div id="posts-list" style="display: flex; flex-direction: column; gap: 16px;">
+                    <p style="color: #666; font-style: italic;">Pulling weeds...</p>
+                </div>
+            </div>
+
+            <br />
+
             <h3 class="syne-mono-regular">news</h3>
             <div
                 style="display: flex; gap: 8px; align-items: flex-start; flex-direction: column; background-color: white; border-radius: 32px; padding: 32px; font-size: 0.8em;">
@@ -1046,6 +1055,68 @@
         await updateNowPlaying();
         setInterval(updateNowPlaying, 1000 * 15);
     })();
+</script>
+
+<script>
+    // Load and display blog posts
+    async function loadPosts() {
+        try {
+            const response = await fetch('/posts.json?_=' + Date.now());
+            if (!response.ok) {
+                throw new Error('Failed to load posts');
+            }
+            
+            const posts = await response.json();
+            const postsList = document.getElementById('posts-list');
+            
+            if (posts.length === 0) {
+                postsList.innerHTML = '<p style="color: #666; font-style: italic;">No posts yet. Check back soon!</p>';
+                return;
+            }
+            
+            postsList.innerHTML = '';
+            
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.style.cssText = `
+                    padding: 16px;
+                    border-radius: 8px;
+                    transition: background-color 0.2s;
+                `;
+                
+                postElement.innerHTML = `
+                    <a href="/patch/${post.slug}.html" style="text-decoration: none; color: inherit;">
+                        <div style="font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1em; margin-bottom: 4px; color: var(--daorange);">
+                            ${post.title}
+                        </div>
+                        <div style="color: #666; font-family: 'Courier New', monospace; font-size: 0.9em; margin-bottom: 8px;">
+                            By <strong>${post.author}</strong> · ${post.date}
+                        </div>
+                        <div style="color: #444; font-family: 'Courier New', monospace; font-size: 0.9em;">
+                            ${post.excerpt}
+                        </div>
+                    </a>
+                `;
+                
+                // Add hover effect
+                postElement.addEventListener('mouseenter', () => {
+                    postElement.style.backgroundColor = '#f9f9f9';
+                });
+                postElement.addEventListener('mouseleave', () => {
+                    postElement.style.backgroundColor = 'transparent';
+                });
+                
+                postsList.appendChild(postElement);
+            });
+        } catch (error) {
+            console.error('Error loading posts:', error);
+            const postsList = document.getElementById('posts-list');
+            postsList.innerHTML = '<p style="color: #666; font-style: italic;">Unable to load posts at the moment.</p>';
+        }
+    }
+    
+    // Load posts when page loads
+    document.addEventListener('DOMContentLoaded', loadPosts);
 </script>
 
 </html>

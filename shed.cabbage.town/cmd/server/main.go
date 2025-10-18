@@ -926,7 +926,7 @@ func createPostAPIHandler(w http.ResponseWriter, r *http.Request) {
 		Metadata: PostMetadata{
 			Tags:     []string{},
 			Category: "",
-			Excerpt:  "",
+			Excerpt:  generateExcerpt(req.Markdown),
 		},
 	}
 
@@ -989,6 +989,7 @@ func updatePostAPIHandler(w http.ResponseWriter, r *http.Request) {
 	post.Markdown = req.Markdown
 	post.Published = req.Published
 	post.UpdatedAt = time.Now().UTC()
+	post.Metadata.Excerpt = generateExcerpt(req.Markdown)
 
 	if err := savePost(post); err != nil {
 		log.Printf("Error updating post: %v", err)
@@ -1664,6 +1665,48 @@ func generateSlug(title string) string {
 		slug = slug[:100]
 	}
 	return slug
+}
+
+func generateExcerpt(markdown string) string {
+	// Strip markdown formatting
+	text := markdown
+
+	// Remove headers (# ## ###)
+	text = regexp.MustCompile(`(?m)^#+\s+`).ReplaceAllString(text, "")
+
+	// Remove links [text](url) -> text
+	text = regexp.MustCompile(`\[([^\]]+)\]\([^\)]+\)`).ReplaceAllString(text, "$1")
+
+	// Remove images ![alt](url)
+	text = regexp.MustCompile(`!\[([^\]]*)\]\([^\)]+\)`).ReplaceAllString(text, "")
+
+	// Remove bold/italic (**text** or *text*)
+	text = regexp.MustCompile(`\*+([^*]+)\*+`).ReplaceAllString(text, "$1")
+
+	// Remove code blocks ```code```
+	text = regexp.MustCompile("(?s)```[^`]+```").ReplaceAllString(text, "")
+
+	// Remove inline code `code`
+	text = regexp.MustCompile("`([^`]+)`").ReplaceAllString(text, "$1")
+
+	// Remove extra whitespace
+	text = regexp.MustCompile(`\s+`).ReplaceAllString(text, " ")
+	text = strings.TrimSpace(text)
+
+	// Truncate to ~200 chars at word boundary
+	maxLen := 200
+	if len(text) <= maxLen {
+		return text
+	}
+
+	// Find last space before maxLen
+	truncated := text[:maxLen]
+	lastSpace := strings.LastIndex(truncated, " ")
+	if lastSpace > 0 {
+		truncated = text[:lastSpace]
+	}
+
+	return truncated + "..."
 }
 
 func generatePostID(title string) string {

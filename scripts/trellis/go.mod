@@ -14,5 +14,6 @@ replace cabbage.town/shed.cabbage.town => ../../shed.cabbage.town
 
 require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/yuin/goldmark v1.7.13 // indirect
 	golang.org/x/net v0.38.0 // indirect
 )
