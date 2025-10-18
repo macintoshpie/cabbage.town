@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/joho/godotenv"
 
 	"cabbage.town/shed.cabbage.town/pkg/bucket"
 	"cabbage.town/trellis/internal/acls"
 	"cabbage.town/trellis/internal/metadata"
-	"cabbage.town/trellis/trellis"
 )
 
 func main() {
@@ -20,7 +18,6 @@ func main() {
 	dryRun := flag.Bool("dry-run", false, "Perform a dry run without making changes")
 	skipACL := flag.Bool("skip-acl", false, "Skip ACL updates")
 	skipMetadata := flag.Bool("skip-metadata", false, "Skip ID3 metadata processing")
-	skipPlaylists := flag.Bool("skip-playlists", false, "Skip playlist/feed generation")
 	flag.Parse()
 
 	// Get subcommand from args
@@ -36,13 +33,8 @@ func main() {
 		// Run all steps (default behavior)
 	case "acls":
 		*skipMetadata = true
-		*skipPlaylists = true
 	case "metadata":
 		*skipACL = true
-		*skipPlaylists = true
-	case "playlists":
-		*skipACL = true
-		*skipMetadata = true
 	default:
 		fmt.Printf("Error: Unknown subcommand '%s'\n", subcommand)
 		fmt.Println("Usage: update_recordings [OPTIONS] [SUBCOMMAND]")
@@ -51,7 +43,6 @@ func main() {
 		fmt.Println("  all        Run all steps (default)")
 		fmt.Println("  acls       Update ACLs for recent recordings only")
 		fmt.Println("  metadata   Add ID3 metadata to recent recordings only")
-		fmt.Println("  playlists  Generate playlists and RSS feed only")
 		fmt.Println("")
 		fmt.Println("Options:")
 		flag.PrintDefaults()
@@ -73,7 +64,6 @@ func main() {
 	log.Printf("[WORKFLOW] - Dry run: %v", *dryRun)
 	log.Printf("[WORKFLOW] - Skip ACL: %v", *skipACL)
 	log.Printf("[WORKFLOW] - Skip metadata: %v", *skipMetadata)
-	log.Printf("[WORKFLOW] - Skip playlists: %v", *skipPlaylists)
 
 	// Load environment variables from .env file
 	log.Printf("[WORKFLOW] Loading environment variables...")
@@ -120,62 +110,9 @@ func main() {
 		log.Printf("[WORKFLOW] ⏭️  Step 2: Skipping metadata updates")
 	}
 
-	// Step 3: Generate playlists and RSS feed
-	if !*skipPlaylists {
-		log.Printf("[WORKFLOW] 📻 Step 3: Updating playlists and RSS feed...")
-		if *dryRun {
-			log.Printf("[WORKFLOW] DRY RUN: Would regenerate playlists and RSS feed")
-		} else {
-			err := updatePlaylists(bucketClient)
-			if err != nil {
-				log.Printf("[WORKFLOW] ERROR: Step 3 failed: %v", err)
-				os.Exit(1)
-			}
-		}
-		log.Printf("[WORKFLOW] ✅ Step 3 completed successfully")
-	} else {
-		log.Printf("[WORKFLOW] ⏭️  Step 3: Skipping playlist updates")
-	}
-
 	if *dryRun {
 		log.Printf("[WORKFLOW] 🎯 Dry run complete - no changes were made")
 	} else {
 		log.Printf("[WORKFLOW] 🎉 Recordings update workflow complete!")
 	}
-}
-
-func updatePlaylists(bucketClient *bucket.Client) error {
-	// Use existing trellis logic
-	outputDir := filepath.Join("..", "..", "public")
-	outputFile := filepath.Join("playlists", "recordings.m3u")
-	rssFile := filepath.Join("feed.xml")
-
-	// Define user playlists
-	userPlaylists := []trellis.UserPlaylist{
-		{
-			Username: "seth",
-			Filename: filepath.Join("playlists", "home_cooking.m3u"),
-			Filter: func(r trellis.Recording) bool {
-				return r.DJ == "Seth"
-			},
-		},
-		{
-			Username: "will",
-			Filename: filepath.Join("playlists", "tracks_from_terminus.m3u"),
-			Filter: func(r trellis.Recording) bool {
-				return r.DJ == "the conductor"
-			},
-		},
-		// Add more user playlists here as needed
-	}
-
-	config := trellis.Config{
-		BucketClient:  bucketClient,
-		OutputDir:     outputDir,
-		OutputFile:    outputFile,
-		RSSFile:       rssFile,
-		UserPlaylists: userPlaylists,
-	}
-
-	return trellis.Run(config)
 }

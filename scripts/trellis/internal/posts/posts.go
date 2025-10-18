@@ -3,7 +3,6 @@ package posts
 import (
 	"bytes"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -56,6 +55,13 @@ type PostListItem struct {
 type Config struct {
 	BucketClient *bucket.Client
 	OutputDir    string
+}
+
+// UserPlaylist represents a user-specific playlist with filtering
+type UserPlaylist struct {
+	Username string
+	Filename string
+	Filter   func(Recording) bool
 }
 
 // ListPosts fetches all published, non-deleted posts from S3
@@ -393,64 +399,231 @@ type Recording struct {
 	DisplayName  string
 }
 
-// parseRSSFeed reads and parses the feed.xml to get recordings
-func parseRSSFeed(outputDir string) ([]Recording, error) {
-	feedPath := filepath.Join(outputDir, "feed.xml")
-	data, err := ioutil.ReadFile(feedPath)
+// getShowName returns the show name and DJ name for a given username
+func getShowName(dj string) (string, string, error) {
+	switch dj {
+	case "brennan":
+		return "Late Nights Like These", "Nights Like These", nil
+	case "ted":
+		return "mulch channel", "dj ted", nil
+	case "ben":
+		return "IS WiLD hour", "DJ CHICAGO STYLE", nil
+	case "will":
+		return "tracks from terminus", "the conductor", nil
+	case "katherine":
+		return "The reginajingles show", "reginajingles", nil
+	case "seth":
+		return "Home Cooking Show", "Seth", nil
+	default:
+		return "", "", fmt.Errorf("unknown DJ: %s", dj)
+	}
+}
+
+// parseRecordingInfo extracts recording information from a URL
+func parseRecordingInfo(url string) (Recording, error) {
+	// Example URL: https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-204143.mp3
+	parts := strings.Split(url, "/")
+	if len(parts) < 5 {
+		return Recording{}, fmt.Errorf("invalid URL format")
+	}
+
+	bucketFolder := parts[4]
+	show, dj, err := getShowName(bucketFolder)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read feed.xml: %v", err)
+		return Recording{}, err
 	}
 
-	// Simple RSS structure for parsing
-	type RSS struct {
-		XMLName xml.Name `xml:"rss"`
-		Channel struct {
-			Items []struct {
-				Title   string `xml:"title"`
-				Link    string `xml:"link"`
-				PubDate string `xml:"pubDate"`
-				Author  string `xml:"http://www.itunes.com/dtds/podcast-1.0.dtd author"`
-				GUID    string `xml:"guid"`
-			} `xml:"item"`
-		} `xml:"channel"`
+	filename := parts[len(parts)-1]
+	// Extract date from filename by finding the YYYYMMDD pattern
+	datePattern := strings.Index(filename, "stream_")
+	if datePattern == -1 {
+		return Recording{}, fmt.Errorf("invalid filename format: %s", filename)
 	}
 
-	var rss RSS
-	if err := xml.Unmarshal(data, &rss); err != nil {
-		return nil, fmt.Errorf("failed to parse feed.xml: %v", err)
+	dateStr := filename[datePattern+7 : datePattern+15] // Extract YYYYMMDD
+
+	// Parse the date string
+	date, err := time.Parse("20060102", dateStr)
+	if err != nil {
+		return Recording{}, fmt.Errorf("failed to parse date: %v", err)
 	}
+
+	// Format the date
+	formattedDate := date.Format("January 2, 2006")
+
+	return Recording{
+		URL:  url,
+		DJ:   dj,
+		Show: show,
+		Date: formattedDate,
+	}, nil
+}
+
+// isRecordingPublic checks if a recording has public-read ACL
+func isRecordingPublic(client *bucket.Client, key string) bool {
+	aclOutput, err := client.GetObjectACL(key)
+	if err != nil {
+		log.Printf("[POSTS] WARNING: Failed to get ACL for %s: %v", key, err)
+		return false
+	}
+
+	// Check if the object has public-read ACL
+	for _, grant := range aclOutput.Grants {
+		if grant.Grantee.URI != nil && *grant.Grantee.URI == "http://acs.amazonaws.com/groups/global/AllUsers" {
+			return true
+		}
+	}
+
+	return false
+}
+
+// fetchRecordingsFromS3 fetches all public recordings directly from the S3 bucket
+func fetchRecordingsFromS3(client *bucket.Client) ([]Recording, error) {
+	log.Printf("[POSTS] Fetching recordings from S3...")
+	objects, err := client.ListObjects("recordings/")
+	if err != nil {
+		return nil, fmt.Errorf("failed to list recordings: %v", err)
+	}
+	log.Printf("[POSTS] Found %d objects in recordings/", len(objects))
 
 	var recordings []Recording
-	for _, item := range rss.Channel.Items {
-		// Parse pubDate
-		pubDate, err := time.Parse(time.RFC1123Z, item.PubDate)
-		if err != nil {
-			log.Printf("[POSTS] WARNING: Failed to parse date %s: %v", item.PubDate, err)
-			pubDate = time.Now()
+	var skipped int
+	var privateCount int
+
+	for _, obj := range objects {
+		if obj.Key == nil || len(*obj.Key) < 4 || (*obj.Key)[len(*obj.Key)-4:] != ".mp3" {
+			continue
 		}
 
-		// Extract key from URL (GUID is the full URL)
-		url := item.GUID
-		key := ""
-		if strings.Contains(url, "cabbagetown.nyc3.digitaloceanspaces.com/") {
-			parts := strings.Split(url, "cabbagetown.nyc3.digitaloceanspaces.com/")
-			if len(parts) > 1 {
-				key = parts[1]
+		// Check if recording is public
+		if !isRecordingPublic(client, *obj.Key) {
+			log.Printf("[POSTS] Skipping private recording: %s", *obj.Key)
+			privateCount++
+			continue
+		}
+
+		// Construct URL
+		fullURL := "https://cabbagetown.nyc3.digitaloceanspaces.com/" + *obj.Key
+		log.Printf("[POSTS] Processing public MP3: %s", *obj.Key)
+
+		recording, err := parseRecordingInfo(fullURL)
+		if err != nil {
+			log.Printf("[POSTS] WARNING: Failed to parse recording info for %s: %v", fullURL, err)
+			skipped++
+			continue
+		}
+
+		recording.Key = *obj.Key
+		if obj.LastModified != nil {
+			recording.LastModified = *obj.LastModified
+		}
+
+		// Get object metadata to check for display name
+		headOutput, err := client.HeadObject(*obj.Key)
+		if err == nil && headOutput.Metadata != nil {
+			if displayName, ok := headOutput.Metadata["Display-Name"]; ok && displayName != nil {
+				recording.DisplayName = *displayName
+				log.Printf("[POSTS] Using display name: %s", recording.DisplayName)
 			}
 		}
 
-		recordings = append(recordings, Recording{
-			URL:          url,
-			Key:          key,
-			DJ:           item.Author,
-			Show:         item.Title,
-			Date:         pubDate.Format("January 2, 2006"),
-			LastModified: pubDate,
-			DisplayName:  item.Title,
-		})
+		// If no display name from metadata, construct one
+		if recording.DisplayName == "" {
+			recording.DisplayName = fmt.Sprintf("%s - %s", recording.Show, recording.Date)
+		}
+
+		recordings = append(recordings, recording)
 	}
 
+	// Sort by LastModified descending (newest first)
+	sort.Slice(recordings, func(i, j int) bool {
+		return recordings[i].LastModified.After(recordings[j].LastModified)
+	})
+
+	log.Printf("[POSTS] Successfully fetched %d public recordings (skipped %d, private %d)", len(recordings), skipped, privateCount)
 	return recordings, nil
+}
+
+// generatePlaylist creates an M3U playlist file from recordings
+func generatePlaylist(recordings []Recording, outputFile string, outputDir string, filter func(Recording) bool) error {
+	// Create directory for output file
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %v", err)
+	}
+
+	outputFilePath := filepath.Join(outputDir, outputFile)
+
+	// Initialize playlist with M3U header
+	content := "#EXTM3U\n"
+
+	// Add filtered recordings to playlist
+	for _, recording := range recordings {
+		if filter == nil || filter(recording) {
+			// Use display name if available, otherwise use default format
+			title := recording.DisplayName
+			if title == "" {
+				title = fmt.Sprintf("%s - %s (%s)", recording.Show, recording.DJ, recording.Date)
+			}
+			content += fmt.Sprintf("#EXTINF:-1,%s\n%s\n", title, recording.URL)
+		}
+	}
+
+	if err := ioutil.WriteFile(outputFilePath, []byte(content), 0644); err != nil {
+		return fmt.Errorf("failed to write playlist file: %v", err)
+	}
+
+	return nil
+}
+
+// GeneratePlaylists creates M3U playlist files from recordings
+func GeneratePlaylists(recordings []Recording, outputDir string) error {
+	log.Printf("[POSTS] Generating playlists...")
+
+	// Define user playlists
+	userPlaylists := []UserPlaylist{
+		{
+			Username: "seth",
+			Filename: filepath.Join("playlists", "home_cooking.m3u"),
+			Filter: func(r Recording) bool {
+				return r.DJ == "Seth"
+			},
+		},
+		{
+			Username: "will",
+			Filename: filepath.Join("playlists", "tracks_from_terminus.m3u"),
+			Filter: func(r Recording) bool {
+				return r.DJ == "the conductor"
+			},
+		},
+	}
+
+	// Generate main playlist with all recordings
+	mainPlaylist := filepath.Join("playlists", "recordings.m3u")
+	log.Printf("[POSTS] Generating main playlist: %s", mainPlaylist)
+	if err := generatePlaylist(recordings, mainPlaylist, outputDir, nil); err != nil {
+		return fmt.Errorf("failed to generate main playlist: %v", err)
+	}
+	log.Printf("[POSTS] Generated main playlist with %d recordings", len(recordings))
+
+	// Generate user-specific playlists
+	for _, userPlaylist := range userPlaylists {
+		log.Printf("[POSTS] Generating playlist for user %s: %s", userPlaylist.Username, userPlaylist.Filename)
+
+		matchingCount := 0
+		for _, r := range recordings {
+			if userPlaylist.Filter(r) {
+				matchingCount++
+			}
+		}
+
+		if err := generatePlaylist(recordings, userPlaylist.Filename, outputDir, userPlaylist.Filter); err != nil {
+			return fmt.Errorf("failed to generate playlist for user %s: %v", userPlaylist.Username, err)
+		}
+		log.Printf("[POSTS] Generated playlist for %s with %d recordings", userPlaylist.Username, matchingCount)
+	}
+
+	log.Printf("[POSTS] Successfully generated all playlists")
+	return nil
 }
 
 // GenerateUnifiedFeed creates a shows.json combining recordings and posts
@@ -470,10 +643,11 @@ func GenerateUnifiedFeed(posts []Post, recordings []Recording, outputDir string)
 
 	// Add recordings (with or without posts)
 	for _, rec := range recordings {
-		// Parse date for sorting
-		dateTime, err := time.Parse("January 02, 2006", rec.Date)
+		// Parse date for sorting (use single-digit day format)
+		dateTime, err := time.Parse("January 2, 2006", rec.Date)
 		if err != nil {
 			// If parse fails, use LastModified
+			log.Printf("[POSTS] WARNING: Failed to parse date '%s' for recording %s: %v", rec.Date, rec.Key, err)
 			dateTime = rec.LastModified
 		}
 
@@ -618,18 +792,27 @@ func Run(config Config) error {
 		// Don't fail the whole process if cleanup fails
 	}
 
-	// Generate unified shows.json combining recordings and posts
-	log.Printf("[POSTS] Generating unified shows feed...")
-	recordings, err := parseRSSFeed(config.OutputDir)
+	// Fetch recordings from S3 for playlist and feed generation
+	log.Printf("[POSTS] Fetching recordings for codegen...")
+	recordings, err := fetchRecordingsFromS3(config.BucketClient)
 	if err != nil {
-		log.Printf("[POSTS] WARNING: Failed to parse RSS feed: %v", err)
-		log.Printf("[POSTS] Skipping unified feed generation")
-	} else {
-		if err := GenerateUnifiedFeed(posts, recordings, config.OutputDir); err != nil {
-			return fmt.Errorf("failed to generate shows.json: %v", err)
-		}
+		log.Printf("[POSTS] WARNING: Failed to fetch recordings from S3: %v", err)
+		log.Printf("[POSTS] Skipping playlist and feed generation")
+		log.Printf("[POSTS] Post generation complete: %d posts", len(posts))
+		return nil
 	}
 
-	log.Printf("[POSTS] Post generation complete: %d posts", len(posts))
+	// Generate playlists from recordings
+	if err := GeneratePlaylists(recordings, config.OutputDir); err != nil {
+		return fmt.Errorf("failed to generate playlists: %v", err)
+	}
+
+	// Generate unified shows.json combining recordings and posts
+	log.Printf("[POSTS] Generating unified shows feed...")
+	if err := GenerateUnifiedFeed(posts, recordings, config.OutputDir); err != nil {
+		return fmt.Errorf("failed to generate shows.json: %v", err)
+	}
+
+	log.Printf("[POSTS] Code generation complete: %d posts, %d recordings", len(posts), len(recordings))
 	return nil
 }

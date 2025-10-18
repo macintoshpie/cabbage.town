@@ -152,12 +152,16 @@ func Run(config Config) error {
 		log.Printf("[TRELLIS] Successfully updated playlist for user %s", userPlaylist.Username)
 	}
 
-	// Update RSS feed
-	log.Printf("[TRELLIS] Updating RSS feed: %s", config.RSSFile)
-	err = updateRssFeed(recordings, config)
-	if err != nil {
-		log.Printf("[TRELLIS] ERROR: Failed to update RSS feed: %v", err)
-		return fmt.Errorf("failed to update RSS feed: %v", err)
+	// Update RSS feed (optional - skip if RSSFile is empty)
+	if config.RSSFile != "" {
+		log.Printf("[TRELLIS] Updating RSS feed: %s", config.RSSFile)
+		err = updateRssFeed(recordings, config)
+		if err != nil {
+			log.Printf("[TRELLIS] ERROR: Failed to update RSS feed: %v", err)
+			return fmt.Errorf("failed to update RSS feed: %v", err)
+		}
+	} else {
+		log.Printf("[TRELLIS] Skipping RSS feed generation (not configured)")
 	}
 	log.Printf("[TRELLIS] Successfully updated RSS feed")
 

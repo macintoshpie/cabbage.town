@@ -1,4 +1,4 @@
-name: Update Recordings and Playlists
+name: Update Recordings and Generate Static Content
 
 on:
   schedule:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   update-recordings:
-    name: Update Recording ACLs and Playlists
+    name: Update Recording Metadata and Generate Static Content
     runs-on: ubuntu-latest
 
     steps:
@@ -36,30 +36,32 @@ jobs:
       - name: Install ID3 tools
         run: pip install eyeD3
 
-      - name: Update Recordings
+      - name: Update Recording Metadata
         env:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
         working-directory: scripts/trellis
         run: go run cmd/update_recordings/main.go all
+        # Updates ACLs and ID3 metadata for recordings
 
-      - name: Update Posts
+      - name: Generate Static Content
         env:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
         working-directory: scripts/trellis
         run: go run cmd/update_posts/main.go
+        # Generates: post HTML, playlists, and shows.json
 
       - name: Commit and push changes
         run: |
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'actions@github.com'
-          git add public/playlists/*.m3u public/feed.xml public/shows.json public/patch/*.html
+          git add public/playlists/*.m3u public/shows.json public/patch/*.html
 
           # Only commit and push if there are changes
           if git diff --staged --quiet; then
-            echo "No changes to playlists, feed, or posts"
+            echo "No changes to static content"
           else
-            git commit -m "Update playlists, feed, and posts via automated workflow"
+            git commit -m "Update static content (playlists, posts, shows) via automated workflow"
             git push origin main
           fi
