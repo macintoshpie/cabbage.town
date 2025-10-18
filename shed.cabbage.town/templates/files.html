@@ -270,6 +270,11 @@
           {{if .IsPublic}}Make Private{{else}}Make Public{{end}}
         </button>
         <button onclick="startRename(this)" class="button rename">Rename</button>
+        {{if .PostID}}
+        <a href="/posts/{{.PostID}}/edit" class="button" style="background-color: #9C27B0;">Edit Post</a>
+        {{else if .IsPublic}}
+        <a href="/posts/new?recording={{.Key}}" class="button" style="background-color: #9C27B0;">Create Post</a>
+        {{end}}
       </div>
     </div>
     {{end}}

@@ -220,6 +220,7 @@
     let postId = {{if .Post}}'{{.Post.ID}}'{{else}}null{{end}};
     const isEdit = postId !== null;
     const existingRecording = {{if .Post}}'{{.Post.Metadata.Recording}}'{{else}}''{{end}};
+    const initialRecording = {{if .RecordingKey}}'{{.RecordingKey}}'{{else}}''{{end}};
 
     // Load available recordings
     async function loadRecordings() {
@@ -244,9 +245,11 @@
           select.appendChild(option);
         });
         
-        // Select existing recording if editing
+        // Select recording: prefer existing (when editing) or initial (when creating with recording link)
         if (existingRecording) {
           select.value = existingRecording;
+        } else if (initialRecording) {
+          select.value = initialRecording;
         }
       } catch (error) {
         console.error('Error loading recordings:', error);

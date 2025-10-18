@@ -112,6 +112,8 @@ type FileInfo struct {
 	SizeMB       float64            `json:"sizeMB"` // Changed from SizeBytes
 	LastModified time.Time          `json:"lastModified"`
 	Metadata     map[string]*string `json:"metadata"`
+	PostID       string             `json:"postId,omitempty"`   // ID of associated post, if any
+	PostSlug     string             `json:"postSlug,omitempty"` // Slug of associated post, if any
 }
 
 // Add this helper method
@@ -326,6 +328,48 @@ func listFilesHandler(w http.ResponseWriter, r *http.Request) {
 			LastModified: *headOutput.LastModified,
 			Metadata:     headOutput.Metadata,
 		})
+	}
+
+	// Fetch all posts and create a map of recording key -> post
+	postObjects, err := bucketClient.ListObjects("posts/")
+	if err == nil {
+		recordingToPost := make(map[string]*Post)
+
+		for _, postObj := range postObjects {
+			if postObj.Key == nil || !strings.HasSuffix(*postObj.Key, ".json") {
+				continue
+			}
+
+			// Fetch the post
+			output, err := bucketClient.GetObject(*postObj.Key)
+			if err != nil {
+				continue
+			}
+			defer output.Body.Close()
+
+			data, err := ioutil.ReadAll(output.Body)
+			if err != nil {
+				continue
+			}
+
+			var post Post
+			if err := json.Unmarshal(data, &post); err != nil {
+				continue
+			}
+
+			// Only map non-deleted posts with recordings
+			if post.DeletedAt == nil && post.Metadata.Recording != "" {
+				recordingToPost[post.Metadata.Recording] = &post
+			}
+		}
+
+		// Update files with post information
+		for i := range files {
+			if post, exists := recordingToPost[files[i].Key]; exists {
+				files[i].PostID = post.ID
+				files[i].PostSlug = post.Slug
+			}
+		}
 	}
 
 	data := struct {
@@ -1301,6 +1345,7 @@ func postEditorPageHandler(w http.ResponseWriter, r *http.Request) {
 	admin := isAdmin(username)
 	var post *Post
 	var err error
+	var recordingKey string
 
 	if id != "" {
 		// Edit existing post
@@ -1322,16 +1367,21 @@ func postEditorPageHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Unauthorized", http.StatusForbidden)
 			return
 		}
+	} else {
+		// Check for recording parameter when creating new post
+		recordingKey = r.URL.Query().Get("recording")
 	}
 
 	data := struct {
-		Post     *Post
-		Username string
-		IsAdmin  bool
+		Post         *Post
+		Username     string
+		IsAdmin      bool
+		RecordingKey string
 	}{
-		Post:     post,
-		Username: username,
-		IsAdmin:  admin,
+		Post:         post,
+		Username:     username,
+		IsAdmin:      admin,
+		RecordingKey: recordingKey,
 	}
 
 	if err := templates.ExecuteTemplate(w, "post_editor.html", data); err != nil {
