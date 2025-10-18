@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -420,43 +421,53 @@ func getShowName(dj string) (string, string, error) {
 }
 
 // parseRecordingInfo extracts recording information from a URL
-func parseRecordingInfo(url string) (Recording, error) {
+func parseRecordingInfo(url string, lastModified time.Time) Recording {
 	// Example URL: https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-204143.mp3
 	parts := strings.Split(url, "/")
-	if len(parts) < 5 {
-		return Recording{}, fmt.Errorf("invalid URL format")
-	}
 
-	bucketFolder := parts[4]
-	show, dj, err := getShowName(bucketFolder)
-	if err != nil {
-		return Recording{}, err
+	var username, show, dj string
+	var date time.Time
+
+	// Extract username from URL path
+	if len(parts) >= 5 {
+		username = parts[4]
+		show, dj, _ = getShowName(username)
 	}
 
 	filename := parts[len(parts)-1]
-	// Extract date from filename by finding the YYYYMMDD pattern
-	datePattern := strings.Index(filename, "stream_")
-	if datePattern == -1 {
-		return Recording{}, fmt.Errorf("invalid filename format: %s", filename)
+
+	// Try standard format first: stream_YYYYMMDD-HHMMSS.mp3
+	if strings.HasPrefix(filename, "stream_") && len(filename) >= 23 {
+		dateStr := filename[7:15] // Extract YYYYMMDD
+		parsedDate, err := time.Parse("20060102", dateStr)
+		if err == nil {
+			date = parsedDate
+		}
 	}
 
-	dateStr := filename[datePattern+7 : datePattern+15] // Extract YYYYMMDD
-
-	// Parse the date string
-	date, err := time.Parse("20060102", dateStr)
-	if err != nil {
-		return Recording{}, fmt.Errorf("failed to parse date: %v", err)
+	// Fallback: Try to find YYYYMMDD-HHMMSS pattern anywhere in filename
+	if date.IsZero() {
+		datePattern := regexp.MustCompile(`(\d{8})-\d{6}`)
+		if matches := datePattern.FindStringSubmatch(filename); len(matches) > 1 {
+			parsedDate, err := time.Parse("20060102", matches[1])
+			if err == nil {
+				date = parsedDate
+			}
+		}
 	}
 
-	// Format the date
-	formattedDate := date.Format("January 2, 2006")
+	// If still no date, use lastModified
+	if date.IsZero() {
+		date = lastModified
+	}
 
 	return Recording{
-		URL:  url,
-		DJ:   dj,
-		Show: show,
-		Date: formattedDate,
-	}, nil
+		URL:          url,
+		DJ:           dj,
+		Show:         show,
+		Date:         date.Format("January 2, 2006"),
+		LastModified: date,
+	}
 }
 
 // isRecordingPublic checks if a recording has public-read ACL
@@ -506,17 +517,14 @@ func fetchRecordingsFromS3(client *bucket.Client) ([]Recording, error) {
 		fullURL := "https://cabbagetown.nyc3.digitaloceanspaces.com/" + *obj.Key
 		log.Printf("[POSTS] Processing public MP3: %s", *obj.Key)
 
-		recording, err := parseRecordingInfo(fullURL)
-		if err != nil {
-			log.Printf("[POSTS] WARNING: Failed to parse recording info for %s: %v", fullURL, err)
-			skipped++
-			continue
+		// Parse recording info (handles both standard and custom formats)
+		lastModified := time.Now()
+		if obj.LastModified != nil {
+			lastModified = *obj.LastModified
 		}
 
+		recording := parseRecordingInfo(fullURL, lastModified)
 		recording.Key = *obj.Key
-		if obj.LastModified != nil {
-			recording.LastModified = *obj.LastModified
-		}
 
 		// Get object metadata to check for display name
 		headOutput, err := client.HeadObject(*obj.Key)
@@ -629,9 +637,11 @@ func GenerateUnifiedFeed(posts []Post, recordings []Recording, outputDir string)
 	recordingToPost := make(map[string]*Post)
 	for i := range posts {
 		if posts[i].Metadata.Recording != "" {
+			log.Printf("[POSTS] Post '%s' (ID: %s) linked to recording: '%s'", posts[i].Title, posts[i].ID, posts[i].Metadata.Recording)
 			recordingToPost[posts[i].Metadata.Recording] = &posts[i]
 		}
 	}
+	log.Printf("[POSTS] Created map with %d post-to-recording associations", len(recordingToPost))
 
 	// Track which posts have been used (linked to recordings)
 	usedPosts := make(map[string]bool)
@@ -661,12 +671,15 @@ func GenerateUnifiedFeed(posts []Post, recordings []Recording, outputDir string)
 
 		// Check if there's a post linked to this recording
 		if post, exists := recordingToPost[rec.Key]; exists {
+			log.Printf("[POSTS] ✓ Matched recording '%s' to post '%s'", rec.Key, post.Title)
 			item.Post = &PostInfo{
 				Slug:    post.Slug,
 				Excerpt: post.Metadata.Excerpt,
 			}
 			item.Title = post.Title
 			usedPosts[post.ID] = true
+		} else {
+			log.Printf("[POSTS] ✗ No post found for recording '%s'", rec.Key)
 		}
 
 		showItems = append(showItems, item)

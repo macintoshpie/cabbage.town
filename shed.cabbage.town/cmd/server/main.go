@@ -987,6 +987,10 @@ func createPostAPIHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	if req.Recording != "" {
+		log.Printf("[POST_CREATE] Storing recording reference: '%s'", req.Recording)
+	}
+
 	if err := savePost(&post); err != nil {
 		log.Printf("Error saving post: %v", err)
 		http.Error(w, "Failed to save post", http.StatusInternalServerError)
