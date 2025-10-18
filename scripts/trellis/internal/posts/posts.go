@@ -3,12 +3,14 @@ package posts
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/yuin/goldmark"
@@ -35,9 +37,10 @@ type Post struct {
 }
 
 type PostMetadata struct {
-	Tags     []string `json:"tags"`
-	Category string   `json:"category"`
-	Excerpt  string   `json:"excerpt"`
+	Tags      []string `json:"tags"`
+	Category  string   `json:"category"`
+	Excerpt   string   `json:"excerpt"`
+	Recording string   `json:"recording"` // S3 key of associated recording
 }
 
 // PostListItem represents a post in the public listing
@@ -118,6 +121,26 @@ func ListPosts(client *bucket.Client) ([]Post, error) {
 
 	log.Printf("[POSTS] Returning %d published posts", len(posts))
 	return posts, nil
+}
+
+// generateRecordingPlayer creates an HTML audio player if the post has an associated recording
+func generateRecordingPlayer(post Post) string {
+	if post.Metadata.Recording == "" {
+		return ""
+	}
+
+	// Generate the URL for the recording
+	recordingURL := fmt.Sprintf("https://cabbagetown.nyc3.digitaloceanspaces.com/%s", post.Metadata.Recording)
+
+	return fmt.Sprintf(`
+            <div class="post-container" style="margin-bottom: 24px; background: var(--daorange); color: white;">
+                <h3 style="margin: 0 0 16px 0; font-family: 'Cooper Black Regular', monospace;">🎵 Listen to this show</h3>
+                <audio controls style="width: 100%%; border-radius: 8px;">
+                    <source src="%s" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+`, recordingURL)
 }
 
 // GeneratePostHTML creates an HTML file for a single post
@@ -296,7 +319,7 @@ func GeneratePostHTML(post Post, outputDir string) error {
 
         <div class="content">
             <a href="/" class="back-link">back to the patch</a>
-            
+            %s
             <div class="post-container">
                 <div class="post-header">
                     <h1 class="post-title">%s</h1>
@@ -315,7 +338,7 @@ func GeneratePostHTML(post Post, outputDir string) error {
     </div>
 </body>
 </html>
-`, post.Title, post.Title, post.Author, formattedDate, buf.String())
+`, post.Title, generateRecordingPlayer(post), post.Title, post.Author, formattedDate, buf.String())
 
 	// Write to file
 	patchDir := filepath.Join(outputDir, "patch")
@@ -332,32 +355,186 @@ func GeneratePostHTML(post Post, outputDir string) error {
 	return nil
 }
 
-// GeneratePostsJSON creates a JSON file with post listing data for the static site
-func GeneratePostsJSON(posts []Post, outputDir string) error {
-	// Initialize as empty slice so it marshals as [] instead of null
-	listItems := []PostListItem{}
+// RecordingNoteInfo represents the post information for a recording
+type RecordingNoteInfo struct {
+	PostSlug  string `json:"postSlug"`
+	PostTitle string `json:"postTitle"`
+	Excerpt   string `json:"excerpt"`
+}
 
-	for _, post := range posts {
-		listItems = append(listItems, PostListItem{
-			Title:   post.Title,
-			Slug:    post.Slug,
-			Author:  post.Author,
-			Date:    post.CreatedAt.Format("January 2, 2006"),
-			Excerpt: post.Metadata.Excerpt,
+// ShowItem represents a unified item that can be a recording, a post, or both
+type ShowItem struct {
+	Title     string         `json:"title"`
+	Author    string         `json:"author"`
+	Date      string         `json:"date"` // Formatted date string
+	Timestamp time.Time      `json:"-"`    // For sorting, not exported
+	Recording *RecordingInfo `json:"recording,omitempty"`
+	Post      *PostInfo      `json:"post,omitempty"`
+}
+
+type RecordingInfo struct {
+	Key string `json:"key"`
+	URL string `json:"url"`
+}
+
+type PostInfo struct {
+	Slug    string `json:"slug"`
+	Excerpt string `json:"excerpt"`
+}
+
+// Recording represents a recording from the trellis sync (matches trellis.Recording)
+type Recording struct {
+	URL          string
+	Key          string
+	DJ           string
+	Show         string
+	Date         string
+	LastModified time.Time
+	DisplayName  string
+}
+
+// parseRSSFeed reads and parses the feed.xml to get recordings
+func parseRSSFeed(outputDir string) ([]Recording, error) {
+	feedPath := filepath.Join(outputDir, "feed.xml")
+	data, err := ioutil.ReadFile(feedPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read feed.xml: %v", err)
+	}
+
+	// Simple RSS structure for parsing
+	type RSS struct {
+		XMLName xml.Name `xml:"rss"`
+		Channel struct {
+			Items []struct {
+				Title   string `xml:"title"`
+				Link    string `xml:"link"`
+				PubDate string `xml:"pubDate"`
+				Author  string `xml:"http://www.itunes.com/dtds/podcast-1.0.dtd author"`
+				GUID    string `xml:"guid"`
+			} `xml:"item"`
+		} `xml:"channel"`
+	}
+
+	var rss RSS
+	if err := xml.Unmarshal(data, &rss); err != nil {
+		return nil, fmt.Errorf("failed to parse feed.xml: %v", err)
+	}
+
+	var recordings []Recording
+	for _, item := range rss.Channel.Items {
+		// Parse pubDate
+		pubDate, err := time.Parse(time.RFC1123Z, item.PubDate)
+		if err != nil {
+			log.Printf("[POSTS] WARNING: Failed to parse date %s: %v", item.PubDate, err)
+			pubDate = time.Now()
+		}
+
+		// Extract key from URL (GUID is the full URL)
+		url := item.GUID
+		key := ""
+		if strings.Contains(url, "cabbagetown.nyc3.digitaloceanspaces.com/") {
+			parts := strings.Split(url, "cabbagetown.nyc3.digitaloceanspaces.com/")
+			if len(parts) > 1 {
+				key = parts[1]
+			}
+		}
+
+		recordings = append(recordings, Recording{
+			URL:          url,
+			Key:          key,
+			DJ:           item.Author,
+			Show:         item.Title,
+			Date:         pubDate.Format("January 2, 2006"),
+			LastModified: pubDate,
+			DisplayName:  item.Title,
 		})
 	}
 
-	data, err := json.MarshalIndent(listItems, "", "  ")
+	return recordings, nil
+}
+
+// GenerateUnifiedFeed creates a shows.json combining recordings and posts
+func GenerateUnifiedFeed(posts []Post, recordings []Recording, outputDir string) error {
+	// Create a map of recording keys to posts for easy lookup
+	recordingToPost := make(map[string]*Post)
+	for i := range posts {
+		if posts[i].Metadata.Recording != "" {
+			recordingToPost[posts[i].Metadata.Recording] = &posts[i]
+		}
+	}
+
+	// Track which posts have been used (linked to recordings)
+	usedPosts := make(map[string]bool)
+
+	var showItems []ShowItem
+
+	// Add recordings (with or without posts)
+	for _, rec := range recordings {
+		// Parse date for sorting
+		dateTime, err := time.Parse("January 02, 2006", rec.Date)
+		if err != nil {
+			// If parse fails, use LastModified
+			dateTime = rec.LastModified
+		}
+
+		item := ShowItem{
+			Title:     rec.DisplayName,
+			Author:    rec.DJ,
+			Date:      rec.Date,
+			Timestamp: dateTime,
+			Recording: &RecordingInfo{
+				Key: rec.Key,
+				URL: rec.URL,
+			},
+		}
+
+		// Check if there's a post linked to this recording
+		if post, exists := recordingToPost[rec.Key]; exists {
+			item.Post = &PostInfo{
+				Slug:    post.Slug,
+				Excerpt: post.Metadata.Excerpt,
+			}
+			usedPosts[post.ID] = true
+		}
+
+		showItems = append(showItems, item)
+	}
+
+	// Add posts that aren't linked to recordings
+	for _, post := range posts {
+		if !usedPosts[post.ID] {
+			item := ShowItem{
+				Title:     post.Title,
+				Author:    post.Author,
+				Date:      post.CreatedAt.Format("January 2, 2006"),
+				Timestamp: post.CreatedAt,
+				Post: &PostInfo{
+					Slug:    post.Slug,
+					Excerpt: post.Metadata.Excerpt,
+				},
+			}
+			showItems = append(showItems, item)
+		}
+	}
+
+	// Sort by timestamp (newest first)
+	sort.Slice(showItems, func(i, j int) bool {
+		return showItems[i].Timestamp.After(showItems[j].Timestamp)
+	})
+
+	// Marshal to JSON
+	data, err := json.MarshalIndent(showItems, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal posts JSON: %v", err)
+		return fmt.Errorf("failed to marshal shows.json: %v", err)
 	}
 
-	outputFile := filepath.Join(outputDir, "posts.json")
+	outputFile := filepath.Join(outputDir, "shows.json")
 	if err := ioutil.WriteFile(outputFile, data, 0644); err != nil {
-		return fmt.Errorf("failed to write posts.json: %v", err)
+		return fmt.Errorf("failed to write shows.json: %v", err)
 	}
 
-	log.Printf("[POSTS] Generated posts.json with %d posts", len(listItems))
+	log.Printf("[POSTS] Generated shows.json with %d items (%d recordings, %d standalone posts)",
+		len(showItems), len(recordings), len(posts)-len(usedPosts))
 	return nil
 }
 
@@ -441,9 +618,16 @@ func Run(config Config) error {
 		// Don't fail the whole process if cleanup fails
 	}
 
-	// Generate posts.json for the listing (even if empty)
-	if err := GeneratePostsJSON(posts, config.OutputDir); err != nil {
-		return fmt.Errorf("failed to generate posts.json: %v", err)
+	// Generate unified shows.json combining recordings and posts
+	log.Printf("[POSTS] Generating unified shows feed...")
+	recordings, err := parseRSSFeed(config.OutputDir)
+	if err != nil {
+		log.Printf("[POSTS] WARNING: Failed to parse RSS feed: %v", err)
+		log.Printf("[POSTS] Skipping unified feed generation")
+	} else {
+		if err := GenerateUnifiedFeed(posts, recordings, config.OutputDir); err != nil {
+			return fmt.Errorf("failed to generate shows.json: %v", err)
+		}
 	}
 
 	log.Printf("[POSTS] Post generation complete: %d posts", len(posts))

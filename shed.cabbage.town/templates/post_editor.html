@@ -189,6 +189,14 @@
       </div>
 
       <div class="form-group">
+        <label for="recording">Related Recording (optional)</label>
+        <select id="recording" name="recording">
+          <option value="">No recording</option>
+        </select>
+        <small style="color: #666;">Link this post to a show recording</small>
+      </div>
+
+      <div class="form-group">
         <label for="markdown">Content</label>
         <textarea id="markdown" name="markdown">{{if .Post}}{{.Post.Markdown}}{{end}}</textarea>
       </div>
@@ -211,6 +219,42 @@
   <script>
     let postId = {{if .Post}}'{{.Post.ID}}'{{else}}null{{end}};
     const isEdit = postId !== null;
+    const existingRecording = {{if .Post}}'{{.Post.Metadata.Recording}}'{{else}}''{{end}};
+
+    // Load available recordings
+    async function loadRecordings() {
+      try {
+        const response = await fetch('/api/recordings');
+        if (!response.ok) {
+          console.error('Failed to fetch recordings');
+          return;
+        }
+        
+        const recordings = await response.json();
+        const select = document.getElementById('recording');
+        
+        // Sort by last modified (newest first)
+        recordings.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
+        
+        // Add recordings to dropdown
+        recordings.forEach(recording => {
+          const option = document.createElement('option');
+          option.value = recording.key;
+          option.textContent = recording.displayName;
+          select.appendChild(option);
+        });
+        
+        // Select existing recording if editing
+        if (existingRecording) {
+          select.value = existingRecording;
+        }
+      } catch (error) {
+        console.error('Error loading recordings:', error);
+      }
+    }
+
+    // Load recordings when page loads
+    loadRecordings();
 
     // Initialize EasyMDE
     const easyMDE = new EasyMDE({
@@ -249,9 +293,10 @@
           
           // Get current markdown content to preserve it
           const currentMarkdown = easyMDE.value();
+          const currentRecording = document.getElementById('recording').value;
           
           // Create a draft post with current content to get an ID (silently)
-          const tempPost = await savePostAPI(title, author, currentMarkdown, false);
+          const tempPost = await savePostAPI(title, author, currentMarkdown, false, currentRecording);
           if (!tempPost) {
             onError('Failed to create post');
             return;
@@ -294,6 +339,7 @@
       const author = document.getElementById('author').value.trim();
       const markdown = easyMDE.value();
       const published = document.getElementById('published').checked;
+      const recording = document.getElementById('recording').value;
 
       if (!title) {
         alert('Please enter a post title');
@@ -306,8 +352,8 @@
       }
 
       const success = postId
-        ? await updatePostAPI(postId, title, author, markdown, published)
-        : await savePostAPI(title, author, markdown, published);
+        ? await updatePostAPI(postId, title, author, markdown, published, recording)
+        : await savePostAPI(title, author, markdown, published, recording);
 
       if (success) {
         alert('Post saved successfully!');
@@ -318,7 +364,7 @@
     }
 
     // Core API functions without UI side effects
-    async function savePostAPI(title, author, markdown, published) {
+    async function savePostAPI(title, author, markdown, published, recording) {
       try {
         const response = await fetch('/api/posts', {
           method: 'POST',
@@ -329,7 +375,8 @@
             title: title,
             author: author,
             markdown: markdown,
-            published: published
+            published: published,
+            recording: recording
           })
         });
 
@@ -341,7 +388,7 @@
       }
     }
 
-    async function updatePostAPI(id, title, author, markdown, published) {
+    async function updatePostAPI(id, title, author, markdown, published, recording) {
       try {
         const response = await fetch('/api/posts/' + id, {
           method: 'PUT',
@@ -352,7 +399,8 @@
             title: title,
             author: author,
             markdown: markdown,
-            published: published
+            published: published,
+            recording: recording
           })
         });
 

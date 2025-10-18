@@ -160,9 +160,10 @@ type Post struct {
 }
 
 type PostMetadata struct {
-	Tags     []string `json:"tags"`
-	Category string   `json:"category"`
-	Excerpt  string   `json:"excerpt"`
+	Tags      []string `json:"tags"`
+	Category  string   `json:"category"`
+	Excerpt   string   `json:"excerpt"`
+	Recording string   `json:"recording"` // S3 key of associated recording
 }
 
 type PostListItem struct {
@@ -181,6 +182,7 @@ type CreatePostRequest struct {
 	Author    string `json:"author"`
 	Markdown  string `json:"markdown"`
 	Published bool   `json:"published"`
+	Recording string `json:"recording"`
 }
 
 type UpdatePostRequest struct {
@@ -188,6 +190,7 @@ type UpdatePostRequest struct {
 	Author    string `json:"author"`
 	Markdown  string `json:"markdown"`
 	Published bool   `json:"published"`
+	Recording string `json:"recording"`
 }
 
 // Auth handlers
@@ -933,9 +936,10 @@ func createPostAPIHandler(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: now,
 		Published: req.Published,
 		Metadata: PostMetadata{
-			Tags:     []string{},
-			Category: "",
-			Excerpt:  generateExcerpt(req.Markdown),
+			Tags:      []string{},
+			Category:  "",
+			Excerpt:   generateExcerpt(req.Markdown),
+			Recording: req.Recording,
 		},
 	}
 
@@ -1005,6 +1009,7 @@ func updatePostAPIHandler(w http.ResponseWriter, r *http.Request) {
 	post.Published = req.Published
 	post.UpdatedAt = time.Now().UTC()
 	post.Metadata.Excerpt = generateExcerpt(req.Markdown)
+	post.Metadata.Recording = req.Recording
 
 	if err := savePost(post); err != nil {
 		log.Printf("Error updating post: %v", err)
@@ -1159,6 +1164,86 @@ func uploadPostImageHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"url": url,
 	})
+}
+
+func listRecordingsAPIHandler(w http.ResponseWriter, r *http.Request) {
+	// List all public recordings from the recordings/ directory
+	session, _ := store.Get(r, sessionName)
+	username, ok := session.Values["username"].(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	prefix := fmt.Sprintf("recordings/%s/", username)
+
+	objects, err := bucketClient.ListObjects(prefix)
+	if err != nil {
+		log.Printf("Error listing recordings: %v", err)
+		http.Error(w, "Failed to list recordings", http.StatusInternalServerError)
+		return
+	}
+
+	type RecordingItem struct {
+		Key          string `json:"key"`
+		DisplayName  string `json:"displayName"`
+		LastModified string `json:"lastModified"`
+	}
+
+	var recordings []RecordingItem
+	for _, obj := range objects {
+		if obj.Key == nil {
+			continue
+		}
+
+		// Only include .mp3 files
+		if len(*obj.Key) < 4 || (*obj.Key)[len(*obj.Key)-4:] != ".mp3" {
+			continue
+		}
+
+		// Check if file is public by checking ACL
+		aclOutput, err := bucketClient.GetObjectACL(*obj.Key)
+		if err != nil {
+			log.Printf("Error getting ACL for %s: %v", *obj.Key, err)
+			continue
+		}
+
+		// Check if public-read
+		isPublic := false
+		for _, grant := range aclOutput.Grants {
+			if grant.Grantee.URI != nil && *grant.Grantee.URI == "http://acs.amazonaws.com/groups/global/AllUsers" {
+				isPublic = true
+				break
+			}
+		}
+
+		if !isPublic {
+			continue
+		}
+
+		// Get display name from metadata if available
+		displayName := *obj.Key
+		headOutput, err := bucketClient.HeadObject(*obj.Key)
+		if err == nil && headOutput.Metadata != nil {
+			if name, ok := headOutput.Metadata["Display-Name"]; ok && name != nil {
+				displayName = *name
+			}
+		}
+
+		lastModified := ""
+		if obj.LastModified != nil {
+			lastModified = obj.LastModified.Format(time.RFC3339)
+		}
+
+		recordings = append(recordings, RecordingItem{
+			Key:          *obj.Key,
+			DisplayName:  displayName,
+			LastModified: lastModified,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(recordings)
 }
 
 // Post page handlers
@@ -1511,6 +1596,7 @@ func setupRoutes() *mux.Router {
 	protected.HandleFunc("/api/posts/{id}", updatePostAPIHandler).Methods("PUT")
 	protected.HandleFunc("/api/posts/{id}", deletePostAPIHandler).Methods("DELETE")
 	protected.HandleFunc("/api/posts/{id}/images", uploadPostImageHandler).Methods("POST")
+	protected.HandleFunc("/api/recordings", listRecordingsAPIHandler).Methods("GET")
 
 	// Admin endpoints
 	admin := protected.PathPrefix("/api/admin").Subrouter()

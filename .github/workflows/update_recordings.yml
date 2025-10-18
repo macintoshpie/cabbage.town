@@ -54,7 +54,7 @@ jobs:
         run: |
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'actions@github.com'
-          git add public/playlists/*.m3u public/feed.xml public/posts.json public/patch/*.html
+          git add public/playlists/*.m3u public/feed.xml public/shows.json public/patch/*.html
 
           # Only commit and push if there are changes
           if git diff --staged --quiet; then

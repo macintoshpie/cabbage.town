@@ -428,11 +428,11 @@
             </div>
             <audio id="radio" src="https://radio.cabbage.town:8000/radio.mp3" preload="none"></audio>
 
-            <h3 class="syne-mono-regular">previous shows</h3>
-            <div id="recordings-container"
-                style="max-height: 300px; overflow-y: auto; background: white; border-radius: 32px; padding: 32px;">
-                <div id="recordings-list" style="display: flex; flex-direction: column; gap: 12px;">
-                    <!-- Shows will be populated here -->
+            <h3 class="syne-mono-regular">recent shows</h3>
+            <div id="shows-container"
+                style="max-height: 400px; overflow-y: auto; background: white; border-radius: 32px; padding: 32px;">
+                <div id="shows-list" style="display: flex; flex-direction: column; gap: 12px;">
+                    <p style="color: #666; font-style: italic;">Loading shows...</p>
                 </div>
             </div>
 
@@ -551,36 +551,31 @@
                             </svg>`;
                     }
 
-                    async function fetchAndDisplayRecordings() {
+                    async function fetchAndDisplayShows() {
                         try {
-                            const response = await fetch('/feed.xml?_=' + Date.now());
-                            const text = await response.text();
-                            const parser = new DOMParser();
-                            const xmlDoc = parser.parseFromString(text, 'text/xml');
-                            const items = xmlDoc.getElementsByTagName('item');
+                            const response = await fetch('/shows.json?_=' + Date.now());
+                            if (!response.ok) {
+                                throw new Error('Failed to load shows');
+                            }
+                            
+                            const shows = await response.json();
+                            const showsList = document.getElementById('shows-list');
+                            
+                            if (shows.length === 0) {
+                                showsList.innerHTML = '<p style="color: #666; font-style: italic;">No shows yet. Check back soon!</p>';
+                                return;
+                            }
+                            
+                            showsList.innerHTML = '';
 
-                            const recordingsList = document.getElementById('recordings-list');
-                            recordingsList.innerHTML = ''; // Clear existing content
-
-                            Array.from(items).forEach(item => {
-                                const title = item.getElementsByTagName('title')[0].textContent;
-                                const date = new Date(item.getElementsByTagName('pubDate')[0].textContent);
-                                const audioUrl = item.getElementsByTagName('enclosure')[0].getAttribute('url');
-                                const author = item.getElementsByTagName('itunes:author')[0]?.textContent || '';
-
-                                const formattedDate = date.toLocaleDateString('en-US', {
-                                    month: 'long',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                });
-
+                            shows.forEach(show => {
                                 const showElement = document.createElement('div');
                                 showElement.style.cssText = `
                                     display: flex;
                                     justify-content: space-between;
-                                    align-items: center;
-                                    gap: 8px;
-                                    padding: 4px;
+                                    align-items: flex-start;
+                                    gap: 12px;
+                                    padding: 8px;
                                     border-radius: 8px;
                                     transition: background-color 0.2s;
                                 `;
@@ -590,142 +585,164 @@
                                 infoSection.style.cssText = `
                                     display: flex;
                                     flex-direction: column;
-                                    gap: 4px;
+                                    gap: 6px;
                                     flex-grow: 1;
                                 `;
-                                infoSection.innerHTML = `
-                                    <div style="font-family: 'Courier New', monospace; font-weight: bold;">${title}</div>
-                                    <div style="color: #666; font-family: 'Courier New', monospace;">
-                                        ${author ? `<span style="color: #444;">${author}</span> - ` : ''}${formattedDate}
+
+                                let infoHTML = `
+                                    <div style="font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.05em;">${show.title}</div>
+                                    <div style="color: #666; font-family: 'Courier New', monospace; font-size: 0.9em;">
+                                        ${show.author ? `<span style="color: #444;">${show.author}</span> - ` : ''}${show.date}
                                     </div>
                                 `;
 
-                                // Create play button (right side)
-                                const playButton = document.createElement('button');
-                                playButton.style.cssText = `
-                                    background: black;
-                                    border: none;
-                                    border-radius: 50%;
-                                    width: 20px;
-                                    height: 20px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    cursor: pointer;
-                                    flex-shrink: 0;
-                                    padding: 0;
-                                `;
+                                // Add post excerpt and link if available
+                                if (show.post) {
+                                    infoHTML += `
+                                        <div style="color: #555; font-family: 'Courier New', monospace; font-size: 0.85em; margin-top: 4px;">
+                                            ${show.post.excerpt}
+                                        </div>
+                                        <div style="margin-top: 4px;">
+                                            <a href="/patch/${show.post.slug}.html" style="color: var(--daorange); text-decoration: none; font-size: 0.9em; font-weight: bold;">
+                                                Show Notes
+                                            </a>
+                                        </div>
+                                    `;
+                                }
 
-                                // Add play icon SVG
-                                playButton.innerHTML = `
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M8 5v14l11-7z" fill="white"/>
-                                    </svg>
-                                `;
+                                infoSection.innerHTML = infoHTML;
 
-                                let audioElement = null;
+                                // Create play button (right side) if recording exists
+                                if (show.recording) {
+                                    const playButton = document.createElement('button');
+                                    playButton.style.cssText = `
+                                        background: black;
+                                        border: none;
+                                        border-radius: 50%;
+                                        width: 24px;
+                                        height: 24px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        cursor: pointer;
+                                        flex-shrink: 0;
+                                        padding: 0;
+                                        margin-top: 4px;
+                                    `;
 
-                                playButton.onclick = () => {
-                                    if (!audioElement) {
-                                        audioElement = document.createElement('audio');
-                                        audioElement.style.display = 'none';
+                                    playButton.innerHTML = `
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M8 5v14l11-7z" fill="white"/>
+                                        </svg>
+                                    `;
 
-                                        audioElement.onplay = () => {
-                                            if (typeof stopRadio === 'function') {
-                                                stopRadio();
-                                            }
+                                    let audioElement = null;
 
-                                            recordingPlayers.forEach(player => {
-                                                if (player !== audioElement) {
-                                                    player.pause();
-                                                    player.currentTime = 0;
+                                    playButton.onclick = () => {
+                                        if (!audioElement) {
+                                            audioElement = document.createElement('audio');
+                                            audioElement.style.display = 'none';
+
+                                            audioElement.onplay = () => {
+                                                if (typeof stopRadio === 'function') {
+                                                    stopRadio();
                                                 }
-                                            });
 
-                                            currentAudioElement = audioElement;
-                                            playerFooter.classList.add('visible');
-                                            footerTitle.textContent = title;
-                                            footerDate.textContent = formattedDate;
-                                            updateFooterPlayButton(true);
-
-                                            // Add Media Session metadata
-                                            if ('mediaSession' in navigator && isPlaying) {
-                                                navigator.mediaSession.metadata = new MediaMetadata({
-                                                    title: `LIVE: ${title}`,
-                                                    artist: 'cabbage.town',
-                                                    artwork: [
-                                                        { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
-                                                    ]
+                                                recordingPlayers.forEach(player => {
+                                                    if (player !== audioElement) {
+                                                        player.pause();
+                                                        player.currentTime = 0;
+                                                    }
                                                 });
-                                            }
 
-                                            playButton.innerHTML = `
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="white"/>
-                                                </svg>
-                                            `;
-                                        };
+                                                currentAudioElement = audioElement;
+                                                playerFooter.classList.add('visible');
+                                                footerTitle.textContent = show.title;
+                                                footerDate.textContent = show.date;
+                                                updateFooterPlayButton(true);
 
-                                        audioElement.onpause = () => {
-                                            updateFooterPlayButton(false);
-                                            if ('mediaSession' in navigator && isPlaying) {
-                                                navigator.mediaSession.playbackState = 'paused';
-                                            }
-                                            playButton.innerHTML = `
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M8 5v14l11-7z" fill="white"/>
-                                                </svg>
-                                            `;
-                                        };
+                                                if ('mediaSession' in navigator && isPlaying) {
+                                                    navigator.mediaSession.metadata = new MediaMetadata({
+                                                        title: show.title,
+                                                        artist: show.author || 'cabbage.town',
+                                                        artwork: [
+                                                            { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
+                                                        ]
+                                                    });
+                                                }
 
-                                        audioElement.onloadedmetadata = () => {
-                                            timeSlider.max = audioElement.duration;
-                                            durationDisplay.textContent = formatTime(audioElement.duration);
-                                        };
+                                                playButton.innerHTML = `
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="white"/>
+                                                    </svg>
+                                                `;
+                                            };
 
-                                        audioElement.ontimeupdate = () => {
-                                            if (!timeSlider.dragging) {
-                                                timeSlider.value = audioElement.currentTime;
-                                                currentTimeDisplay.textContent = formatTime(audioElement.currentTime);
-                                            }
-                                        };
+                                            audioElement.onpause = () => {
+                                                updateFooterPlayButton(false);
+                                                if ('mediaSession' in navigator && isPlaying) {
+                                                    navigator.mediaSession.playbackState = 'paused';
+                                                }
+                                                playButton.innerHTML = `
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M8 5v14l11-7z" fill="white"/>
+                                                    </svg>
+                                                `;
+                                            };
 
-                                        audioElement.onended = () => {
-                                            playerFooter.classList.remove('visible');
-                                            currentAudioElement = null;
-                                        };
+                                            audioElement.onloadedmetadata = () => {
+                                                timeSlider.max = audioElement.duration;
+                                                durationDisplay.textContent = formatTime(audioElement.duration);
+                                            };
 
-                                        const source = document.createElement('source');
-                                        source.src = audioUrl;
-                                        source.type = 'audio/mpeg';
-                                        audioElement.appendChild(source);
+                                            audioElement.ontimeupdate = () => {
+                                                if (!timeSlider.dragging) {
+                                                    timeSlider.value = audioElement.currentTime;
+                                                    currentTimeDisplay.textContent = formatTime(audioElement.currentTime);
+                                                }
+                                            };
 
-                                        playButton.style.opacity = '0.5';
+                                            audioElement.onended = () => {
+                                                playerFooter.classList.remove('visible');
+                                                currentAudioElement = null;
+                                            };
 
-                                        audioElement.onloadeddata = () => {
-                                            playButton.style.opacity = '1';
-                                            audioElement.play();
-                                        };
+                                            const source = document.createElement('source');
+                                            source.src = show.recording.url;
+                                            source.type = 'audio/mpeg';
+                                            audioElement.appendChild(source);
 
-                                        audioElement.onerror = () => {
-                                            playButton.style.opacity = '1';
-                                            playButton.style.backgroundColor = '#d32f2f';
-                                        };
+                                            playButton.style.opacity = '0.5';
 
-                                        recordingPlayers.push(audioElement);
-                                        showElement.appendChild(audioElement);
-                                    } else {
-                                        if (audioElement.paused) {
-                                            audioElement.play();
+                                            audioElement.onloadeddata = () => {
+                                                playButton.style.opacity = '1';
+                                                audioElement.play();
+                                            };
+
+                                            audioElement.onerror = () => {
+                                                playButton.style.opacity = '1';
+                                                playButton.style.backgroundColor = '#d32f2f';
+                                            };
+
+                                            recordingPlayers.push(audioElement);
+                                            showElement.appendChild(audioElement);
                                         } else {
-                                            audioElement.pause();
+                                            if (audioElement.paused) {
+                                                audioElement.play();
+                                            } else {
+                                                audioElement.pause();
+                                            }
                                         }
-                                    }
-                                };
+                                    };
 
-                                showElement.appendChild(infoSection);
-                                showElement.appendChild(playButton);
-                                recordingsList.appendChild(showElement);
+                                    showElement.appendChild(infoSection);
+                                    showElement.appendChild(playButton);
+                                } else {
+                                    // No recording, just show the info
+                                    showElement.appendChild(infoSection);
+                                }
+
+                                showsList.appendChild(showElement);
                             });
 
                             mainRadio.addEventListener('play', () => {
@@ -736,9 +753,9 @@
                             });
 
                         } catch (error) {
-                            console.error('Error fetching recordings:', error);
-                            const recordingsList = document.getElementById('recordings-list');
-                            recordingsList.innerHTML = '<p style="color: red;">Error loading recordings. Please try again later.</p>';
+                            console.error('Error fetching shows:', error);
+                            const showsList = document.getElementById('shows-list');
+                            showsList.innerHTML = '<p style="color: red;">Error loading shows. Please try again later.</p>';
                         }
                     }
 
@@ -764,18 +781,9 @@
                         }
                     });
 
-                    fetchAndDisplayRecordings();
+                    fetchAndDisplayShows();
                 });
             </script>
-
-            <h3 class="syne-mono-regular">from the patch</h3>
-            <div id="posts-container" style="background: white; border-radius: 32px; padding: 32px;">
-                <div id="posts-list" style="display: flex; flex-direction: column; gap: 16px;">
-                    <p style="color: #666; font-style: italic;">Pulling weeds...</p>
-                </div>
-            </div>
-
-            <br />
 
             <h3 class="syne-mono-regular">news</h3>
             <div
@@ -1057,66 +1065,5 @@
     })();
 </script>
 
-<script>
-    // Load and display blog posts
-    async function loadPosts() {
-        try {
-            const response = await fetch('/posts.json?_=' + Date.now());
-            if (!response.ok) {
-                throw new Error('Failed to load posts');
-            }
-            
-            const posts = await response.json();
-            const postsList = document.getElementById('posts-list');
-            
-            if (posts.length === 0) {
-                postsList.innerHTML = '<p style="color: #666; font-style: italic;">No posts yet. Check back soon!</p>';
-                return;
-            }
-            
-            postsList.innerHTML = '';
-            
-            posts.forEach(post => {
-                const postElement = document.createElement('div');
-                postElement.style.cssText = `
-                    padding: 16px;
-                    border-radius: 8px;
-                    transition: background-color 0.2s;
-                `;
-                
-                postElement.innerHTML = `
-                    <a href="/patch/${post.slug}.html" style="text-decoration: none; color: inherit;">
-                        <div style="font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1em; margin-bottom: 4px; color: var(--daorange);">
-                            ${post.title}
-                        </div>
-                        <div style="color: #666; font-family: 'Courier New', monospace; font-size: 0.9em; margin-bottom: 8px;">
-                            By <strong>${post.author}</strong> · ${post.date}
-                        </div>
-                        <div style="color: #444; font-family: 'Courier New', monospace; font-size: 0.9em;">
-                            ${post.excerpt}
-                        </div>
-                    </a>
-                `;
-                
-                // Add hover effect
-                postElement.addEventListener('mouseenter', () => {
-                    postElement.style.backgroundColor = '#f9f9f9';
-                });
-                postElement.addEventListener('mouseleave', () => {
-                    postElement.style.backgroundColor = 'transparent';
-                });
-                
-                postsList.appendChild(postElement);
-            });
-        } catch (error) {
-            console.error('Error loading posts:', error);
-            const postsList = document.getElementById('posts-list');
-            postsList.innerHTML = '<p style="color: #666; font-style: italic;">Unable to load posts at the moment.</p>';
-        }
-    }
-    
-    // Load posts when page loads
-    document.addEventListener('DOMContentLoaded', loadPosts);
-</script>
 
 </html>
