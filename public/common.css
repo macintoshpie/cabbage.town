@@ -5,11 +5,92 @@
   src: local('Cooper Black Regular'), url('COOPBL.woff') format('woff');
 }
 
-:root {
+/* ========================================
+   THEME CONFIGURATION
+   Comment/uncomment theme blocks to switch themes
+   ======================================== */
+
+/* 🌿 DEFAULT THEME - cabbage.town classic 🌿 */
+/* :root {
   --dagreen: rgb(36, 221, 35);
   --dayellow: rgb(255, 237, 182);
   --daorange: rgb(250, 134, 37);
+
+  --theme-text-shadow: none;
+  --theme-glow: none;
+} */
+
+/* END DEFAULT THEME */
+
+/* 🎃 HALLOWEEN THEME 🎃 
+   Uncomment this block (and comment out DEFAULT THEME above) for spooky vibes
+*/
+:root {
+  --dagreen: rgb(34, 139, 34);
+  --dayellow: rgb(80, 53, 98);
+  --daorange: rgb(255, 102, 0);
+
+  --theme-text-shadow: 2px 2px 4px rgba(255, 102, 0, 0.5);
+  --theme-glow: drop-shadow(0 0 8px rgb(255, 102, 0));
 }
+
+body {
+  background-image:
+    repeating-linear-gradient(45deg,
+      transparent,
+      transparent 35px,
+      rgba(139, 0, 139, 0.03) 35px,
+      rgba(139, 0, 139, 0.03) 70px);
+}
+
+.syne-mono-regular {
+  text-shadow: var(--theme-text-shadow);
+}
+
+#logo {
+  filter: var(--theme-glow);
+  animation: spookyFloat 3s ease-in-out infinite;
+}
+
+@keyframes spookyFloat {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.song-details-container {
+  box-shadow: 0 0 20px rgba(139, 0, 139, 0.3);
+}
+
+/* END HALLOWEEN THEME */
+
+/* 🎄 WINTER THEME 🎄 
+   Uncomment for winter/holiday vibes
+:root {
+  --dagreen: rgb(0, 128, 0);
+  --dayellow: rgb(240, 248, 255);
+  --daorange: rgb(178, 34, 34);
+  
+  --theme-text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+  --theme-glow: drop-shadow(0 0 8px rgb(255, 255, 255));
+}
+
+body {
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(178, 34, 34, 0.2) 0%, transparent 50%);
+}
+
+#logo {
+  filter: var(--theme-glow);
+}
+END WINTER THEME */
 
 body {
   background: var(--dayellow);

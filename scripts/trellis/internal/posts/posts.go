@@ -176,6 +176,7 @@ func GeneratePostHTML(post Post, outputDir string) error {
 	htmlContent := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>%s - cabbage.town</title>
     <link rel="icon" href="../icon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -190,9 +191,13 @@ func GeneratePostHTML(post Post, outputDir string) error {
     </style>
 </head>
 <body>
+    
+    <div style="position: fixed; top: 10px; left: 10px; font-size: 3em; z-index: 999; animation: spookyFloat 4s ease-in-out infinite;">🎃</div>
+    <div style="position: fixed; top: 10px; right: 10px; font-size: 3em; z-index: 999; animation: spookyFloat 3s ease-in-out infinite 0.5s;">👻</div>
+
     <div class="main">
         <a href="/">
-            <img src="../the-cabbage.png" style="width: 80px; height: auto" alt="cabbage">
+            <img src="../the-cabbage.png" style="width: 80px; height: auto" alt="cabbage" id="logo">
         </a>
         <a href="/" style="text-decoration: none; color: black;">
             <h2 class="syne-mono-regular">cabbage.town</h2>
