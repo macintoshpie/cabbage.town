@@ -183,6 +183,12 @@
       </div>
 
       <div class="form-group">
+        <label for="author">Author</label>
+        <input type="text" id="author" name="author" placeholder="Enter author name" required
+          value="{{if .Post}}{{.Post.Author}}{{end}}">
+      </div>
+
+      <div class="form-group">
         <label for="markdown">Content</label>
         <textarea id="markdown" name="markdown">{{if .Post}}{{.Post.Markdown}}{{end}}</textarea>
       </div>
@@ -235,11 +241,17 @@
             return;
           }
           
+          const author = document.getElementById('author').value.trim();
+          if (!author) {
+            onError('Please enter an author name first');
+            return;
+          }
+          
           // Get current markdown content to preserve it
           const currentMarkdown = easyMDE.value();
           
           // Create a draft post with current content to get an ID (silently)
-          const tempPost = await savePostAPI(title, currentMarkdown, false);
+          const tempPost = await savePostAPI(title, author, currentMarkdown, false);
           if (!tempPost) {
             onError('Failed to create post');
             return;
@@ -279,6 +291,7 @@
 
     async function savePost() {
       const title = document.getElementById('title').value.trim();
+      const author = document.getElementById('author').value.trim();
       const markdown = easyMDE.value();
       const published = document.getElementById('published').checked;
 
@@ -287,9 +300,14 @@
         return;
       }
 
+      if (!author) {
+        alert('Please enter an author name');
+        return;
+      }
+
       const success = postId
-        ? await updatePostAPI(postId, title, markdown, published)
-        : await savePostAPI(title, markdown, published);
+        ? await updatePostAPI(postId, title, author, markdown, published)
+        : await savePostAPI(title, author, markdown, published);
 
       if (success) {
         alert('Post saved successfully!');
@@ -300,7 +318,7 @@
     }
 
     // Core API functions without UI side effects
-    async function savePostAPI(title, markdown, published) {
+    async function savePostAPI(title, author, markdown, published) {
       try {
         const response = await fetch('/api/posts', {
           method: 'POST',
@@ -309,6 +327,7 @@
           },
           body: JSON.stringify({
             title: title,
+            author: author,
             markdown: markdown,
             published: published
           })
@@ -322,7 +341,7 @@
       }
     }
 
-    async function updatePostAPI(id, title, markdown, published) {
+    async function updatePostAPI(id, title, author, markdown, published) {
       try {
         const response = await fetch('/api/posts/' + id, {
           method: 'PUT',
@@ -331,6 +350,7 @@
           },
           body: JSON.stringify({
             title: title,
+            author: author,
             markdown: markdown,
             published: published
           })

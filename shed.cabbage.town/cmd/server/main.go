@@ -150,7 +150,8 @@ type Post struct {
 	Title     string       `json:"title"`
 	Slug      string       `json:"slug"`
 	Markdown  string       `json:"markdown"`
-	Author    string       `json:"author"`
+	Author    string       `json:"author"`    // User-specified display name
+	CreatedBy string       `json:"createdBy"` // Authenticated username (for permissions)
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	Published bool         `json:"published"`
@@ -177,12 +178,14 @@ type PostListItem struct {
 
 type CreatePostRequest struct {
 	Title     string `json:"title"`
+	Author    string `json:"author"`
 	Markdown  string `json:"markdown"`
 	Published bool   `json:"published"`
 }
 
 type UpdatePostRequest struct {
 	Title     string `json:"title"`
+	Author    string `json:"author"`
 	Markdown  string `json:"markdown"`
 	Published bool   `json:"published"`
 }
@@ -912,6 +915,11 @@ func createPostAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Author == "" {
+		http.Error(w, "Author is required", http.StatusBadRequest)
+		return
+	}
+
 	// Create new post
 	now := time.Now().UTC()
 	post := Post{
@@ -919,7 +927,8 @@ func createPostAPIHandler(w http.ResponseWriter, r *http.Request) {
 		Title:     req.Title,
 		Slug:      generateSlug(req.Title),
 		Markdown:  req.Markdown,
-		Author:    username,
+		Author:    req.Author,
+		CreatedBy: username,
 		CreatedAt: now,
 		UpdatedAt: now,
 		Published: req.Published,
@@ -983,10 +992,16 @@ func updatePostAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Author == "" {
+		http.Error(w, "Author is required", http.StatusBadRequest)
+		return
+	}
+
 	// Update post
 	post.Title = req.Title
 	post.Slug = generateSlug(req.Title)
 	post.Markdown = req.Markdown
+	post.Author = req.Author
 	post.Published = req.Published
 	post.UpdatedAt = time.Now().UTC()
 	post.Metadata.Excerpt = generateExcerpt(req.Markdown)
@@ -1838,7 +1853,7 @@ func checkPostPermissions(post *Post, username string, isAdmin bool) bool {
 	if isAdmin {
 		return true
 	}
-	return post.Author == username
+	return post.CreatedBy == username
 }
 
 func canViewPost(post *Post, username string, isAdmin bool) bool {

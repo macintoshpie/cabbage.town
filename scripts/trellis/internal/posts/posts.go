@@ -25,7 +25,8 @@ type Post struct {
 	Title     string       `json:"title"`
 	Slug      string       `json:"slug"`
 	Markdown  string       `json:"markdown"`
-	Author    string       `json:"author"`
+	Author    string       `json:"author"`    // User-specified display name
+	CreatedBy string       `json:"createdBy"` // Authenticated username (for permissions)
 	CreatedAt time.Time    `json:"createdAt"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 	Published bool         `json:"published"`
