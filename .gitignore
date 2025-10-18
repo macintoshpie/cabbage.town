@@ -5,3 +5,6 @@ tmp/
 # Built executables
 scripts/trellis/bin/
 scripts/trellis/update_recordings
+scripts/trellis/main
+shed.cabbage.town/server
+shed.cabbage.town/main
