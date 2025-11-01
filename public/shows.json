@@ -17,17 +17,8 @@
     "author": "dj ted",
     "date": "October 27, 2025",
     "recording": {
-      "key": "recordings/ted/stream_20251027-211516.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20251027-211516.mp3"
-    }
-  },
-  {
-    "title": "mulch channel",
-    "author": "dj ted",
-    "date": "October 27, 2025",
-    "recording": {
-      "key": "recordings/ted/stream_20251027-210034.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20251027-210034.mp3"
+      "key": "recordings/ted/stream_20251027-210000.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20251027-210000.mp3"
     }
   },
   {
@@ -152,21 +143,21 @@
     }
   },
   {
-    "title": "DJ (Kim) Facchine's favorite covers",
-    "author": "reginajingles",
-    "date": "September 17, 2025",
-    "recording": {
-      "key": "recordings/katherine/stream_20250917-205929.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/katherine/stream_20250917-205929.mp3"
-    }
-  },
-  {
     "title": "DJ Facchine covers pt deux",
     "author": "reginajingles",
     "date": "September 17, 2025",
     "recording": {
       "key": "recordings/katherine/stream_20250917-220448.mp3",
       "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/katherine/stream_20250917-220448.mp3"
+    }
+  },
+  {
+    "title": "DJ (Kim) Facchine's favorite covers",
+    "author": "reginajingles",
+    "date": "September 17, 2025",
+    "recording": {
+      "key": "recordings/katherine/stream_20250917-205929.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/katherine/stream_20250917-205929.mp3"
     }
   },
   {
@@ -327,8 +318,8 @@
     "author": "the conductor",
     "date": "August 12, 2025",
     "recording": {
-      "key": "recordings/will/stream_20250812-150005.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150005.mp3"
+      "key": "recordings/will/stream_20250812-150816.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150816.mp3"
     }
   },
   {
@@ -336,8 +327,8 @@
     "author": "the conductor",
     "date": "August 12, 2025",
     "recording": {
-      "key": "recordings/will/stream_20250812-150816.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150816.mp3"
+      "key": "recordings/will/stream_20250812-150005.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250812-150005.mp3"
     }
   },
   {
@@ -399,8 +390,8 @@
     "author": "the conductor",
     "date": "July 29, 2025",
     "recording": {
-      "key": "recordings/will/stream_20250729-130000.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250729-130000.mp3"
+      "key": "recordings/will/stream_20250729-130005.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250729-130005.mp3"
     }
   },
   {
@@ -408,8 +399,8 @@
     "author": "the conductor",
     "date": "July 29, 2025",
     "recording": {
-      "key": "recordings/will/stream_20250729-130005.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250729-130005.mp3"
+      "key": "recordings/will/stream_20250729-130000.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250729-130000.mp3"
     }
   },
   {
@@ -741,8 +732,8 @@
     "author": "Seth",
     "date": "June 1, 2025",
     "recording": {
-      "key": "recordings/seth/Home Cooking Show 3 20250601-000000.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 3 20250601-000000.mp3"
+      "key": "recordings/seth/Home Cooking Show 1 20250601-000000.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3"
     }
   },
   {
@@ -750,8 +741,8 @@
     "author": "Seth",
     "date": "June 1, 2025",
     "recording": {
-      "key": "recordings/seth/Home Cooking Show 1 20250601-000000.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3"
+      "key": "recordings/seth/Home Cooking Show 3 20250601-000000.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 3 20250601-000000.mp3"
     }
   },
   {
@@ -764,12 +755,12 @@
     }
   },
   {
-    "title": "IS WiLD hour",
-    "author": "DJ CHICAGO STYLE",
+    "title": "Late Nights Like These",
+    "author": "Nights Like These",
     "date": "May 20, 2025",
     "recording": {
-      "key": "recordings/ben/IS WiLD hour - 2025 05 20 DJ CHICAGO STYLE-20250520-000000.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/IS WiLD hour - 2025 05 20 DJ CHICAGO STYLE-20250520-000000.mp3"
+      "key": "recordings/brennan/Late 05082025 Nights Like These-20250520-000000.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/Late 05082025 Nights Like These-20250520-000000.mp3"
     }
   },
   {
@@ -791,12 +782,12 @@
     }
   },
   {
-    "title": "Late Nights Like These",
-    "author": "Nights Like These",
+    "title": "IS WiLD hour",
+    "author": "DJ CHICAGO STYLE",
     "date": "May 20, 2025",
     "recording": {
-      "key": "recordings/brennan/Late 05082025 Nights Like These-20250520-000000.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/Late 05082025 Nights Like These-20250520-000000.mp3"
+      "key": "recordings/ben/IS WiLD hour - 2025 05 20 DJ CHICAGO STYLE-20250520-000000.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/IS WiLD hour - 2025 05 20 DJ CHICAGO STYLE-20250520-000000.mp3"
     }
   },
   {
@@ -831,6 +822,15 @@
     "author": "DJ CHICAGO STYLE",
     "date": "May 6, 2025",
     "recording": {
+      "key": "recordings/ben/DJ CHICAGO STYLE IS WiLD hour - 2025 04 15 Ben Shudak-20250506-000000.mp3",
+      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/DJ CHICAGO STYLE IS WiLD hour - 2025 04 15 Ben Shudak-20250506-000000.mp3"
+    }
+  },
+  {
+    "title": "IS WiLD hour",
+    "author": "DJ CHICAGO STYLE",
+    "date": "May 6, 2025",
+    "recording": {
       "key": "recordings/ben/DJ CHICAGO STYLE IS WiLD hour - 2025 05 06 Ben Shudak-20250506-000000.mp3",
       "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/DJ CHICAGO STYLE IS WiLD hour - 2025 05 06 Ben Shudak-20250506-000000.mp3"
     }
@@ -851,15 +851,6 @@
     "recording": {
       "key": "recordings/ben/DJ CHICAGO STYLE IS WiLD hour - 2025 04 22 Ben Shudak-20250506-000000.mp3",
       "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/DJ CHICAGO STYLE IS WiLD hour - 2025 04 22 Ben Shudak-20250506-000000.mp3"
-    }
-  },
-  {
-    "title": "IS WiLD hour",
-    "author": "DJ CHICAGO STYLE",
-    "date": "May 6, 2025",
-    "recording": {
-      "key": "recordings/ben/DJ CHICAGO STYLE IS WiLD hour - 2025 04 15 Ben Shudak-20250506-000000.mp3",
-      "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/DJ CHICAGO STYLE IS WiLD hour - 2025 04 15 Ben Shudak-20250506-000000.mp3"
     }
   }
 ]
