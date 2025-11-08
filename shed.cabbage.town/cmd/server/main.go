@@ -1214,6 +1214,72 @@ func uploadPostImageHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func uploadBirthdayImageHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse multipart form (10MB max)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, "File too large", http.StatusBadRequest)
+		return
+	}
+
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Failed to get image from request", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Validate file extension
+	ext := filepath.Ext(header.Filename)
+	allowedExts := map[string]bool{
+		".jpg":  true,
+		".jpeg": true,
+		".png":  true,
+		".gif":  true,
+		".webp": true,
+	}
+	if !allowedExts[strings.ToLower(ext)] {
+		http.Error(w, "Invalid image format. Allowed: jpg, jpeg, png, gif, webp", http.StatusBadRequest)
+		return
+	}
+
+	// Generate safe filename with timestamp
+	timestamp := time.Now().UTC().Format("20060102-150405")
+	safeFilename := regexp.MustCompile(`[^a-zA-Z0-9._-]`).ReplaceAllString(header.Filename, "")
+	filename := fmt.Sprintf("%s-%s", timestamp, safeFilename)
+
+	// Store at birthday/<filename>
+	key := fmt.Sprintf("birthday/%s", filename)
+
+	// Upload with public-read ACL
+	contentType := header.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	// Create metadata
+	metadata := map[string]*string{
+		"Upload-Time":       aws.String(time.Now().UTC().Format(time.RFC3339)),
+		"Original-Filename": aws.String(header.Filename),
+	}
+
+	err = bucketClient.PutObjectWithMetadata(key, file, contentType, metadata, "public-read")
+	if err != nil {
+		log.Printf("Error uploading birthday image: %v", err)
+		http.Error(w, "Failed to upload image", http.StatusInternalServerError)
+		return
+	}
+
+	// Return the public URL
+	url := fmt.Sprintf("https://%s.nyc3.digitaloceanspaces.com/%s", bucketClient.Bucket, key)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"url":     url,
+		"message": "Image uploaded successfully",
+	})
+}
+
 func listRecordingsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	// List all public recordings from the recordings/ directory
 	session, _ := store.Get(r, sessionName)
@@ -1606,12 +1672,36 @@ func securityHeadersMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		fmt.Println("CORS request", r.Header.Get("Origin"))
+		// Allow requests from localhost:8000
+		origin := r.Header.Get("Origin")
+		if origin == "http://localhost:8000" || origin == "http://127.0.0.1:8000" || origin == "http://[::1]:8000" || origin == "https://birthday.cabbage.town" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+		}
+
+		// Handle preflight OPTIONS request
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func setupRoutes() *mux.Router {
 	r := mux.NewRouter().StrictSlash(true)
 
 	log.Printf("[SETUP] Configuring routes")
 
 	// Add global middleware
+	r.Use(corsMiddleware)
 	r.Use(securityHeadersMiddleware)
 
 	// Static files
@@ -1621,6 +1711,7 @@ func setupRoutes() *mux.Router {
 	r.HandleFunc("/", homeHandler).Methods("GET").Name("home")
 	r.HandleFunc("/login", loginHandler).Methods("POST").Name("login")
 	r.HandleFunc("/logout", logoutHandler).Methods("GET").Name("logout")
+	r.HandleFunc("/api/birthday", uploadBirthdayImageHandler).Methods("POST").Name("birthday-upload")
 
 	// Protected routes with rate limiting
 	protected := r.NewRoute().Subrouter()
