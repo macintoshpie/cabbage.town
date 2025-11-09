@@ -191,9 +191,6 @@ func GeneratePostHTML(post Post, outputDir string) error {
     </style>
 </head>
 <body>
-    
-    <div style="position: fixed; top: 10px; left: 10px; font-size: 3em; z-index: 999; animation: spookyFloat 4s ease-in-out infinite;">🎃</div>
-    <div style="position: fixed; top: 10px; right: 10px; font-size: 3em; z-index: 999; animation: spookyFloat 3s ease-in-out infinite 0.5s;">👻</div>
 
     <div class="main">
         <a href="/">
