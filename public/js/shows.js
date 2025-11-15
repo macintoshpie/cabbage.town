@@ -4,7 +4,7 @@
 // ============================================
 
 import { setCurrentNowPlaying, setNowPlayingInterval, getRadioState } from './state.js';
-import { createRecordingPlayer, updateLiveFooterMetadata } from './player.js';
+import { playRecording, updateLiveFooterMetadata } from './player.js';
 
 // Streamer mapping
 // https://radio.cabbage.town/station/1/streamers
@@ -257,7 +257,7 @@ export async function fetchAndDisplayShows() {
                     </svg>
                 `;
 
-                playButton.onclick = createRecordingPlayer(show, playButton);
+                playButton.onclick = () => playRecording(show, playButton);
 
                 showElement.appendChild(infoSection);
                 showElement.appendChild(playButton);
@@ -334,7 +334,7 @@ export function initPatchPagePlayer() {
         };
         
         console.log('[Shows] Initializing patch page player button:', show.title);
-        button.onclick = createRecordingPlayer(show, button);
+        button.onclick = () => playRecording(show, button);
     });
 }
 
