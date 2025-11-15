@@ -364,92 +364,21 @@
             </div>
 
             <script id="radio-script">
-                // partially borrowed logic from original azuracast player
-                // https://github.com/AzuraCast/AzuraCast/blob/8783383563a538b3e06f3dca4dbe65b2202cec99/frontend/components/Common/AudioPlayer.vue
-                const radio = document.getElementById("radio");
-                const playBtn = document.getElementById("play");
-                const stopBtn = document.getElementById("stop");
-
-                let isPlaying = false;
-
-                function stopRadio() {
-                    radio.pause();
-                    radio.src = "";
-                    radio.load();
-                    isPlaying = false;
-
-                    playBtn.style.display = "flex";
-                    stopBtn.style.display = "none";
-
-                    // Update media session
-                    if ('mediaSession' in navigator) {
-                        navigator.mediaSession.playbackState = 'paused';
-                    }
-                }
-
-                function playRadio() {
-                    // force fresh stream each time
-                    let url = "https://radio.cabbage.town:8000/radio.mp3";
-                    if (navigator.userAgent.includes("Firefox")) {
-                        url += "?refresh=" + Date.now(); // bust cache
-                    }
-
-                    radio.src = url;
-                    radio.load();
-
-                    radio.play().then(() => {
-                        isPlaying = true;
-                        playBtn.style.display = "none";
-                        stopBtn.style.display = "flex";
-
-                        // Set up media session
-                        if ('mediaSession' in navigator) {
-                            // Initial metadata will be updated by updateNowPlaying
-                            navigator.mediaSession.metadata = new MediaMetadata({
-                                title: 'Live Radio',
-                                artist: 'cabbage.town',
-                                artwork: [
-                                    { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
-                                ]
-                            });
-
-                            // Add action handlers
-                            navigator.mediaSession.setActionHandler('play', () => {
-                                playRadio();
-                            });
-                            navigator.mediaSession.setActionHandler('pause', () => {
-                                stopRadio();
-                            });
-
-                            navigator.mediaSession.playbackState = 'playing';
-                        }
-                    }).catch(err => {
-                        console.warn("playback failed", err);
-                    });
-                }
-
-                playBtn.onclick = () => {
-                    if (isPlaying) stopRadio();
-                    playRadio();
+                // Global state and functions for unified player management
+                // Will be initialized properly in DOMContentLoaded
+                window.radioPlayerState = {
+                    currentNowPlaying: null // Store current now playing data
                 };
-
-                stopBtn.onclick = () => {
-                    stopRadio();
-                };
-
-                radio.onerror = (e) => {
-                    const err = radio.error;
-                    if (err?.code === MediaError.MEDIA_ERR_NETWORK) {
-                        console.log("stream error, retrying in 5s...");
-                        setTimeout(playRadio, 5000);
-                    }
-                };
-
-                radio.onended = stopRadio;
             </script>
 
             <script>
+                // ============================================
+                // UNIFIED AUDIO PLAYER MANAGEMENT
+                // Consolidates live radio and recorded show playback
+                // with synchronized controls and footer player
+                // ============================================
                 document.addEventListener('DOMContentLoaded', () => {
+                    // DOM references
                     const mainRadio = document.getElementById('radio');
                     const recordingPlayers = [];
                     const playerFooter = document.getElementById('playerFooter');
@@ -459,9 +388,221 @@
                     const durationDisplay = document.getElementById('duration');
                     const footerTitle = document.getElementById('footerTitle');
                     const footerDate = document.getElementById('footerDate');
+                    const playBtn = document.getElementById('play');
+                    const stopBtn = document.getElementById('stop');
 
-                    let currentAudioElement = null;
+                    // Unified player state management
+                    // Tracks current playback across both live and recorded shows
+                    const playerState = {
+                        type: null, // 'live' or 'recording'
+                        audioElement: null,
+                        isPlaying: false,
+                        metadata: {
+                            title: '',
+                            artist: '',
+                            date: '',
+                            artwork: ''
+                        }
+                    };
 
+                    // Helper: Update main section buttons
+                    function updateMainButtons() {
+                        if (playerState.type === 'live' && playerState.isPlaying) {
+                            playBtn.style.display = 'none';
+                            stopBtn.style.display = 'flex';
+                        } else {
+                            playBtn.style.display = 'flex';
+                            stopBtn.style.display = 'none';
+                        }
+                    }
+
+                    // Helper: Update footer visibility and content
+                    function updateFooter() {
+                        if (playerState.isPlaying) {
+                            playerFooter.classList.add('visible');
+                            
+                            if (playerState.type === 'live') {
+                                // Hide time controls for live radio
+                                timeSlider.style.display = 'none';
+                                currentTimeDisplay.style.display = 'none';
+                                durationDisplay.style.display = 'none';
+                            } else {
+                                // Show time controls for recordings
+                                timeSlider.style.display = 'block';
+                                currentTimeDisplay.style.display = 'block';
+                                durationDisplay.style.display = 'block';
+                            }
+                            
+                            footerTitle.textContent = playerState.metadata.title;
+                            footerDate.textContent = playerState.metadata.date;
+                        } else {
+                            playerFooter.classList.remove('visible');
+                        }
+                    }
+
+                    // Helper: Stop all audio
+                    function stopAllAudio() {
+                        // Stop live radio
+                        if (mainRadio && !mainRadio.paused) {
+                            mainRadio.pause();
+                            mainRadio.src = "";
+                            mainRadio.load();
+                        }
+                        
+                        // Stop all recording players
+                        recordingPlayers.forEach(player => {
+                            if (!player.paused) {
+                                player.pause();
+                                player.currentTime = 0;
+                            }
+                        });
+                        
+                        playerState.isPlaying = false;
+                        playerState.type = null;
+                        playerState.audioElement = null;
+                        updateMainButtons();
+                        updateFooter();
+                    }
+
+                    // Live radio control functions
+                    function stopRadio() {
+                        mainRadio.pause();
+                        mainRadio.src = "";
+                        mainRadio.load();
+                        
+                        playerState.isPlaying = false;
+                        playerState.type = null;
+                        playerState.audioElement = null;
+                        
+                        updateMainButtons();
+                        updateFooter();
+
+                        // Update media session
+                        if ('mediaSession' in navigator) {
+                            navigator.mediaSession.playbackState = 'paused';
+                        }
+                    }
+
+                    function playRadio() {
+                        // Stop any other audio first
+                        recordingPlayers.forEach(player => {
+                            if (!player.paused) {
+                                player.pause();
+                                player.currentTime = 0;
+                            }
+                        });
+
+                        // Force fresh stream each time
+                        let url = "https://radio.cabbage.town:8000/radio.mp3";
+                        if (navigator.userAgent.includes("Firefox")) {
+                            url += "?refresh=" + Date.now(); // bust cache
+                        }
+
+                        mainRadio.src = url;
+                        mainRadio.load();
+
+                        mainRadio.play().then(() => {
+                            playerState.isPlaying = true;
+                            playerState.type = 'live';
+                            playerState.audioElement = mainRadio;
+                            
+                            // Update metadata from current now playing data
+                            const nowPlaying = window.radioPlayerState.currentNowPlaying;
+                            if (nowPlaying) {
+                                if (nowPlaying.streamerDetails) {
+                                    playerState.metadata.title = `LIVE: ${nowPlaying.streamerDetails.name} w/ ${nowPlaying.streamerDetails.dj}`;
+                                    playerState.metadata.date = `${nowPlaying.artist} - ${nowPlaying.title}`;
+                                } else {
+                                    playerState.metadata.title = 'Live Radio';
+                                    playerState.metadata.date = `${nowPlaying.artist} - ${nowPlaying.title}`;
+                                }
+                            } else {
+                                playerState.metadata.title = 'Live Radio';
+                                playerState.metadata.date = 'cabbage.town';
+                            }
+                            
+                            updateMainButtons();
+                            updateFooter();
+
+                            // Set up media session
+                            if ('mediaSession' in navigator) {
+                                navigator.mediaSession.metadata = new MediaMetadata({
+                                    title: playerState.metadata.title,
+                                    artist: 'cabbage.town',
+                                    artwork: [
+                                        { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
+                                    ]
+                                });
+
+                                // Add action handlers
+                                navigator.mediaSession.setActionHandler('play', () => {
+                                    playRadio();
+                                });
+                                navigator.mediaSession.setActionHandler('pause', () => {
+                                    stopRadio();
+                                });
+
+                                navigator.mediaSession.playbackState = 'playing';
+                            }
+                        }).catch(err => {
+                            console.warn("playback failed", err);
+                        });
+                    }
+
+                    // Wire up main play/stop buttons
+                    playBtn.onclick = () => {
+                        if (playerState.isPlaying && playerState.type === 'live') {
+                            stopRadio();
+                        } else {
+                            playRadio();
+                        }
+                    };
+
+                    stopBtn.onclick = () => {
+                        stopRadio();
+                    };
+
+                    mainRadio.onerror = (e) => {
+                        const err = mainRadio.error;
+                        if (err?.code === MediaError.MEDIA_ERR_NETWORK) {
+                            console.log("stream error, retrying in 5s...");
+                            setTimeout(playRadio, 5000);
+                        }
+                    };
+
+                    mainRadio.onended = stopRadio;
+
+                    // Make stopRadio globally accessible for recording players
+                    window.stopRadio = stopRadio;
+
+                    // Function to update footer metadata during live playback
+                    window.updateLiveFooterMetadata = (nowPlaying) => {
+                        if (playerState.type === 'live' && playerState.isPlaying) {
+                            if (nowPlaying.streamerDetails) {
+                                playerState.metadata.title = `LIVE: ${nowPlaying.streamerDetails.name} w/ ${nowPlaying.streamerDetails.dj}`;
+                                playerState.metadata.date = `${nowPlaying.artist} - ${nowPlaying.title}`;
+                            } else {
+                                playerState.metadata.title = 'Live Radio';
+                                playerState.metadata.date = `${nowPlaying.artist} - ${nowPlaying.title}`;
+                            }
+                            
+                            footerTitle.textContent = playerState.metadata.title;
+                            footerDate.textContent = playerState.metadata.date;
+                            
+                            // Update media session
+                            if ('mediaSession' in navigator) {
+                                navigator.mediaSession.metadata = new MediaMetadata({
+                                    title: playerState.metadata.title,
+                                    artist: 'cabbage.town',
+                                    artwork: [
+                                        { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
+                                    ]
+                                });
+                            }
+                        }
+                    };
+
+                    // Utility function for time formatting
                     function formatTime(seconds) {
                         const minutes = Math.floor(seconds / 60);
                         const remainingSeconds = Math.floor(seconds % 60);
@@ -478,6 +619,9 @@
                             </svg>`;
                     }
 
+                    // ============================================
+                    // RECORDED SHOWS DISPLAY AND PLAYBACK
+                    // ============================================
                     async function fetchAndDisplayShows() {
                         try {
                             const response = await fetch('/shows.json?_=' + Date.now());
@@ -572,10 +716,12 @@
                                             audioElement.style.display = 'none';
 
                                             audioElement.onplay = () => {
-                                                if (typeof stopRadio === 'function') {
+                                                // Stop live radio if playing
+                                                if (playerState.type === 'live' && playerState.isPlaying) {
                                                     stopRadio();
                                                 }
 
+                                                // Stop other recording players
                                                 recordingPlayers.forEach(player => {
                                                     if (player !== audioElement) {
                                                         player.pause();
@@ -583,13 +729,18 @@
                                                     }
                                                 });
 
-                                                currentAudioElement = audioElement;
-                                                playerFooter.classList.add('visible');
-                                                footerTitle.textContent = show.title;
-                                                footerDate.textContent = show.date;
+                                                // Update unified player state
+                                                playerState.isPlaying = true;
+                                                playerState.type = 'recording';
+                                                playerState.audioElement = audioElement;
+                                                playerState.metadata.title = show.title;
+                                                playerState.metadata.date = show.date;
+                                                
+                                                updateMainButtons();
+                                                updateFooter();
                                                 updateFooterPlayButton(true);
 
-                                                if ('mediaSession' in navigator && isPlaying) {
+                                                if ('mediaSession' in navigator) {
                                                     navigator.mediaSession.metadata = new MediaMetadata({
                                                         title: show.title,
                                                         artist: show.author || 'cabbage.town',
@@ -597,6 +748,7 @@
                                                             { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
                                                         ]
                                                     });
+                                                    navigator.mediaSession.playbackState = 'playing';
                                                 }
 
                                                 playButton.innerHTML = `
@@ -607,8 +759,9 @@
                                             };
 
                                             audioElement.onpause = () => {
+                                                playerState.isPlaying = false;
                                                 updateFooterPlayButton(false);
-                                                if ('mediaSession' in navigator && isPlaying) {
+                                                if ('mediaSession' in navigator) {
                                                     navigator.mediaSession.playbackState = 'paused';
                                                 }
                                                 playButton.innerHTML = `
@@ -631,8 +784,10 @@
                                             };
 
                                             audioElement.onended = () => {
-                                                playerFooter.classList.remove('visible');
-                                                currentAudioElement = null;
+                                                playerState.isPlaying = false;
+                                                playerState.type = null;
+                                                playerState.audioElement = null;
+                                                updateFooter();
                                             };
 
                                             const source = document.createElement('source');
@@ -673,13 +828,6 @@
                                 showsList.appendChild(showElement);
                             });
 
-                            mainRadio.addEventListener('play', () => {
-                                recordingPlayers.forEach(player => {
-                                    player.pause();
-                                    player.currentTime = 0;
-                                });
-                            });
-
                         } catch (error) {
                             console.error('Error fetching shows:', error);
                             const showsList = document.getElementById('shows-list');
@@ -687,16 +835,24 @@
                         }
                     }
 
+                    // Footer play button controls both live and recording playback
                     footerPlayButton.onclick = () => {
-                        if (currentAudioElement) {
-                            if (currentAudioElement.paused) {
-                                currentAudioElement.play();
+                        if (playerState.type === 'live') {
+                            if (playerState.isPlaying) {
+                                stopRadio();
                             } else {
-                                currentAudioElement.pause();
+                                playRadio();
+                            }
+                        } else if (playerState.type === 'recording' && playerState.audioElement) {
+                            if (playerState.audioElement.paused) {
+                                playerState.audioElement.play();
+                            } else {
+                                playerState.audioElement.pause();
                             }
                         }
                     };
 
+                    // Time slider controls for recordings
                     let isTimeSliderDragging = false;
                     timeSlider.addEventListener('mousedown', () => {
                         isTimeSliderDragging = true;
@@ -704,11 +860,12 @@
 
                     timeSlider.addEventListener('mouseup', () => {
                         isTimeSliderDragging = false;
-                        if (currentAudioElement) {
-                            currentAudioElement.currentTime = timeSlider.value;
+                        if (playerState.type === 'recording' && playerState.audioElement) {
+                            playerState.audioElement.currentTime = timeSlider.value;
                         }
                     });
 
+                    // Initialize: fetch and display shows
                     fetchAndDisplayShows();
                 });
             </script>
@@ -908,7 +1065,11 @@
         nowPlayingTitle.innerHTML = `<em>${nowPlaying.title}</em>`;
     }
 
+    // Update media session metadata (when available)
+    // Note: Playback state is managed by the player itself
     const updateMediaSession = (nowPlaying) => {
+        if (!('mediaSession' in navigator)) return;
+        
         const mediaData = {
             title: nowPlaying.title,
             artist: nowPlaying.artist,
@@ -916,6 +1077,7 @@
                 { src: nowPlaying.art, sizes: '512x512', type: 'image/png' }
             ]
         }
+        
         if (nowPlaying.streamerDetails) {
             mediaData.title = `LIVE: ${nowPlaying.streamerDetails.name} w/ ${nowPlaying.streamerDetails.dj}`;
             mediaData.artist = nowPlaying.streamerDetails.dj;
@@ -923,7 +1085,9 @@
                 { src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }
             ]
         }
-        if ('mediaSession' in navigator && isPlaying) {
+        
+        // Only update if media session exists (playback state is managed separately)
+        if (navigator.mediaSession.metadata) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: mediaData.title,
                 artist: mediaData.artist,
@@ -972,9 +1136,18 @@
 
     async function refreshNowPlaying() {
         const nowPlaying = await fetchNowPlaying();
+        
+        // Store for use by player
+        window.radioPlayerState.currentNowPlaying = nowPlaying;
+        
         updateLiveShowBanner(nowPlaying.streamerDetails);
         updateNowPlaying(nowPlaying);
         updateMediaSession(nowPlaying);
+        
+        // Update footer if live radio is playing
+        if (window.updateLiveFooterMetadata) {
+            window.updateLiveFooterMetadata(nowPlaying);
+        }
     }
 
     (async () => {
