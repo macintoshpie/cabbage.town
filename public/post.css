@@ -1,5 +1,5 @@
 .post-container {
-  background: white;
+  background: var(--dayellow);
   border-radius: 32px;
   padding: 32px;
 }

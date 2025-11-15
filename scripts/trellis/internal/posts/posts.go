@@ -58,6 +58,57 @@ type Config struct {
 	OutputDir    string
 }
 
+// Template cache
+var (
+	footerPlayerHTML string
+	scriptsHTML      string
+	indexTemplate    string
+	patchTemplate    string
+	templatesLoaded  bool
+)
+
+// loadTemplates reads HTML template files from _templates directory
+func loadTemplates(baseDir string) error {
+	if templatesLoaded {
+		return nil
+	}
+
+	// baseDir is "../../public", so templates are at "../../_templates"
+	templatesDir := filepath.Join(baseDir, "..", "_templates")
+
+	// Load footer player HTML
+	footerBytes, err := ioutil.ReadFile(filepath.Join(templatesDir, "footer-player.html"))
+	if err != nil {
+		return fmt.Errorf("failed to read footer-player.html: %v", err)
+	}
+	footerPlayerHTML = string(footerBytes)
+
+	// Load scripts HTML (uses absolute paths, works for both index and patch pages)
+	scriptsBytes, err := ioutil.ReadFile(filepath.Join(templatesDir, "scripts.html"))
+	if err != nil {
+		return fmt.Errorf("failed to read scripts.html: %v", err)
+	}
+	scriptsHTML = string(scriptsBytes)
+
+	// Load index template
+	indexBytes, err := ioutil.ReadFile(filepath.Join(templatesDir, "index.template.html"))
+	if err != nil {
+		return fmt.Errorf("failed to read index.template.html: %v", err)
+	}
+	indexTemplate = string(indexBytes)
+
+	// Load patch template
+	patchBytes, err := ioutil.ReadFile(filepath.Join(templatesDir, "patch.template.html"))
+	if err != nil {
+		return fmt.Errorf("failed to read patch.template.html: %v", err)
+	}
+	patchTemplate = string(patchBytes)
+
+	templatesLoaded = true
+	log.Printf("[POSTS] Templates loaded successfully")
+	return nil
+}
+
 // UserPlaylist represents a user-specific playlist with filtering
 type UserPlaylist struct {
 	Username string
@@ -130,7 +181,8 @@ func ListPosts(client *bucket.Client) ([]Post, error) {
 	return posts, nil
 }
 
-// generateRecordingPlayer creates an HTML audio player if the post has an associated recording
+// generateRecordingPlayer creates an HTML play button if the post has an associated recording
+// The button integrates with the shared footer player via the player.js module
 func generateRecordingPlayer(post Post) string {
 	if post.Metadata.Recording == "" {
 		return ""
@@ -139,15 +191,26 @@ func generateRecordingPlayer(post Post) string {
 	// Generate the URL for the recording
 	recordingURL := fmt.Sprintf("https://cabbagetown.nyc3.digitaloceanspaces.com/%s", post.Metadata.Recording)
 
+	// Return a play button that will be picked up by the player.js createRecordingPlayer function
 	return fmt.Sprintf(`
-            <div class="post-container recording-player">
-                <h3>Listen to this show</h3>
-                <audio controls>
-                    <source src="%s" type="audio/mpeg">
-                    Your browser does not support the audio element.
-                </audio>
+            <div class="post-container recording-player" style="border-radius: 32px; padding: 24px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+                    <div>
+                        <h3 style="margin: 0 0 8px 0;">Listen to this show</h3>
+                    </div>
+                    <button class="recording-play-button" 
+                            data-recording-url="%s"
+                            data-show-title="%s"
+                            data-show-author="%s"
+                            data-show-date="%s"
+                            style="background: black; border: none; border-radius: 50%%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; padding: 0;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 5v14l11-7z" fill="white"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-`, recordingURL)
+`, recordingURL, post.Title, post.Author, post.CreatedAt.Format("January 2, 2006"))
 }
 
 // GeneratePostHTML creates an HTML file for a single post
@@ -172,56 +235,16 @@ func GeneratePostHTML(post Post, outputDir string) error {
 	// Format date
 	formattedDate := post.CreatedAt.Format("January 2, 2006")
 
-	// Generate HTML page with cabbage.town styling
-	htmlContent := fmt.Sprintf(`<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>%s - cabbage.town</title>
-    <link rel="icon" href="../icon.ico" type="image/x-icon">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="../reset.css">
-    <link rel="stylesheet" href="../common.css">
-    <link rel="stylesheet" href="../post.css">
-    <style>
-        .content {
-            max-width: 700px;
-            width: 100%%;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="main">
-        <a href="/">
-            <img src="../the-cabbage.png" style="width: 80px; height: auto" alt="cabbage" id="logo">
-        </a>
-        <a href="/" style="text-decoration: none; color: black;">
-            <h2 class="syne-mono-regular">cabbage.town</h2>
-        </a>
-
-        <div class="content">
-            <a href="/" class="back-link">back to home</a>
-            %s
-            <div class="post-container">
-                <div class="post-header">
-                    <h1 class="post-title">%s</h1>
-                    <div class="post-meta">
-                        <strong>%s</strong> - %s
-                    </div>
-                </div>
-                
-                <div class="post-content">
-                    %s
-                </div>
-            </div>
-
-            <a href="/" class="back-link">back to home</a>
-        </div>
-    </div>
-</body>
-</html>
-`, post.Title, generateRecordingPlayer(post), post.Title, post.Author, formattedDate, buf.String())
+	// Generate HTML from template
+	htmlContent := patchTemplate
+	htmlContent = strings.ReplaceAll(htmlContent, "{{TITLE}}", post.Title)
+	htmlContent = strings.ReplaceAll(htmlContent, "{{RECORDING_PLAYER}}", generateRecordingPlayer(post))
+	htmlContent = strings.ReplaceAll(htmlContent, "{{POST_TITLE}}", post.Title)
+	htmlContent = strings.ReplaceAll(htmlContent, "{{AUTHOR}}", post.Author)
+	htmlContent = strings.ReplaceAll(htmlContent, "{{DATE}}", formattedDate)
+	htmlContent = strings.ReplaceAll(htmlContent, "{{CONTENT}}", buf.String())
+	htmlContent = strings.ReplaceAll(htmlContent, "<!-- INJECT:FOOTER_PLAYER -->", footerPlayerHTML)
+	htmlContent = strings.ReplaceAll(htmlContent, "<!-- INJECT:SCRIPTS -->", scriptsHTML)
 
 	// Write to file
 	patchDir := filepath.Join(outputDir, "patch")
@@ -235,6 +258,22 @@ func GeneratePostHTML(post Post, outputDir string) error {
 	}
 
 	log.Printf("[POSTS] Generated HTML: %s", outputFile)
+	return nil
+}
+
+// GenerateIndexHTML creates the index.html file from template
+func GenerateIndexHTML(outputDir string) error {
+	// Replace placeholders in template with actual HTML
+	indexHTML := strings.ReplaceAll(indexTemplate, "<!-- INJECT:FOOTER_PLAYER -->", footerPlayerHTML)
+	indexHTML = strings.ReplaceAll(indexHTML, "<!-- INJECT:SCRIPTS -->", scriptsHTML)
+
+	// Write to file
+	outputFile := filepath.Join(outputDir, "index.html")
+	if err := ioutil.WriteFile(outputFile, []byte(indexHTML), 0644); err != nil {
+		return fmt.Errorf("failed to write index.html: %v", err)
+	}
+
+	log.Printf("[POSTS] Generated index.html: %s", outputFile)
 	return nil
 }
 
@@ -658,6 +697,11 @@ func cleanupOrphanedFiles(posts []Post, outputDir string) error {
 func Run(config Config) error {
 	log.Printf("[POSTS] Starting post generation process")
 
+	// Load HTML templates
+	if err := loadTemplates(config.OutputDir); err != nil {
+		return fmt.Errorf("failed to load templates: %v", err)
+	}
+
 	// List all published posts
 	posts, err := ListPosts(config.BucketClient)
 	if err != nil {
@@ -670,6 +714,11 @@ func Run(config Config) error {
 			log.Printf("[POSTS] WARNING: Failed to generate HTML for %s: %v", post.Title, err)
 			continue
 		}
+	}
+
+	// Generate index.html from template
+	if err := GenerateIndexHTML(config.OutputDir); err != nil {
+		return fmt.Errorf("failed to generate index.html: %v", err)
 	}
 
 	// Clean up orphaned HTML files (from renamed, unpublished, or deleted posts)
