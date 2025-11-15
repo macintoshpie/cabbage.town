@@ -1,3 +1,9 @@
+/* Page-specific layout override for post pages */
+.content {
+  max-width: 700px;
+  width: 100%;
+}
+
 .post-container {
   background: var(--dayellow);
   border-radius: 32px;
