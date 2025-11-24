@@ -69,7 +69,7 @@ body {
 END HALLOWEEN THEME */
 
 /* 🦃 THANKSGIVING THEME 🦃 */
-:root {
+/* :root {
   --dagreen: rgb(76, 47, 39);
   --dayellow: rgb(255, 223, 186);
   --daorange: rgb(204, 85, 0);
@@ -100,31 +100,39 @@ body {
 
 .song-details-container {
   box-shadow: 0 0 20px rgba(204, 85, 0, 0.3), 0 4px 8px rgba(76, 47, 39, 0.2);
-}
+} */
 
 /* END THANKSGIVING THEME */
 
-/* 🎄 WINTER THEME 🎄 
-   Uncomment for winter/holiday vibes
+/* 🎄 WINTER THEME 🎄 */
 :root {
   --dagreen: rgb(0, 128, 0);
   --dayellow: rgb(240, 248, 255);
   --daorange: rgb(178, 34, 34);
-  
+
   --theme-text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
   --theme-glow: drop-shadow(0 0 8px rgb(255, 255, 255));
 }
 
 body {
-  background-image: 
+  background-image:
     radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(178, 34, 34, 0.2) 0%, transparent 50%);
+}
+
+.syne-mono-regular {
+  text-shadow: var(--theme-text-shadow);
 }
 
 #logo {
   filter: var(--theme-glow);
 }
-END WINTER THEME */
+
+.song-details-container {
+  box-shadow: 0 0 20px rgba(178, 34, 34, 0.3), 0 4px 8px rgba(255, 255, 255, 0.2);
+}
+
+/* END WINTER THEME */
 
 body {
   background: var(--dayellow);
