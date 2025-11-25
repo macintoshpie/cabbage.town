@@ -1,4 +1,6 @@
 #EXTM3U
+#EXTINF:-1,mulch channel - November 24, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20251124-210841.mp3
 #EXTINF:-1,Late Nights Like These - November 20, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20251120-205454.mp3
 #EXTINF:-1,IS WiLD hour - November 18, 2025
@@ -7,12 +9,12 @@ https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20251118-2
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20251117-211850.mp3
 #EXTINF:-1,Late Nights Like These - November 13, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20251113-205250.mp3
+#EXTINF:-1,Home Cooking Show - November 11, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/stream_20251111-151200.mp3
 #EXTINF:-1,tracks from terminus_2025.11.11 - November 11, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20251111-164348.mp3
 #EXTINF:-1,IS WiLD hour - November 11, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20251111-200015.mp3
-#EXTINF:-1,Home Cooking Show - November 11, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/stream_20251111-151200.mp3
 #EXTINF:-1,Late Nights Like These - November 6, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20251106-205655.mp3
 #EXTINF:-1,Tristan Fabriani goes LIVE with Regina Jingles: live performances and his influential picks - November 5, 2025
@@ -75,10 +77,10 @@ https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250901-2
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250828-205726.mp3
 #EXTINF:-1,IS WiLD hour - August 26, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250826-200012.mp3
-#EXTINF:-1,tracks from terminus - August 25, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250825-140012.mp3
 #EXTINF:-1,live goofin - August 25, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250825-210011.mp3
+#EXTINF:-1,tracks from terminus - August 25, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250825-140012.mp3
 #EXTINF:-1,Ghost guest dj plays jazz ++ - August 20, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/katherine/stream_20250820-205928.mp3
 #EXTINF:-1,mulch channel - August 18, 2025
@@ -102,9 +104,9 @@ https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250804-2
 #EXTINF:-1,Late Nights Like These - July 31, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250731-205504.mp3
 #EXTINF:-1,tracks from terminus - July 29, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250729-130005.mp3
-#EXTINF:-1,tracks from terminus - July 29, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250729-130000.mp3
+#EXTINF:-1,tracks from terminus - July 29, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250729-130005.mp3
 #EXTINF:-1,mulch channel - July 28, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250728-212741.mp3
 #EXTINF:-1,Home Cooking Show - July 27, 2025
@@ -118,25 +120,25 @@ https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250722-2
 #EXTINF:-1,mulch channel - July 21, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250721-210010.mp3
 #EXTINF:-1,Late Nights Like These - July 17, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-210301.mp3
-#EXTINF:-1,Late Nights Like These - July 17, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-205938.mp3
-#EXTINF:-1,Home Cooking Show - July 16, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/stream_20250716-173500.mp3
+#EXTINF:-1,Late Nights Like These - July 17, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250717-210301.mp3
 #EXTINF:-1,Call Me Up in Dreamland: night time sounds - July 16, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/katherine/stream_20250716-210652.mp3
+#EXTINF:-1,Home Cooking Show - July 16, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/stream_20250716-173500.mp3
 #EXTINF:-1,Late Nights Like These - July 10, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250710-205352.mp3
 #EXTINF:-1,The Prodigal Son Returns: Cabbagetown boi Neil Ringer guest djs - July 9, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/katherine/stream_20250709-210321.mp3
 #EXTINF:-1,IS WiLD hour - July 8, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250708-210000.mp3
-#EXTINF:-1,IS WiLD hour - July 8, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250708-203740.mp3
-#EXTINF:-1,IS WiLD hour - July 8, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250708-203748.mp3
 #EXTINF:-1,IS WiLD hour - July 8, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250708-210000.mp3
+#EXTINF:-1,IS WiLD hour - July 8, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250708-195954.mp3
+#EXTINF:-1,IS WiLD hour - July 8, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250708-203740.mp3
 #EXTINF:-1,mulch channel - July 7, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250707-210011.mp3
 #EXTINF:-1,Home Cooking Show - July 3, 2025
@@ -157,10 +159,10 @@ https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_202506
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20250626-205633.mp3
 #EXTINF:-1,ATL Knucks if you Buck - June 25, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/katherine/stream_20250625-000000.mp3
-#EXTINF:-1,IS WiLD hour - June 24, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250624-195919.mp3
 #EXTINF:-1,tracks from terminus - June 24, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/stream_20250624-120118.mp3
+#EXTINF:-1,IS WiLD hour - June 24, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20250624-195919.mp3
 #EXTINF:-1,mulch channel - June 23, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20250623-210011.mp3
 #EXTINF:-1,Home Cooking Show - June 20, 2025
@@ -171,24 +173,24 @@ https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/Carbohydrates
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/katherine/WART_ Music of Pete & Pete Katherine Kennedy-20250618-000000.mp3
 #EXTINF:-1,tracks from terminus - June 17, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/will/tracks from terminus_2025.06.17 the conductor-20250617-000000.mp3
-#EXTINF:-1,IS WiLD hour - June 17, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/IS WiLD hour - 2025 06 17 DJ CHICAGO STYLE-20250617-000000.mp3
 #EXTINF:-1,mulch channel - June 17, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/dj ted mulch channel - 2025 06 17-20250617-000000.mp3
+#EXTINF:-1,IS WiLD hour - June 17, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/IS WiLD hour - 2025 06 17 DJ CHICAGO STYLE-20250617-000000.mp3
 #EXTINF:-1,Home Cooking Show - June 12, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 4 20250612-000000.mp3
 #EXTINF:-1,Home Cooking Show - June 1, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Hip Hop Edition Show 2 20250601-000000.mp3
 #EXTINF:-1,Home Cooking Show - June 1, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3
-#EXTINF:-1,Home Cooking Show - June 1, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 3 20250601-000000.mp3
+#EXTINF:-1,Home Cooking Show - June 1, 2025
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/Home Cooking Show 1 20250601-000000.mp3
 #EXTINF:-1,Late Nights Like These - May 20, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/Late 04242025 Nights Like These-20250520-000000.mp3
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/Late 05082025 Nights Like These-20250520-000000.mp3
 #EXTINF:-1,Late Nights Like These - May 20, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/Late 04202025 Nights Like These-20250520-000000.mp3
 #EXTINF:-1,Late Nights Like These - May 20, 2025
-https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/Late 05082025 Nights Like These-20250520-000000.mp3
+https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/Late 04242025 Nights Like These-20250520-000000.mp3
 #EXTINF:-1,IS WiLD hour - May 20, 2025
 https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/IS WiLD hour - 2025 05 20 DJ CHICAGO STYLE-20250520-000000.mp3
 #EXTINF:-1,mulch channel - May 19, 2025
