@@ -166,8 +166,117 @@ export async function refreshNowPlaying() {
 // SHOWS LIST FUNCTIONS
 // ============================================
 
+const SHOWS_PER_PAGE = 5;
+let allShows = [];
+let displayedShowsCount = 0;
+
+function createShowElement(show) {
+    const showElement = document.createElement('div');
+    showElement.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 8px;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    `;
+
+    // Create info section (left side)
+    const infoSection = document.createElement('div');
+    infoSection.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-grow: 1;
+    `;
+
+    let infoHTML = `
+        <div style="font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.05em;">${show.title}</div>
+        <div style="color: #666; font-family: 'Courier New', monospace; font-size: 0.9em;">
+            ${show.author ? `<span style="color: #444;">${show.author}</span> - ` : ''}${show.date}
+        </div>
+    `;
+
+    // Add post excerpt and link if available
+    if (show.post) {
+        const linkText = show.recording ? 'Show Notes' : 'Read More';
+        infoHTML += `
+            <div style="color: #555; font-family: 'Courier New', monospace; font-size: 0.85em; margin-top: 4px;">
+                ${show.post.excerpt}
+            </div>
+            <div style="margin-top: 4px;">
+                <a href="/patch/${show.post.slug}.html" style="color: var(--daorange); text-decoration: none; font-size: 0.9em; font-weight: bold;">
+                    ${linkText}
+                </a>
+            </div>
+        `;
+    }
+
+    infoSection.innerHTML = infoHTML;
+
+    // Create play button (right side) if recording exists
+    if (show.recording) {
+        const playButton = document.createElement('button');
+        playButton.style.cssText = `
+            background: black;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            padding: 0;
+            margin-top: 4px;
+        `;
+
+        playButton.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 5v14l11-7z" fill="white"/>
+            </svg>
+        `;
+
+        playButton.onclick = () => playRecording(show, playButton);
+
+        showElement.appendChild(infoSection);
+        showElement.appendChild(playButton);
+    } else {
+        // No recording, just show the info
+        showElement.appendChild(infoSection);
+    }
+
+    return showElement;
+}
+
+function displayMoreShows() {
+    const showsList = document.getElementById('shows-list');
+    const loadMoreButton = document.getElementById('load-more-shows');
+    if (!showsList) return;
+
+    const showsToDisplay = allShows.slice(displayedShowsCount, displayedShowsCount + SHOWS_PER_PAGE);
+    
+    showsToDisplay.forEach(show => {
+        showsList.appendChild(createShowElement(show));
+    });
+    
+    displayedShowsCount += showsToDisplay.length;
+    
+    // Hide button if all shows are displayed
+    if (loadMoreButton) {
+        if (displayedShowsCount >= allShows.length) {
+            loadMoreButton.style.display = 'none';
+        } else {
+            loadMoreButton.style.display = 'block';
+        }
+    }
+}
+
 export async function fetchAndDisplayShows() {
     const showsList = document.getElementById('shows-list');
+    const loadMoreButton = document.getElementById('load-more-shows');
     if (!showsList) {
         console.log('[Shows] No shows list found, skipping');
         return;
@@ -179,99 +288,29 @@ export async function fetchAndDisplayShows() {
             throw new Error('Failed to load shows');
         }
         
-        const shows = await response.json();
+        allShows = await response.json();
+        displayedShowsCount = 0;
         
-        if (shows.length === 0) {
+        if (allShows.length === 0) {
             showsList.innerHTML = '<p style="color: #666; font-style: italic;">No shows yet. Check back soon!</p>';
+            if (loadMoreButton) loadMoreButton.style.display = 'none';
             return;
         }
         
         showsList.innerHTML = '';
-
-        shows.forEach(show => {
-            const showElement = document.createElement('div');
-            showElement.style.cssText = `
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                gap: 12px;
-                padding: 8px;
-                border-radius: 8px;
-                transition: background-color 0.2s;
-            `;
-
-            // Create info section (left side)
-            const infoSection = document.createElement('div');
-            infoSection.style.cssText = `
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-                flex-grow: 1;
-            `;
-
-            let infoHTML = `
-                <div style="font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.05em;">${show.title}</div>
-                <div style="color: #666; font-family: 'Courier New', monospace; font-size: 0.9em;">
-                    ${show.author ? `<span style="color: #444;">${show.author}</span> - ` : ''}${show.date}
-                </div>
-            `;
-
-            // Add post excerpt and link if available
-            if (show.post) {
-                const linkText = show.recording ? 'Show Notes' : 'Read More';
-                infoHTML += `
-                    <div style="color: #555; font-family: 'Courier New', monospace; font-size: 0.85em; margin-top: 4px;">
-                        ${show.post.excerpt}
-                    </div>
-                    <div style="margin-top: 4px;">
-                        <a href="/patch/${show.post.slug}.html" style="color: var(--daorange); text-decoration: none; font-size: 0.9em; font-weight: bold;">
-                            ${linkText}
-                        </a>
-                    </div>
-                `;
-            }
-
-            infoSection.innerHTML = infoHTML;
-
-            // Create play button (right side) if recording exists
-            if (show.recording) {
-                const playButton = document.createElement('button');
-                playButton.style.cssText = `
-                    background: black;
-                    border: none;
-                    border-radius: 50%;
-                    width: 24px;
-                    height: 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    flex-shrink: 0;
-                    padding: 0;
-                    margin-top: 4px;
-                `;
-
-                playButton.innerHTML = `
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 5v14l11-7z" fill="white"/>
-                    </svg>
-                `;
-
-                playButton.onclick = () => playRecording(show, playButton);
-
-                showElement.appendChild(infoSection);
-                showElement.appendChild(playButton);
-            } else {
-                // No recording, just show the info
-                showElement.appendChild(infoSection);
-            }
-
-            showsList.appendChild(showElement);
-        });
+        
+        // Display initial batch
+        displayMoreShows();
+        
+        // Setup load more button
+        if (loadMoreButton) {
+            loadMoreButton.onclick = displayMoreShows;
+        }
 
     } catch (error) {
         console.error('Error fetching shows:', error);
         showsList.innerHTML = '<p style="color: red;">Error loading shows. Please try again later.</p>';
+        if (loadMoreButton) loadMoreButton.style.display = 'none';
     }
 }
 
