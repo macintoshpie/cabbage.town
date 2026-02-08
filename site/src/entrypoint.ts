@@ -8,33 +8,61 @@ const STREAMER_MAP: Record<string, { name: string; dj: string }> = {
   'the conductor': { name: 'tracks from terminus', dj: 'the conductor' },
 };
 
+interface PlayerStore {
+  type: 'live' | 'recording' | null;
+  isPlaying: boolean;
+  metadata: { title: string; date: string };
+  nowPlaying: {
+    artist: string;
+    title: string;
+    art: string;
+    streamerDetails?: { name: string; dj: string };
+  } | null;
+  currentTime: number;
+  duration: number;
+  _nowPlayingInterval: ReturnType<typeof setInterval> | null;
+  _currentRecordingUrl: string | null;
+
+  _getRadio(): HTMLAudioElement | null;
+  _getRecording(): HTMLAudioElement | null;
+  formatTime(seconds: number): string;
+  playRadio(): void;
+  stopRadio(): void;
+  stopRecording(): void;
+  stopAll(): void;
+  _updateLiveMetadata(): void;
+  _setupMediaSession(): void;
+  playRecording(url: string, title: string, dj: string, date: string): void;
+  _setupRecordingMediaSession(title: string, dj: string): void;
+  togglePlayback(): void;
+  seekTo(time: number): void;
+  refreshNowPlaying(): Promise<void>;
+  startNowPlayingPolling(): void;
+  stopNowPlayingPolling(): void;
+}
+
 export default (Alpine: Alpine) => {
-  Alpine.store('player', {
+  const store: PlayerStore & ThisType<PlayerStore> = {
     // State
-    type: null as 'live' | 'recording' | null,
+    type: null,
     isPlaying: false,
     metadata: { title: '', date: '' },
-    nowPlaying: null as {
-      artist: string;
-      title: string;
-      art: string;
-      streamerDetails?: { name: string; dj: string };
-    } | null,
+    nowPlaying: null,
     currentTime: 0,
     duration: 0,
-    _nowPlayingInterval: null as ReturnType<typeof setInterval> | null,
-    _currentRecordingUrl: null as string | null,
+    _nowPlayingInterval: null,
+    _currentRecordingUrl: null,
 
     // Audio element accessors
-    _getRadio(): HTMLAudioElement | null {
+    _getRadio() {
       return document.getElementById('radio') as HTMLAudioElement | null;
     },
-    _getRecording(): HTMLAudioElement | null {
+    _getRecording() {
       return document.getElementById('recordingPlayer') as HTMLAudioElement | null;
     },
 
     // Format seconds to m:ss
-    formatTime(seconds: number): string {
+    formatTime(seconds: number) {
       const m = Math.floor(seconds / 60);
       const s = Math.floor(seconds % 60);
       return `${m}:${s.toString().padStart(2, '0')}`;
@@ -300,5 +328,7 @@ export default (Alpine: Alpine) => {
         this._nowPlayingInterval = null;
       }
     },
-  });
+  };
+
+  Alpine.store('player', store);
 };

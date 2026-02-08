@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import Player from '../components/Player.astro';
 interface Props {
   title: string;
 }
@@ -16,79 +17,9 @@ const { title } = Astro.props;
   </head>
   <body>
     <slot />
-
-    <!-- Persistent audio elements -->
-    <audio id="radio" transition:persist="radio-audio"></audio>
-    <audio id="recordingPlayer" transition:persist="recording-audio"></audio>
-
-    <!-- Spacer for player footer -->
-    <div x-data x-show="$store.player.type !== null" style="height: 80px;" x-cloak transition:persist="player-spacer"></div>
-
-    <!-- Player footer -->
-    <div
-      class="player-footer"
-      x-data
-      x-show="$store.player.type !== null"
-      x-cloak
-      transition:persist="player-footer"
-    >
-      <div class="player-info">
-        <div class="player-title-container">
-          <span class="player-title" x-text="$store.player.metadata.title"></span>
-        </div>
-        <span class="player-date" x-text="$store.player.metadata.date"></span>
-      </div>
-      <div class="player-controls">
-        <button @click="$store.player.togglePlayback()" :aria-label="$store.player.isPlaying ? 'Pause' : 'Play'">
-          <template x-if="$store.player.isPlaying">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
-          </template>
-          <template x-if="!$store.player.isPlaying">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5,3 19,12 5,21"></polygon>
-            </svg>
-          </template>
-        </button>
-        <template x-if="$store.player.type === 'recording'">
-          <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
-            <span x-text="$store.player.formatTime($store.player.currentTime)" style="font-size: 0.85em; min-width: 35px;"></span>
-            <input
-              type="range"
-              class="time-slider"
-              min="0"
-              :max="$store.player.duration"
-              :value="$store.player.currentTime"
-              @input="$store.player.seekTo(Number($event.target.value))"
-            />
-            <span x-text="$store.player.formatTime($store.player.duration)" style="font-size: 0.85em; min-width: 35px;"></span>
-          </div>
-        </template>
-        <button @click="$store.player.stopAll()" aria-label="Stop" style="color: var(--daorange);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="4" y="4" width="16" height="16"></rect>
-          </svg>
-        </button>
-      </div>
-    </div>
+    <Player />
   </body>
 </html>
-
-<script>
-  document.addEventListener('astro:page-load', () => {
-    requestAnimationFrame(() => {
-      const store = (window as any).Alpine?.store('player');
-      if (!store) return;
-      if (document.getElementById('nowPlayingSection')) {
-        store.startNowPlayingPolling();
-      } else {
-        store.stopNowPlayingPolling();
-      }
-    });
-  });
-</script>
 
 <style is:global>
   /* Alpine.js cloak support */
