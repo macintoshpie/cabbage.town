@@ -17,6 +17,9 @@ const recordings = [...recordingsData].sort(
   (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
 );
 
+// Build a key → recording map for URL lookups
+const recordingsByKey = new Map(recordingsData.map(r => [r.key, r]));
+
 // Deduplicate by show + date (same show on same day = one entry)
 type DeduplicatedShow = {
   show: string;
@@ -79,43 +82,82 @@ function findPost(entry: DeduplicatedShow) {
     <div class="content" style="padding-top: 16px;">
 
       <!-- Now Playing -->
-      <h3 class="cooper" style="color: var(--daorange);">now playing</h3>
-      <div class="now-playing-container">
-        <img
-          class="song-details-container"
-          src="/the-cabbage.png"
-          alt="now playing artwork"
-          style="max-height: 150px; border-radius: 16px; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; max-width: 150px;"
-        />
-        <div
-          class="song-details-container"
-          style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; flex-grow: 1; height: fit-content;"
-        >
-          <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start; flex-grow: 1;">
-            <p style="font-size: 1.25em; word-break: break-word; overflow-wrap: break-word;">.... .... ....</p>
-            <p style="font-size: 1.25em; word-break: break-word; overflow-wrap: break-word;">.... .... ....</p>
+      <div id="nowPlayingSection" x-data>
+        <h3 class="cooper" style="color: var(--daorange);">now playing</h3>
+        <div class="now-playing-container" style="margin-top: 8px;">
+          <img
+            class="song-details-container"
+            src="/the-cabbage.png"
+            :src="$store.player.nowPlaying?.art || '/the-cabbage.png'"
+            alt="now playing artwork"
+            style="max-height: 150px; border-radius: 16px; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; max-width: 150px;"
+          />
+          <div
+            class="song-details-container"
+            style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; flex-grow: 1; height: fit-content;"
+          >
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start; flex-grow: 1;">
+              <p
+                x-show="$store.player.nowPlaying?.streamerDetails"
+                x-text="($store.player.nowPlaying?.streamerDetails?.name || '') + ' w/ ' + ($store.player.nowPlaying?.streamerDetails?.dj || '')"
+                style="font-size: 1em; font-weight: bold; color: var(--daorange);"
+                x-cloak
+              ></p>
+              <p style="font-size: 1.25em; word-break: break-word; overflow-wrap: break-word;" x-text="$store.player.nowPlaying?.artist || '.... .... ....'"></p>
+              <p style="font-size: 1.25em; word-break: break-word; overflow-wrap: break-word;" x-text="$store.player.nowPlaying?.title || '.... .... ....'"></p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button @click="$store.player.playRadio()" aria-label="Play live radio" style="color: var(--dagreen);">
+                <svg width="36" height="36" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5"/><polygon points="9,7 17,12 9,17" fill="currentColor"></polygon></svg>
+              </button>
+              <button
+                x-show="$store.player.type === 'live' && $store.player.isPlaying"
+                @click="$store.player.stopRadio()"
+                aria-label="Stop live radio"
+                style="color: var(--daorange);"
+                x-cloak
+              >
+                <svg width="36" height="36" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="8" width="8" height="8" fill="currentColor"></rect></svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Recent Shows -->
       <h3 class="cooper">recent shows</h3>
-      <div class="card">
+      <div class="card" x-data>
         <div style="display: flex; flex-direction: column; gap: 12px;">
           {deduped.map((entry) => {
             const colorClass = getDjColorClass(entry.show);
             const post = findPost(entry);
+            const rec = recordingsByKey.get(entry.keys[0]);
             return (
-              <div>
-                <p>
-                  <strong class={colorClass}>{entry.displayName}</strong>
-                </p>
-                <p style="font-size: 0.85em; color: #666;">
-                  {entry.dj} &mdash; {entry.date}
-                  {post && (
-                    <> &middot; <a href={`/patch/${post.data.slug}`}>Show Notes</a></>
-                  )}
-                </p>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                {rec && (
+                  <button
+                    class="recording-play-btn"
+                    data-url={rec.url}
+                    data-title={entry.displayName}
+                    data-dj={entry.dj}
+                    data-date={entry.date}
+                    @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
+                    aria-label={`Play ${entry.displayName}`}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>
+                  </button>
+                )}
+                <div>
+                  <p>
+                    <strong class={colorClass}>{entry.displayName}</strong>
+                  </p>
+                  <p style="font-size: 0.85em; color: #666;">
+                    {entry.dj} &mdash; {entry.date}
+                    {post && (
+                      <> &middot; <a href={`/patch/${post.data.slug}`}>Show Notes</a></>
+                    )}
+                  </p>
+                </div>
               </div>
             );
           })}

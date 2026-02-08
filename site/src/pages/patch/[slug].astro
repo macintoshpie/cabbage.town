@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { getCollection, render } from 'astro:content';
+import recordingsData from '../../data/recordings.json';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
@@ -13,6 +14,10 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content } = await render(post);
 
+const recording = post.data.recordingKey
+  ? recordingsData.find(r => r.key === post.data.recordingKey)
+  : null;
+
 const formatDate = (date: Date) =>
   date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 ---
@@ -21,6 +26,22 @@ const formatDate = (date: Date) =>
   <div class="main">
     <div class="content" style="max-width: 700px; width: 100%;">
       <nav><a class="back-link" href="/">&larr; back to cabbage.town</a></nav>
+      {recording && (
+        <div class="recording-card" x-data>
+          <button
+            class="recording-play-btn-post"
+            data-url={recording.url}
+            data-title={post.data.title}
+            data-dj={recording.dj}
+            data-date={recording.date}
+            @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
+            aria-label="Play recording"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>
+            <span>Listen to recording</span>
+          </button>
+        </div>
+      )}
       <article class="post-container">
         <div class="post-header">
           <h1 class="post-title">{post.data.title}</h1>
