@@ -1,0 +1,33 @@
+---
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  return posts.map(post => ({
+    params: { slug: post.data.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{post.data.title} — cabbage.town</title>
+  </head>
+  <body>
+    <nav><a href="/">&larr; back</a></nav>
+    <article>
+      <h1>{post.data.title}</h1>
+      <p>{post.data.author} — {formatDate(post.data.createdAt)}</p>
+      <Content />
+    </article>
+  </body>
+</html>

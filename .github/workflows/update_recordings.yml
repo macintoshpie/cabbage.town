@@ -44,24 +44,24 @@ jobs:
         run: go run cmd/update_recordings/main.go all
         # Updates ACLs and ID3 metadata for recordings
 
-      - name: Generate Static Content
+      - name: Export data from S3
         env:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_SECRET_ACCESS_KEY: ${{ secrets.DO_SECRET_ACCESS_KEY }}
         working-directory: scripts/trellis
         run: go run cmd/update_posts/main.go
-        # Generates: post HTML, playlists, and shows.json
+        # Exports posts.json, recordings.json, and playlists
 
       - name: Commit and push changes
         run: |
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'actions@github.com'
-          git add public/playlists/*.m3u public/shows.json public/patch/*.html public/index.html
+          git add site/src/data/posts.json site/src/data/recordings.json site/public/playlists/*.m3u
 
           # Only commit and push if there are changes
           if git diff --staged --quiet; then
-            echo "No changes to static content"
+            echo "No changes to data files"
           else
-            git commit -m "Update static content (playlists, posts, shows) via automated workflow"
+            git commit -m "Update data files (posts, recordings, playlists) via automated workflow"
             git push origin main
           fi

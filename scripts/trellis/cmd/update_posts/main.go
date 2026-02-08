@@ -48,11 +48,13 @@ func main() {
 		return
 	}
 
-	// Generate static posts
-	outputDir := filepath.Join("..", "..", "public")
+	// Export data and playlists
+	outputDir := filepath.Join("..", "..", "site", "src", "data")
+	playlistsDir := filepath.Join("..", "..", "site", "public")
 	config := posts.Config{
 		BucketClient: bucketClient,
 		OutputDir:    outputDir,
+		PlaylistsDir: playlistsDir,
 	}
 
 	log.Printf("[UPDATE_POSTS] Generating static post pages...")

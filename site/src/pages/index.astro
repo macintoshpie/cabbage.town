@@ -1,0 +1,45 @@
+---
+import { getCollection } from 'astro:content';
+import recordingsData from '../data/recordings.json';
+
+const posts = await getCollection('posts');
+posts.sort((a, b) => b.data.createdAt.getTime() - a.data.createdAt.getTime());
+
+const recordings = [...recordingsData].sort(
+  (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+);
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>cabbage.town [under construction]</title>
+  </head>
+  <body>
+    <h1>cabbage.town</h1>
+
+    <h2>Posts</h2>
+    <ul>
+      {posts.map(post => (
+        <li>
+          <a href={`/patch/${post.data.slug}`}>{post.data.title}</a>
+          — {post.data.author}, {formatDate(post.data.createdAt)}
+        </li>
+      ))}
+    </ul>
+
+    <h2>Recordings</h2>
+    <ul>
+      {recordings.map(rec => (
+        <li>
+          <a href={rec.url}>{rec.displayName}</a>
+          — {rec.dj}, {rec.date}
+        </li>
+      ))}
+    </ul>
+  </body>
+</html>
