@@ -1,0 +1,290 @@
+---
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/icon.ico" type="image/x-icon" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  /* Cooper Black font */
+  @font-face {
+    font-family: 'Cooper Black Regular';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Cooper Black Regular'), url('/COOPBL.woff') format('woff');
+  }
+
+  /* Meyer CSS Reset v2.0 */
+  html, body, div, span, applet, object, iframe,
+  h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+  a, abbr, acronym, address, big, cite, code,
+  del, dfn, em, img, ins, kbd, q, s, samp,
+  small, strike, strong, sub, sup, tt, var,
+  b, u, i, center,
+  dl, dt, dd, ol, ul, li,
+  fieldset, form, label, legend,
+  table, caption, tbody, tfoot, thead, tr, th, td,
+  article, aside, canvas, details, embed,
+  figure, figcaption, footer, header, hgroup,
+  menu, nav, output, ruby, section, summary,
+  time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+  }
+  article, aside, details, figcaption, figure,
+  footer, header, hgroup, menu, nav, section {
+    display: block;
+  }
+  body {
+    line-height: 1;
+  }
+  ol, ul {
+    list-style: none;
+  }
+  blockquote, q {
+    quotes: none;
+  }
+  blockquote:before, blockquote:after,
+  q:before, q:after {
+    content: '';
+    content: none;
+  }
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  /* Winter theme */
+  :root {
+    --dagreen: rgb(0, 128, 0);
+    --dayellow: rgb(240, 248, 255);
+    --daorange: rgb(178, 34, 34);
+  }
+
+  body {
+    background: var(--dayellow);
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(178, 34, 34, 0.2) 0%, transparent 50%);
+    color: black;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+  }
+
+  i {
+    font-style: italic;
+  }
+
+  em {
+    font-weight: bold;
+  }
+
+  h2 {
+    font-size: 2em;
+    margin: 0;
+  }
+
+  h3 {
+    font-size: 1.5em;
+    margin: 0;
+  }
+
+  .cooper {
+    font-family: "Cooper Black Regular", monospace;
+    font-style: normal;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+  }
+
+  a {
+    color: blue;
+  }
+
+  button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 500px;
+    gap: 16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 32px;
+    padding: 32px;
+  }
+
+  /* DJ color classes */
+  .mulch-channel {
+    color: rgb(141, 61, 61);
+  }
+  .reginajingles-channel {
+    color: rgb(53, 174, 43);
+  }
+  .ben {
+    color: rgb(0, 111, 166);
+  }
+  .terminus {
+    color: rgb(180, 32, 234);
+  }
+  .nlt {
+    color: rgb(116, 22, 184);
+  }
+  .home-cooking {
+    color: rgb(174, 52, 4);
+  }
+  .posted-up {
+    color: rgb(168, 168, 168);
+  }
+
+  /* Now-playing styles */
+  .song-details-container {
+    border: 16px ridge var(--daorange);
+    padding: 8px;
+    border-radius: 16px;
+    background-color: white;
+    box-shadow: 0 0 20px rgba(178, 34, 34, 0.3), 0 4px 8px rgba(255, 255, 255, 0.2);
+  }
+
+  .now-playing-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .now-playing-container {
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  /* Schedule styles */
+  .sched-day {
+    color: rgb(90, 90, 90);
+  }
+  .sched-day ul {
+    padding-left: 20px;
+  }
+  .show {
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  /* Socials */
+  .socials {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Post page styles */
+  .post-container {
+    background: var(--dayellow);
+    border-radius: 32px;
+    padding: 32px;
+  }
+  .post-header {
+    margin-bottom: 24px;
+  }
+  .post-title {
+    font-family: 'Cooper Black Regular', monospace;
+    font-size: 2em;
+    margin-bottom: 8px;
+    color: var(--daorange);
+  }
+  .post-meta {
+    color: #666;
+    font-size: 0.9em;
+  }
+  .post-content {
+    line-height: 1.6;
+  }
+  .post-content h1,
+  .post-content h2,
+  .post-content h3 {
+    font-family: 'Cooper Black Regular', monospace;
+    color: var(--daorange);
+    margin-top: 24px;
+    margin-bottom: 12px;
+  }
+  .post-content h1 { font-size: 1.8em; }
+  .post-content h2 { font-size: 1.5em; }
+  .post-content h3 { font-size: 1.2em; }
+  .post-content p { margin-bottom: 16px; }
+  .post-content a {
+    color: blue;
+    text-decoration: underline;
+  }
+  .post-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 16px 0;
+  }
+  .post-content code {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+  }
+  .post-content pre {
+    background: #f4f4f4;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  .post-content pre code {
+    background: none;
+    padding: 0;
+  }
+  .post-content ul,
+  .post-content ol {
+    margin-bottom: 16px;
+    padding-left: 32px;
+  }
+  .post-content li {
+    margin-bottom: 8px;
+  }
+  .back-link {
+    color: blue;
+    text-decoration: none;
+    font-size: 0.9em;
+  }
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>
