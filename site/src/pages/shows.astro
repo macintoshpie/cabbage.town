@@ -1,0 +1,224 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import recordingsData from '../data/recordings.json';
+
+// Load posts and build a Map<recordingKey, post> for matching
+const posts = await getCollection('posts');
+const postsByRecordingKey = new Map<string, typeof posts[number]>();
+for (const post of posts) {
+  if (post.data.recordingKey) {
+    postsByRecordingKey.set(post.data.recordingKey, post);
+  }
+}
+
+// Sort recordings by lastModified desc
+const recordings = [...recordingsData].sort(
+  (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+);
+
+// Build a key → recording map for URL lookups
+const recordingsByKey = new Map(recordingsData.map(r => [r.key, r]));
+
+// Deduplicate by show + date (same show on same day = one entry)
+type DeduplicatedShow = {
+  show: string;
+  displayName: string;
+  dj: string;
+  date: string;
+  keys: string[];
+};
+
+const deduped: DeduplicatedShow[] = [];
+const seen = new Set<string>();
+
+for (const rec of recordings) {
+  const groupKey = `${rec.show}::${rec.date}`;
+  if (seen.has(groupKey)) {
+    const existing = deduped.find(d => `${d.show}::${d.date}` === groupKey);
+    if (existing) existing.keys.push(rec.key);
+    continue;
+  }
+  seen.add(groupKey);
+  deduped.push({
+    show: rec.show,
+    displayName: rec.displayName,
+    dj: rec.dj,
+    date: rec.date,
+    keys: [rec.key],
+  });
+}
+
+// Map show names to DJ color classes
+function getDjColorClass(show: string): string {
+  const s = show.toLowerCase();
+  if (s.includes('mulch')) return 'mulch-channel';
+  if (s.includes('reginajingles')) return 'reginajingles-channel';
+  if (s.includes('wild') || s.includes('chicago')) return 'ben';
+  if (s.includes('terminus')) return 'terminus';
+  if (s.includes('late nights') || s.includes('nights like')) return 'nlt';
+  if (s.includes('home cooking')) return 'home-cooking';
+  if (s.includes('posted')) return 'posted-up';
+  return '';
+}
+
+// Find matching post for a show entry
+function findPost(entry: DeduplicatedShow) {
+  for (const key of entry.keys) {
+    const post = postsByRecordingKey.get(key);
+    if (post) return post;
+  }
+  return null;
+}
+
+// Collect unique DJ names (in order of appearance)
+const djNames: string[] = [];
+const djSeen = new Set<string>();
+for (const entry of deduped) {
+  if (!djSeen.has(entry.dj)) {
+    djSeen.add(entry.dj);
+    djNames.push(entry.dj);
+  }
+}
+
+// Map DJ names to color classes (use first show for that DJ)
+const djColorMap: Record<string, string> = {};
+for (const entry of deduped) {
+  if (!djColorMap[entry.dj]) {
+    djColorMap[entry.dj] = getDjColorClass(entry.show);
+  }
+}
+---
+
+<Layout title="all shows | cabbage.town">
+  <div class="main">
+    <div class="content" style="padding-top: 24px;">
+      <a href="/" class="back-link">&larr; back home</a>
+
+      <h2 class="cooper">all shows</h2>
+
+      <!-- DJ filter chips -->
+      <div
+        x-data=`{
+          activeDj: '',
+          init() {
+            this.activeDj = new URLSearchParams(window.location.search).get('dj') || '';
+          },
+          setFilter(dj) {
+            this.activeDj = dj;
+            const url = new URL(window.location);
+            if (dj) {
+              url.searchParams.set('dj', dj);
+            } else {
+              url.searchParams.delete('dj');
+            }
+            history.replaceState({}, '', url);
+          },
+          matches(dj) {
+            return !this.activeDj || this.activeDj === dj;
+          }
+        }`
+      >
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+          <button
+            class="dj-chip"
+            :class="{ 'dj-chip-active': !activeDj }"
+            @click="setFilter('')"
+          >all</button>
+          {djNames.map((dj) => (
+            <button
+              class={`dj-chip ${djColorMap[dj] || ''}`}
+              :class={`{ 'dj-chip-active': activeDj === '${dj.replace(/'/g, "\\'")}' }`}
+              data-dj={dj}
+              @click="setFilter($el.dataset.dj)"
+            >{dj}</button>
+          ))}
+        </div>
+
+        <div class="card">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            {deduped.map((entry) => {
+              const colorClass = getDjColorClass(entry.show);
+              const post = findPost(entry);
+              const rec = recordingsByKey.get(entry.keys[0]);
+              return (
+                <div
+                  style="display: flex; align-items: center; gap: 12px;"
+                  data-dj={entry.dj}
+                  x-show="matches($el.dataset.dj)"
+                  x-cloak
+                >
+                  {rec && (
+                    <button
+                      class="recording-play-btn"
+                      data-url={rec.url}
+                      data-title={entry.displayName}
+                      data-dj={entry.dj}
+                      data-date={entry.date}
+                      @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
+                      aria-label={`Play ${entry.displayName}`}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>
+                    </button>
+                  )}
+                  <div>
+                    <p>
+                      <strong class={colorClass}>{entry.displayName}</strong>
+                    </p>
+                    <p style="font-size: 0.85em; color: #666;">
+                      <button
+                        class={`dj-link ${djColorMap[entry.dj] || ''}`}
+                        data-dj={entry.dj}
+                        @click="setFilter($el.dataset.dj)"
+                      >{entry.dj}</button> &mdash; {entry.date}
+                      {post && (
+                        <> &middot; <a href={`/patch/${post.data.slug}`}>Show Notes</a></>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .dj-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px solid #ccc;
+    background: white;
+    cursor: pointer;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85em;
+    font-weight: bold;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .dj-chip:hover {
+    border-color: #999;
+  }
+  .dj-chip-active {
+    border-color: black;
+    background: black;
+    color: white !important;
+  }
+
+  .dj-link {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    padding: 0;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+  }
+  .dj-link:hover {
+    text-decoration-style: solid;
+  }
+</style>

@@ -81,54 +81,11 @@ function findPost(entry: DeduplicatedShow) {
 
     <div class="content" style="padding-top: 16px;">
 
-      <!-- Now Playing -->
-      <div id="nowPlayingSection" x-data>
-        <h3 class="cooper" style="color: var(--daorange);">now playing</h3>
-        <div class="now-playing-container" style="margin-top: 8px;">
-          <img
-            class="song-details-container"
-            src="/the-cabbage.png"
-            :src="$store.player.nowPlaying?.art || '/the-cabbage.png'"
-            alt="now playing artwork"
-            style="max-height: 150px; border-radius: 16px; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; max-width: 150px;"
-          />
-          <div
-            class="song-details-container"
-            style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 16px; flex-grow: 1; height: fit-content;"
-          >
-            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start; flex-grow: 1;">
-              <p
-                x-show="$store.player.nowPlaying?.streamerDetails"
-                x-text="($store.player.nowPlaying?.streamerDetails?.name || '') + ' w/ ' + ($store.player.nowPlaying?.streamerDetails?.dj || '')"
-                style="font-size: 1em; font-weight: bold; color: var(--daorange);"
-                x-cloak
-              ></p>
-              <p style="font-size: 1.25em; word-break: break-word; overflow-wrap: break-word;" x-text="$store.player.nowPlaying?.artist || '.... .... ....'"></p>
-              <p style="font-size: 1.25em; word-break: break-word; overflow-wrap: break-word;" x-text="$store.player.nowPlaying?.title || '.... .... ....'"></p>
-            </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <button @click="$store.player.playRadio()" aria-label="Play live radio" style="color: var(--dagreen);">
-                <svg width="36" height="36" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5"/><polygon points="9,7 17,12 9,17" fill="currentColor"></polygon></svg>
-              </button>
-              <button
-                x-show="$store.player.type === 'live' && $store.player.isPlaying"
-                @click="$store.player.stopRadio()"
-                aria-label="Stop live radio"
-                style="color: var(--daorange);"
-                x-cloak
-              >
-                <svg width="36" height="36" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="8" width="8" height="8" fill="currentColor"></rect></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Recent Shows -->
       <h3 class="cooper">recent shows</h3>
       <div class="card" x-data>
         <div style="display: flex; flex-direction: column; gap: 12px;">
-          {deduped.map((entry) => {
+          {deduped.slice(0, 10).map((entry) => {
             const colorClass = getDjColorClass(entry.show);
             const post = findPost(entry);
             const rec = recordingsByKey.get(entry.keys[0]);
@@ -152,7 +109,7 @@ function findPost(entry: DeduplicatedShow) {
                     <strong class={colorClass}>{entry.displayName}</strong>
                   </p>
                   <p style="font-size: 0.85em; color: #666;">
-                    {entry.dj} &mdash; {entry.date}
+                    <a href={`/shows?dj=${encodeURIComponent(entry.dj)}`} style="color: inherit; text-decoration: none;">{entry.dj}</a> &mdash; {entry.date}
                     {post && (
                       <> &middot; <a href={`/patch/${post.data.slug}`}>Show Notes</a></>
                     )}
@@ -162,6 +119,9 @@ function findPost(entry: DeduplicatedShow) {
             );
           })}
         </div>
+        <p style="text-align: center; margin-top: 16px;">
+          <a href="/shows">see all shows &rarr;</a>
+        </p>
       </div>
 
       <!-- Schedule -->

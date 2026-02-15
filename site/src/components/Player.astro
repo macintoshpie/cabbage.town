@@ -2,57 +2,73 @@
 <audio id="radio" transition:persist="radio-audio"></audio>
 <audio id="recordingPlayer" transition:persist="recording-audio"></audio>
 
-<!-- Spacer for player footer -->
-<div x-data x-show="$store.player.type !== null" style="height: 80px;" x-cloak transition:persist="player-spacer"></div>
+<!-- Spacer so content isn't hidden behind the player pill -->
+<div style="height: 110px;" transition:persist="player-spacer"></div>
 
-<!-- Player footer -->
+<!-- Floating player pill -->
 <div
-  class="player-footer"
+  class="player-pill"
   x-data
-  x-show="$store.player.type !== null"
-  x-cloak
   transition:persist="player-footer"
 >
+  <!-- Artwork -->
+  <img
+    class="player-artwork"
+    :src="$store.player.metadata.artwork || $store.player.nowPlaying?.art || '/the-cabbage.png'"
+    alt=""
+  />
+
+  <!-- Info + scrubber -->
   <div class="player-info">
-    <div class="player-title-container">
-      <span class="player-title" x-text="$store.player.metadata.title"></span>
-    </div>
-    <span class="player-date" x-text="$store.player.metadata.date"></span>
-  </div>
-  <div class="player-controls">
-    <button @click="$store.player.togglePlayback()" :aria-label="$store.player.isPlaying ? 'Pause' : 'Play'">
-      <template x-if="$store.player.isPlaying">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="6" y="4" width="4" height="16"></rect>
-          <rect x="14" y="4" width="4" height="16"></rect>
-        </svg>
-      </template>
-      <template x-if="!$store.player.isPlaying">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <polygon points="5,3 19,12 5,21"></polygon>
-        </svg>
-      </template>
-    </button>
+    <span
+      class="player-show-name"
+      x-text="$store.player.metadata.title || ($store.player.nowPlaying?.streamerDetails ? ($store.player.nowPlaying.streamerDetails.name + ' w/ ' + $store.player.nowPlaying.streamerDetails.dj) : 'cabbage.town radio')"
+    ></span>
+    <span
+      class="player-subtitle"
+      x-text="$store.player.metadata.date || ($store.player.nowPlaying ? ($store.player.nowPlaying.artist + ' \u2014 ' + $store.player.nowPlaying.title) : '')"
+    ></span>
+
+    <!-- Scrubber — only for recordings -->
     <template x-if="$store.player.type === 'recording'">
-      <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
-        <span x-text="$store.player.formatTime($store.player.currentTime)" style="font-size: 0.85em; min-width: 35px;"></span>
+      <div class="player-scrubber">
+        <span class="player-time" x-text="$store.player.formatTime($store.player.currentTime)"></span>
         <input
           type="range"
-          class="time-slider"
+          class="player-scrubber-input"
           min="0"
           :max="$store.player.duration"
           :value="$store.player.currentTime"
           @input="$store.player.seekTo(Number($event.target.value))"
+          :style="`background: linear-gradient(to right, var(--daorange) ${$store.player.duration > 0 ? ($store.player.currentTime / $store.player.duration * 100) : 0}%, rgba(178, 68, 218, 0.2) ${$store.player.duration > 0 ? ($store.player.currentTime / $store.player.duration * 100) : 0}%)`"
         />
-        <span x-text="$store.player.formatTime($store.player.duration)" style="font-size: 0.85em; min-width: 35px;"></span>
+        <span class="player-time" x-text="$store.player.formatTime($store.player.duration)"></span>
       </div>
     </template>
-    <button @click="$store.player.stopAll()" aria-label="Stop" style="color: var(--daorange);">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="4" y="4" width="16" height="16"></rect>
-      </svg>
-    </button>
   </div>
+
+  <!-- Play / Pause / Stop button -->
+  <button class="player-play-btn" @click="$store.player.togglePlayback()">
+    <!-- Live playing → stop square -->
+    <template x-if="$store.player.isPlaying && $store.player.type === 'live'">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="5" y="5" width="14" height="14" rx="2"></rect>
+      </svg>
+    </template>
+    <!-- Recording playing → pause bars -->
+    <template x-if="$store.player.isPlaying && $store.player.type === 'recording'">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+        <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+      </svg>
+    </template>
+    <!-- Not playing → play triangle -->
+    <template x-if="!$store.player.isPlaying">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+        <polygon points="7,3 21,12 7,21"></polygon>
+      </svg>
+    </template>
+  </button>
 </div>
 
 <script>
@@ -60,11 +76,147 @@
     requestAnimationFrame(() => {
       const store = (window as any).Alpine?.store('player');
       if (!store) return;
-      if (document.getElementById('nowPlayingSection')) {
-        store.startNowPlayingPolling();
-      } else {
-        store.stopNowPlayingPolling();
-      }
+      store.startNowPlayingPolling();
     });
   });
 </script>
+
+<style>
+  /* Floating player pill */
+  .player-pill {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    width: calc(100% - 32px);
+    max-width: 700px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+  }
+
+  .player-artwork {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(178, 68, 218, 0.1);
+  }
+
+  .player-info {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .player-show-name {
+    font-weight: bold;
+    font-size: 1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #1a1a1a;
+  }
+
+  .player-subtitle {
+    font-size: 0.85em;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .player-scrubber {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .player-time {
+    font-size: 0.75em;
+    color: #999;
+    width: 36px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+
+  .player-scrubber-input {
+    -webkit-appearance: none;
+    appearance: none;
+    flex-grow: 1;
+    height: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .player-scrubber-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--daorange);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .player-scrubber-input::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: var(--daorange);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .player-play-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s;
+  }
+  .player-play-btn:hover {
+    background: #333;
+  }
+
+  @media (max-width: 480px) {
+    .player-pill {
+      bottom: 10px;
+      width: calc(100% - 20px);
+      padding: 10px;
+      gap: 10px;
+      border-radius: 20px;
+    }
+    .player-artwork {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+    }
+    .player-play-btn {
+      width: 42px;
+      height: 42px;
+    }
+  }
+</style>

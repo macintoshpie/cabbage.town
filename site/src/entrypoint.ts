@@ -11,7 +11,7 @@ const STREAMER_MAP: Record<string, { name: string; dj: string }> = {
 interface PlayerStore {
   type: 'live' | 'recording' | null;
   isPlaying: boolean;
-  metadata: { title: string; date: string };
+  metadata: { title: string; date: string; artwork: string };
   nowPlaying: {
     artist: string;
     title: string;
@@ -46,7 +46,7 @@ export default (Alpine: Alpine) => {
     // State
     type: null,
     isPlaying: false,
-    metadata: { title: '', date: '' },
+    metadata: { title: '', date: '', artwork: '' },
     nowPlaying: null,
     currentTime: 0,
     duration: 0,
@@ -118,7 +118,7 @@ export default (Alpine: Alpine) => {
 
       this.type = null;
       this.isPlaying = false;
-      this.metadata = { title: '', date: '' };
+      this.metadata = { title: '', date: '', artwork: '' };
 
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
@@ -135,7 +135,7 @@ export default (Alpine: Alpine) => {
       this.type = null;
       this.isPlaying = false;
       this._currentRecordingUrl = null;
-      this.metadata = { title: '', date: '' };
+      this.metadata = { title: '', date: '', artwork: '' };
       this.currentTime = 0;
       this.duration = 0;
       if ('mediaSession' in navigator) {
@@ -156,14 +156,16 @@ export default (Alpine: Alpine) => {
         this.metadata = {
           title: `LIVE: ${this.nowPlaying.streamerDetails.name} w/ ${this.nowPlaying.streamerDetails.dj}`,
           date: `${this.nowPlaying.artist} - ${this.nowPlaying.title}`,
+          artwork: this.nowPlaying.art || '/the-cabbage.png',
         };
       } else if (this.nowPlaying) {
         this.metadata = {
           title: 'Live Radio',
           date: `${this.nowPlaying.artist} - ${this.nowPlaying.title}`,
+          artwork: this.nowPlaying.art || '/the-cabbage.png',
         };
       } else {
-        this.metadata = { title: 'Live Radio', date: 'cabbage.town' };
+        this.metadata = { title: 'Live Radio', date: 'cabbage.town', artwork: '/the-cabbage.png' };
       }
     },
 
@@ -209,7 +211,7 @@ export default (Alpine: Alpine) => {
       recording.onplay = () => {
         this.type = 'recording';
         this.isPlaying = true;
-        this.metadata = { title, date: `${dj} \u2014 ${date}` };
+        this.metadata = { title, date: `${dj} \u2014 ${date}`, artwork: '/the-cabbage.png' };
         this.duration = recording.duration || 0;
         this._setupRecordingMediaSession(title, dj);
       };
@@ -239,7 +241,7 @@ export default (Alpine: Alpine) => {
         this.type = null;
         this.isPlaying = false;
         this._currentRecordingUrl = null;
-        this.metadata = { title: '', date: '' };
+        this.metadata = { title: '', date: '', artwork: '' };
         this.currentTime = 0;
         this.duration = 0;
       };
@@ -275,6 +277,9 @@ export default (Alpine: Alpine) => {
         const recording = this._getRecording();
         if (this.isPlaying) recording?.pause();
         else recording?.play();
+      } else {
+        // Idle — start live radio
+        this.playRadio();
       }
     },
 
