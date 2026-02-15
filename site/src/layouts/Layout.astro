@@ -11,7 +11,7 @@ const { title } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="/icon.ico" type="image/x-icon" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{title}</title>
     <ClientRouter />
   </head>
@@ -77,18 +77,14 @@ const { title } = Astro.props;
     border-spacing: 0;
   }
 
-  /* Winter theme */
   :root {
-    --dagreen: rgb(0, 128, 0);
-    --dayellow: rgb(240, 248, 255);
-    --daorange: rgb(178, 34, 34);
+    --dagreen: rgb(123, 193, 25);
+    --dayellow: rgb(202, 255, 158);
+    --daorange: rgb(220, 84, 0);
   }
 
   body {
     background: var(--dayellow);
-    background-image:
-      radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(178, 34, 34, 0.2) 0%, transparent 50%);
     color: black;
     font-family: 'Courier New', Courier, monospace;
     margin: 0;
@@ -115,7 +111,6 @@ const { title } = Astro.props;
   .cooper {
     font-family: "Cooper Black Regular", monospace;
     font-style: normal;
-    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
   }
 
   a {
@@ -181,7 +176,6 @@ const { title } = Astro.props;
     padding: 8px;
     border-radius: 16px;
     background-color: white;
-    box-shadow: 0 0 20px rgba(178, 34, 34, 0.3), 0 4px 8px rgba(255, 255, 255, 0.2);
   }
 
   .now-playing-container {
