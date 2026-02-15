@@ -29,6 +29,8 @@ const dayAbbr = day.slice(0, 3).toUpperCase();
     background: white;
     border-radius: 20px;
     font-family: 'Courier New', Courier, monospace;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .show-pill-left {
@@ -55,6 +57,7 @@ const dayAbbr = day.slice(0, 3).toUpperCase();
 
   .show-pill-right {
     padding: 16px 20px;
+    overflow: hidden;
   }
 
   .show-pill-title {
