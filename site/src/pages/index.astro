@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ShowPill from '../components/ShowPill.astro';
+import Hero from '../assets/hero.svg';
 import { getCollection } from 'astro:content';
 import recordingsData from '../data/recordings.json';
 
@@ -77,8 +78,10 @@ function findPost(entry: DeduplicatedShow) {
 <Layout title="cabbage.town">
   <div class="main">
     <div class="hero-section">
-      <img src="/hero.svg" class="hero-img" alt="cabbage" />
+      <Hero class="hero-img" />
     </div>
+
+    
 
     <div class="content-sheet">
     <div class="home-grid">
@@ -168,6 +171,61 @@ function findPost(entry: DeduplicatedShow) {
   </div>
 </Layout>
 
+<script>
+  // Animate hero eye
+  const EYE_CENTER_X = 244;
+  const EYE_CENTER_Y = 223;
+  const MAX_OFFSET = 12;
+  const EASE = 0.2;
+
+  function initEye() {
+    const svg = document.querySelector('.hero-img') as SVGSVGElement | null;
+    const pupilGroup = document.getElementById('pupilGroup');
+    if (!svg || !pupilGroup) return;
+
+    let targetX = 0, targetY = 0;
+    let currentX = 0, currentY = 0;
+    let animating = false;
+
+    function tick() {
+      if (!pupilGroup) return;
+
+      currentX += (targetX - currentX) * EASE;
+      currentY += (targetY - currentY) * EASE;
+
+      pupilGroup.setAttribute('transform', `translate(${currentX}, ${currentY})`);
+
+      if (Math.abs(targetX - currentX) > 0.01 || Math.abs(targetY - currentY) > 0.01) {
+        requestAnimationFrame(tick);
+      } else {
+        animating = false;
+      }
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      const rect = svg.getBoundingClientRect();
+      const scaleX = 1453 / rect.width;
+      const scaleY = 490 / rect.height;
+      const svgX = (e.clientX - rect.left) * scaleX;
+      const svgY = (e.clientY - rect.top) * scaleY;
+
+      const dx = svgX - EYE_CENTER_X;
+      const dy = svgY - EYE_CENTER_Y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const clamp = Math.min(dist, MAX_OFFSET) / (dist || 1);
+      targetX = dx * clamp;
+      targetY = dy * clamp;
+
+      if (!animating) {
+        animating = true;
+        requestAnimationFrame(tick);
+      }
+    });
+  }
+
+  document.addEventListener('astro:page-load', initEye);
+</script>
+
 <style>
   :root {
     --content-width: 1000px;
@@ -191,6 +249,7 @@ function findPost(entry: DeduplicatedShow) {
     width: 100%;
     max-width: var(--content-width);
     height: auto;
+    flex-shrink: 0;
   }
 
   .content-sheet {
