@@ -244,9 +244,131 @@ function findPost(entry: DeduplicatedShow) {
     }
   }
 
+  function initWaveAnalyser() {
+    const wave1 = document.getElementById('wave1');
+    const wave2 = document.getElementById('wave2');
+    if (!wave1 || !wave2) return;
+
+
+    // Pulse direction: ~30° up from horizontal (right)
+    const DIR_X = 0.866;
+    const DIR_Y = -0.5;
+    const MAX_OFFSET = 40; // max px translation in SVG space
+
+    // Delay buffer: wave2 reads amplitude from a few frames behind wave1
+    const DELAY_FRAMES = 4;
+    const ampBuffer: number[] = new Array(DELAY_FRAMES).fill(0);
+    let bufIdx = 0;
+
+    // Smoothed values for each wave
+    let wave1Val = 0;
+    let wave2Val = 0;
+
+
+    let ctx: AudioContext | null = null;
+    let analyser: AnalyserNode | null = null;
+    let sourceMap = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
+    let freqData: Uint8Array;
+    let animId = 0;
+    let connectedEl: HTMLAudioElement | null = null;
+
+    function ensureContext() {
+      if (!ctx) {
+        ctx = new AudioContext();
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.88;
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+        analyser.connect(ctx.destination);
+      }
+      return { ctx: ctx!, analyser: analyser! };
+    }
+
+    function connectAudio(el: HTMLAudioElement) {
+      if (connectedEl === el) return;
+      const { ctx, analyser } = ensureContext();
+      if (ctx.state === 'suspended') ctx.resume();
+
+      let source = sourceMap.get(el);
+      if (!source) {
+        source = ctx.createMediaElementSource(el);
+        sourceMap.set(el, source);
+      }
+      source.connect(analyser);
+      connectedEl = el;
+    }
+
+    function tick() {
+      if (!analyser || !wave1 || !wave2) return;
+      analyser.getByteFrequencyData(freqData);
+
+      // Focus on kick/punch range (~80–400Hz), skip sub-bass rumble
+      // With fftSize 256 & 44.1kHz, each bin ≈ 172Hz. Bins 0–2 ≈ sub-bass, 3–7 ≈ kick range
+      const binStart = 2;
+      const binEnd = Math.min(8, freqData.length);
+      let sum = 0;
+      for (let i = binStart; i < binEnd; i++) sum += freqData[i];
+      const raw = sum / (binEnd - binStart) / 255;
+      // Steep power curve: constant energy gets crushed, only real peaks punch through
+      const amp = raw * raw * raw * raw;
+
+      // Wave1 follows current amplitude, wave2 reads from delay buffer
+      const delayedAmp = ampBuffer[bufIdx];
+      ampBuffer[bufIdx] = amp;
+      bufIdx = (bufIdx + 1) % DELAY_FRAMES;
+
+      // Smooth towards target (lower = smoother)
+      const SMOOTHING = 0.8;
+      wave1Val += (amp - wave1Val) * SMOOTHING;
+      wave2Val += (delayedAmp - wave2Val) * SMOOTHING;
+
+      const offset1 = wave1Val * MAX_OFFSET;
+      const offset2 = wave2Val * MAX_OFFSET;
+
+      wave1.setAttribute('transform', `translate(${DIR_X * offset1}, ${DIR_Y * offset1})`);
+      wave2.setAttribute('transform', `translate(${DIR_X * offset2}, ${DIR_Y * offset2})`);
+
+      animId = requestAnimationFrame(tick);
+    }
+
+    function stopAnim() {
+      if (!wave1 || !wave2) return;
+
+      cancelAnimationFrame(animId);
+      animId = 0;
+      wave1Val = 0;
+      wave2Val = 0;
+      ampBuffer.fill(0);
+      wave1.setAttribute('transform', '');
+      wave2.setAttribute('transform', '');
+    }
+
+    const Alpine = (window as any).Alpine;
+    if (!Alpine) return;
+
+    Alpine.effect(() => {
+      const store = Alpine.store('player');
+      const isPlaying: boolean = store.isPlaying;
+      const type: string | null = store.type;
+
+      if (isPlaying) {
+        const el = type === 'recording'
+          ? document.getElementById('recordingPlayer') as HTMLAudioElement | null
+          : document.getElementById('radio') as HTMLAudioElement | null;
+        if (el) {
+          connectAudio(el);
+          if (!animId) animId = requestAnimationFrame(tick);
+        }
+      } else {
+        stopAnim();
+      }
+    });
+  }
+
   document.addEventListener('astro:page-load', () => {
     initEye();
     initPlayButton();
+    initWaveAnalyser();
   });
 </script>
 
@@ -274,6 +396,7 @@ function findPost(entry: DeduplicatedShow) {
     max-width: var(--content-width);
     height: auto;
     flex-shrink: 0;
+    overflow: visible;
   }
 
   .hero-img :global(#playButton) {
