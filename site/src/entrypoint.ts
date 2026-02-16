@@ -23,9 +23,19 @@ interface PlayerStore {
   _nowPlayingInterval: ReturnType<typeof setInterval> | null;
   _currentRecordingUrl: string | null;
 
+  // Web Audio analyser (persists across navigations)
+  _audioCtx: AudioContext | null;
+  _analyser: AnalyserNode | null;
+  _sourceMap: WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>;
+  _freqData: Uint8Array | null;
+  _connectedEl: HTMLAudioElement | null;
+
   _getRadio(): HTMLAudioElement | null;
   _getRecording(): HTMLAudioElement | null;
   formatTime(seconds: number): string;
+  getAnalyser(): AnalyserNode | null;
+  _ensureAnalyser(): { ctx: AudioContext; analyser: AnalyserNode };
+  _connectAnalyser(el: HTMLAudioElement): void;
   playRadio(): void;
   stopRadio(): void;
   stopRecording(): void;
@@ -53,6 +63,13 @@ export default (Alpine: Alpine) => {
     _nowPlayingInterval: null,
     _currentRecordingUrl: null,
 
+    // Web Audio analyser (persists across navigations via Alpine store)
+    _audioCtx: null,
+    _analyser: null,
+    _sourceMap: new WeakMap(),
+    _freqData: null,
+    _connectedEl: null,
+
     // Audio element accessors
     _getRadio() {
       return document.getElementById('radio') as HTMLAudioElement | null;
@@ -66,6 +83,38 @@ export default (Alpine: Alpine) => {
       const m = Math.floor(seconds / 60);
       const s = Math.floor(seconds % 60);
       return `${m}:${s.toString().padStart(2, '0')}`;
+    },
+
+    // ---- Web Audio Analyser ----
+
+    _ensureAnalyser() {
+      if (!this._audioCtx) {
+        this._audioCtx = new AudioContext();
+        this._analyser = this._audioCtx.createAnalyser();
+        this._analyser.fftSize = 256;
+        this._analyser.smoothingTimeConstant = 0.88;
+        this._freqData = new Uint8Array(this._analyser.frequencyBinCount);
+        this._analyser.connect(this._audioCtx.destination);
+      }
+      return { ctx: this._audioCtx!, analyser: this._analyser! };
+    },
+
+    _connectAnalyser(el: HTMLAudioElement) {
+      if (this._connectedEl === el) return;
+      const { ctx, analyser } = this._ensureAnalyser();
+      if (ctx.state === 'suspended') ctx.resume();
+
+      let source = this._sourceMap.get(el);
+      if (!source) {
+        source = ctx.createMediaElementSource(el);
+        this._sourceMap.set(el, source);
+      }
+      source.connect(analyser);
+      this._connectedEl = el;
+    },
+
+    getAnalyser() {
+      return this._analyser;
     },
 
     // ---- Live Radio ----

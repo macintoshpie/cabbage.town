@@ -166,6 +166,8 @@ const recordingsByKey = getRecordingsByKey();
     const wave2 = document.getElementById('wave2');
     if (!wave1 || !wave2) return;
 
+    const Alpine = (window as any).Alpine;
+    if (!Alpine) return;
 
     // Pulse direction: ~30° up from horizontal (right)
     const DIR_X = 0.866;
@@ -180,47 +182,17 @@ const recordingsByKey = getRecordingsByKey();
     // Smoothed values for each wave
     let wave1Val = 0;
     let wave2Val = 0;
-
-
-    let ctx: AudioContext | null = null;
-    let analyser: AnalyserNode | null = null;
-    let sourceMap = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
-    let freqData: Uint8Array;
     let animId = 0;
-    let connectedEl: HTMLAudioElement | null = null;
-
-    function ensureContext() {
-      if (!ctx) {
-        ctx = new AudioContext();
-        analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.smoothingTimeConstant = 0.88;
-        freqData = new Uint8Array(analyser.frequencyBinCount);
-        analyser.connect(ctx.destination);
-      }
-      return { ctx: ctx!, analyser: analyser! };
-    }
-
-    function connectAudio(el: HTMLAudioElement) {
-      if (connectedEl === el) return;
-      const { ctx, analyser } = ensureContext();
-      if (ctx.state === 'suspended') ctx.resume();
-
-      let source = sourceMap.get(el);
-      if (!source) {
-        source = ctx.createMediaElementSource(el);
-        sourceMap.set(el, source);
-      }
-      source.connect(analyser);
-      connectedEl = el;
-    }
 
     function tick() {
-      if (!analyser || !wave1 || !wave2) return;
+      const store = Alpine.store('player');
+      const analyser = store._analyser as AnalyserNode | null;
+      const freqData = store._freqData as Uint8Array | null;
+      if (!analyser || !freqData || !wave1 || !wave2) return;
+
       analyser.getByteFrequencyData(freqData);
 
-      // Focus on kick/punch range (~80–400Hz), skip sub-bass rumble
-      // With fftSize 256 & 44.1kHz, each bin ≈ 172Hz. Bins 0–2 ≈ sub-bass, 3–7 ≈ kick range
+      // Focus on kick/punch range (~80-400Hz), skip sub-bass rumble
       const binStart = 2;
       const binEnd = Math.min(8, freqData.length);
       let sum = 0;
@@ -250,7 +222,6 @@ const recordingsByKey = getRecordingsByKey();
 
     function stopAnim() {
       if (!wave1 || !wave2) return;
-
       cancelAnimationFrame(animId);
       animId = 0;
       wave1Val = 0;
@@ -259,9 +230,6 @@ const recordingsByKey = getRecordingsByKey();
       wave1.setAttribute('transform', '');
       wave2.setAttribute('transform', '');
     }
-
-    const Alpine = (window as any).Alpine;
-    if (!Alpine) return;
 
     Alpine.effect(() => {
       const store = Alpine.store('player');
@@ -273,7 +241,7 @@ const recordingsByKey = getRecordingsByKey();
           ? document.getElementById('recordingPlayer') as HTMLAudioElement | null
           : document.getElementById('radio') as HTMLAudioElement | null;
         if (el) {
-          connectAudio(el);
+          store._connectAnalyser(el);
           if (!animId) animId = requestAnimationFrame(tick);
         }
       } else {
