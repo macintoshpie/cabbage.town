@@ -223,7 +223,31 @@ function findPost(entry: DeduplicatedShow) {
     });
   }
 
-  document.addEventListener('astro:page-load', initEye);
+  function initPlayButton() {
+    const playBtn = document.getElementById('playButton');
+    const playIcon = document.getElementById('playicon');
+    if (!playBtn || !playIcon) return;
+
+    playBtn.addEventListener('click', () => {
+      const store = (window as any).Alpine?.store('player');
+      if (store) store.playRadio();
+    });
+
+    const Alpine = (window as any).Alpine;
+    if (Alpine) {
+      Alpine.effect(() => {
+        const isPlaying = Alpine.store('player').isPlaying;
+        playIcon.style.display = isPlaying ? 'none' : '';
+        playBtn.style.cursor = isPlaying ? 'default' : 'pointer';
+        playBtn.style.pointerEvents = isPlaying ? 'none' : '';
+      });
+    }
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    initEye();
+    initPlayButton();
+  });
 </script>
 
 <style>
@@ -250,6 +274,15 @@ function findPost(entry: DeduplicatedShow) {
     max-width: var(--content-width);
     height: auto;
     flex-shrink: 0;
+  }
+
+  .hero-img :global(#playButton) {
+    cursor: pointer;
+    transform-origin: 748.748px 320.035px;
+    transition: transform 0.15s;
+  }
+  .hero-img :global(#playButton:hover) {
+    transform: scale(1.05);
   }
 
   .content-sheet {
