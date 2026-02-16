@@ -40,11 +40,15 @@ export function postsLoader(): Loader {
           },
         });
 
+        // Convert single newlines to double so each line renders as its own paragraph
+        // (source content uses \n between lines that authors intend as separate blocks)
+        const md = post.markdown?.replace(/\n/g, '\n\n') ?? '';
+
         store.set({
           id: post.id,
           data,
-          body: post.markdown,
-          rendered: post.markdown ? await renderMarkdown(post.markdown) : undefined,
+          body: md,
+          rendered: md ? await renderMarkdown(md) : undefined,
           digest: generateDigest({ ...post }),
         });
       }
