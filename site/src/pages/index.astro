@@ -65,6 +65,12 @@ function getDjColorClass(show: string): string {
   return '';
 }
 
+// Format "February 12, 2026" → "Feb 12"
+function shortDate(date: string): string {
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 // Find matching post for a show entry
 function findPost(entry: DeduplicatedShow) {
   for (const key of entry.keys) {
@@ -87,7 +93,7 @@ function findPost(entry: DeduplicatedShow) {
     <div class="home-grid">
       <!-- Schedule (left on desktop, top on mobile) -->
       <div class="home-col">
-        <h3 class="cooper">schedule</h3>
+        <h3 class="section-header cooper">schedule</h3>
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <ShowPill day="monday" title="the mulch channel" time="9pm" dj="ted" colorClass="mulch-channel" />
           <ShowPill day="tuesday" title="The IS WiLD hour" time="8pm" dj="DJ Chicago Style" colorClass="ben" />
@@ -102,18 +108,18 @@ function findPost(entry: DeduplicatedShow) {
 
       <!-- Recent Shows (right on desktop, bottom on mobile) -->
       <div class="home-col">
-        <h3 class="cooper">recent shows</h3>
-        <div class="card" x-data>
-          <div style="display: flex; flex-direction: column; gap: 12px;">
+        <h3 class="section-header cooper">recent shows</h3>
+        <div class="card recent-shows-card" x-data>
+          <div class="show-list">
             {deduped.slice(0, 10).map((entry) => {
               const colorClass = getDjColorClass(entry.show);
               const post = findPost(entry);
               const rec = recordingsByKey.get(entry.keys[0]);
               return (
-                <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="show-list-item">
                   {rec && (
                     <button
-                      class="recording-play-btn"
+                      class={`recording-play-btn ${colorClass ? colorClass + '-bg' : ''}`}
                       data-url={rec.url}
                       data-title={entry.displayName}
                       data-dj={entry.dj}
@@ -121,27 +127,23 @@ function findPost(entry: DeduplicatedShow) {
                       @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
                       aria-label={`Play ${entry.displayName}`}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"></polygon></svg>
                     </button>
                   )}
-                  <div>
-                    <p>
-                      <strong class={colorClass}>{entry.displayName}</strong>
-                    </p>
-                    <p style="font-size: 0.85em; color: #666;">
-                      <a href={`/shows?dj=${encodeURIComponent(entry.dj)}`} style="color: inherit; text-decoration: none;">{entry.dj}</a> &mdash; {entry.date}
-                      {post && (
-                        <> &middot; <a href={`/patch/${post.data.slug}`}>Show Notes</a></>
-                      )}
-                    </p>
-                  </div>
+                  {post ? (
+                    <a href={`/patch/${post.data.slug}`} class={`show-list-title-link ${colorClass}`}>
+                      {entry.displayName}
+                      <svg class="show-notes-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </a>
+                  ) : (
+                    <span class={`show-list-title ${colorClass}`}>{entry.displayName}</span>
+                  )}
+                  <span class="show-list-date">{shortDate(entry.date)}</span>
                 </div>
               );
             })}
           </div>
-          <p style="text-align: center; margin-top: 16px;">
-            <a href="/shows">see all shows &rarr;</a>
-          </p>
+          <a href="/shows" class="see-all-link">see all shows &rarr;</a>
         </div>
 
         <!-- Footer (below recent shows) -->
@@ -436,6 +438,96 @@ function findPost(entry: DeduplicatedShow) {
     flex-direction: column;
     gap: 16px;
     min-width: 0;
+  }
+
+  .section-header {
+    color: white;
+    font-size: 1.8em;
+    padding-left: 4px;
+  }
+
+  .recent-shows-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .show-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .show-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .show-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .show-list-title,
+  .show-list-title-link {
+    font-weight: bold;
+    font-size: 0.9em;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .show-list-title-link {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .show-list-title-link:hover {
+    text-decoration: underline;
+  }
+
+  .show-notes-icon {
+    flex-shrink: 0;
+    color: #bbb;
+  }
+
+  .show-list-title-link:hover .show-notes-icon {
+    color: var(--daorange);
+  }
+
+  .show-list-date {
+    font-size: 0.75em;
+    color: #aaa;
+    flex-shrink: 0;
+  }
+
+  /* DJ-colored play buttons */
+  :global(.mulch-channel-bg) { background: rgb(141, 61, 61) !important; }
+  :global(.reginajingles-channel-bg) { background: rgb(53, 174, 43) !important; }
+  :global(.ben-bg) { background: rgb(0, 111, 166) !important; }
+  :global(.terminus-bg) { background: rgb(180, 32, 234) !important; }
+  :global(.nlt-bg) { background: rgb(116, 22, 184) !important; }
+  :global(.home-cooking-bg) { background: rgb(174, 52, 4) !important; }
+  :global(.posted-up-bg) { background: rgb(168, 168, 168) !important; }
+
+  .see-all-link {
+    display: block;
+    text-align: center;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #eee;
+    color: var(--daorange);
+    font-weight: bold;
+    text-decoration: none;
+    font-size: 0.9em;
+  }
+
+  .see-all-link:hover {
+    text-decoration: underline;
   }
 
   .home-footer {

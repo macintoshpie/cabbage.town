@@ -20,7 +20,7 @@ const dayAbbr = day.slice(0, 3).toUpperCase();
   <div class="show-pill-right" style="display: flex; flex-direction: column; justify-content: center; flex: 1; min-width: 0;">
     <span class="show-pill-title">{title}</span>
     <hr class="show-pill-hr" />
-    {dj && <span class="show-pill-dj">host: {dj}</span>}
+    {dj && <span class="show-pill-dj">{dj}</span>}
   </div>
 </div>
 
@@ -34,9 +34,9 @@ const dayAbbr = day.slice(0, 3).toUpperCase();
   }
 
   .show-pill-left {
-    padding: 16px 20px;
-    min-width: 80px;
-    border-right: 2px solid #e0e0e0;
+    padding: 10px 14px;
+    min-width: 70px;
+    border-right: 1px solid #e0e0e0;
     gap: 4px;
   }
 
@@ -56,7 +56,7 @@ const dayAbbr = day.slice(0, 3).toUpperCase();
   }
 
   .show-pill-right {
-    padding: 16px 20px;
+    padding: 10px 14px;
     overflow: hidden;
   }
 
@@ -68,14 +68,13 @@ const dayAbbr = day.slice(0, 3).toUpperCase();
 
   .show-pill-hr {
     border: none;
-    border-top: 2px dashed #ccc;
-    margin: 8px 0;
+    border-top: 1px dashed #ccc;
+    margin: 5px 0;
   }
 
   .show-pill-dj {
     font-size: 0.85em;
     color: #555;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.01em;
   }
 </style>
