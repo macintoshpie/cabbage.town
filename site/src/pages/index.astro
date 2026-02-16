@@ -3,11 +3,8 @@ import Layout from '../layouts/Layout.astro';
 import ShowPill from '../components/ShowPill.astro';
 import ShowListItem from '../components/ShowListItem.astro';
 import Hero from '../assets/hero.svg';
-import { getCollection } from 'astro:content';
-import { getDeduplicatedShows, getDjColorClass, getRecordingsByKey, buildPostMap, findPost } from '../lib/shows';
+import { getDeduplicatedShows, getDjColorClass, getRecordingsByKey } from '../lib/shows';
 
-const posts = await getCollection('posts');
-const postsByRecordingKey = buildPostMap(posts);
 const deduped = getDeduplicatedShows();
 const recordingsByKey = getRecordingsByKey();
 ---
@@ -44,7 +41,6 @@ const recordingsByKey = getRecordingsByKey();
           <div class="show-list">
             {deduped.slice(0, 10).map((entry) => {
               const colorClass = getDjColorClass(entry.show);
-              const post = findPost(entry, postsByRecordingKey);
               const rec = recordingsByKey.get(entry.keys[0]);
               return (
                 <ShowListItem
@@ -53,7 +49,7 @@ const recordingsByKey = getRecordingsByKey();
                   date={entry.date}
                   dj={entry.dj}
                   recUrl={rec?.url}
-                  postSlug={post?.data.slug}
+                  postSlug={entry.postSlug}
                 />
               );
             })}

@@ -1,11 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ShowListItem from '../components/ShowListItem.astro';
-import { getCollection } from 'astro:content';
-import { getDeduplicatedShows, getDjColorClass, getRecordingsByKey, buildPostMap, findPost } from '../lib/shows';
+import { getDeduplicatedShows, getDjColorClass, getRecordingsByKey } from '../lib/shows';
 
-const posts = await getCollection('posts');
-const postsByRecordingKey = buildPostMap(posts);
 const deduped = getDeduplicatedShows();
 const recordingsByKey = getRecordingsByKey();
 
@@ -78,7 +75,6 @@ for (const entry of deduped) {
         <div class="show-list">
           {deduped.map((entry) => {
             const colorClass = getDjColorClass(entry.show);
-            const post = findPost(entry, postsByRecordingKey);
             const rec = recordingsByKey.get(entry.keys[0]);
             return (
               <div
@@ -92,7 +88,7 @@ for (const entry of deduped) {
                   date={entry.date}
                   dj={entry.dj}
                   recUrl={rec?.url}
-                  postSlug={post?.data.slug}
+                  postSlug={entry.postSlug}
                 />
               </div>
             );

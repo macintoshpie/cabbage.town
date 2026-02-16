@@ -62,19 +62,18 @@ type Recording struct {
 	DisplayName  string
 }
 
-// PostOutput is the JSON-serializable output type for posts
-type PostOutput struct {
-	ID           string    `json:"id"`
-	Title        string    `json:"title"`
-	Slug         string    `json:"slug"`
-	Markdown     string    `json:"markdown"`
-	Author       string    `json:"author"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
-	Tags         []string  `json:"tags"`
-	Category     string    `json:"category"`
-	Excerpt      string    `json:"excerpt"`
-	RecordingKey string    `json:"recordingKey,omitempty"`
+// PostData is the nested post data embedded in a recording (nullable via pointer)
+type PostData struct {
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	Slug      string    `json:"slug"`
+	Markdown  string    `json:"markdown"`
+	Author    string    `json:"author"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Tags      []string  `json:"tags"`
+	Category  string    `json:"category"`
+	Excerpt   string    `json:"excerpt"`
 }
 
 // RecordingOutput is the JSON-serializable output type for recordings
@@ -86,6 +85,7 @@ type RecordingOutput struct {
 	Date         string    `json:"date"`
 	LastModified time.Time `json:"lastModified"`
 	DisplayName  string    `json:"displayName"`
+	Post         *PostData `json:"post,omitempty"`
 }
 
 // ListPosts fetches all published, non-deleted posts from S3
@@ -378,7 +378,7 @@ func GeneratePlaylists(recordings []Recording, outputDir string) error {
 	return nil
 }
 
-// Run fetches posts and recordings from S3 and writes JSON data files
+// Run fetches posts and recordings from S3, merges them, and writes recordings.json
 func Run(config Config) error {
 	log.Printf("[POSTS] Starting data export process")
 
@@ -388,51 +388,29 @@ func Run(config Config) error {
 		return fmt.Errorf("failed to list posts: %v", err)
 	}
 
-	// Convert posts to output format
-	postOutputs := make([]PostOutput, len(posts))
-	for i, p := range posts {
-		postOutputs[i] = PostOutput{
-			ID:           p.ID,
-			Title:        p.Title,
-			Slug:         p.Slug,
-			Markdown:     p.Markdown,
-			Author:       p.Author,
-			CreatedAt:    p.CreatedAt,
-			UpdatedAt:    p.UpdatedAt,
-			Tags:         p.Metadata.Tags,
-			Category:     p.Metadata.Category,
-			Excerpt:      p.Metadata.Excerpt,
-			RecordingKey: p.Metadata.Recording,
+	// Build post lookup by recording key
+	postByRecKey := make(map[string]Post)
+	for _, p := range posts {
+		if p.Metadata.Recording != "" {
+			postByRecKey[p.Metadata.Recording] = p
 		}
 	}
+	log.Printf("[POSTS] %d posts linked to recordings", len(postByRecKey))
 
 	// Ensure output directory exists
 	if err := os.MkdirAll(config.OutputDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %v", err)
 	}
 
-	// Write posts.json
-	postsJSON, err := json.MarshalIndent(postOutputs, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal posts: %v", err)
-	}
-	postsFile := fmt.Sprintf("%s/posts.json", config.OutputDir)
-	if err := os.WriteFile(postsFile, postsJSON, 0644); err != nil {
-		return fmt.Errorf("failed to write posts.json: %v", err)
-	}
-	log.Printf("[POSTS] Wrote %d posts to %s", len(postOutputs), postsFile)
-
 	// Fetch recordings from S3
 	recordings, err := fetchRecordingsFromS3(config.BucketClient)
 	if err != nil {
-		log.Printf("[POSTS] WARNING: Failed to fetch recordings from S3: %v", err)
-		log.Printf("[POSTS] Skipping recordings.json")
-		log.Printf("[POSTS] Data export complete: %d posts", len(posts))
-		return nil
+		return fmt.Errorf("failed to fetch recordings from S3: %v", err)
 	}
 
-	// Convert recordings to output format
+	// Convert recordings to output format, enriching with post data
 	recOutputs := make([]RecordingOutput, len(recordings))
+	enriched := 0
 	for i, r := range recordings {
 		recOutputs[i] = RecordingOutput{
 			Key:          r.Key,
@@ -443,7 +421,62 @@ func Run(config Config) error {
 			LastModified: r.LastModified,
 			DisplayName:  r.DisplayName,
 		}
+
+		// Attach post data if this recording has a linked post
+		if p, ok := postByRecKey[r.Key]; ok {
+			tags := p.Metadata.Tags
+			if tags == nil {
+				tags = []string{}
+			}
+			recOutputs[i].Post = &PostData{
+				ID:        p.ID,
+				Title:     p.Title,
+				Slug:      p.Slug,
+				Markdown:  p.Markdown,
+				Author:    p.Author,
+				CreatedAt: p.CreatedAt,
+				UpdatedAt: p.UpdatedAt,
+				Tags:      tags,
+				Category:  p.Metadata.Category,
+				Excerpt:   p.Metadata.Excerpt,
+			}
+			// Use post title as display name when available
+			recOutputs[i].DisplayName = p.Title
+			enriched++
+		}
 	}
+	// Append standalone posts (no linked recording) as post-only entries
+	standalone := 0
+	for _, p := range posts {
+		if p.Metadata.Recording != "" {
+			continue // already attached to a recording above
+		}
+		tags := p.Metadata.Tags
+		if tags == nil {
+			tags = []string{}
+		}
+		recOutputs = append(recOutputs, RecordingOutput{
+			DisplayName:  p.Title,
+			DJ:           p.Author,
+			Show:         p.Title,
+			Date:         p.CreatedAt.Format("January 2, 2006"),
+			LastModified: p.CreatedAt,
+			Post: &PostData{
+				ID:        p.ID,
+				Title:     p.Title,
+				Slug:      p.Slug,
+				Markdown:  p.Markdown,
+				Author:    p.Author,
+				CreatedAt: p.CreatedAt,
+				UpdatedAt: p.UpdatedAt,
+				Tags:      tags,
+				Category:  p.Metadata.Category,
+				Excerpt:   p.Metadata.Excerpt,
+			},
+		})
+		standalone++
+	}
+	log.Printf("[POSTS] Enriched %d recordings with post data, added %d standalone posts", enriched, standalone)
 
 	// Write recordings.json
 	recJSON, err := json.MarshalIndent(recOutputs, "", "  ")
@@ -461,6 +494,6 @@ func Run(config Config) error {
 		return fmt.Errorf("failed to generate playlists: %v", err)
 	}
 
-	log.Printf("[POSTS] Data export complete: %d posts, %d recordings", len(posts), len(recordings))
+	log.Printf("[POSTS] Data export complete: %d entries (%d recordings, %d with posts, %d standalone)", len(recOutputs), len(recordings), enriched, standalone)
 	return nil
 }

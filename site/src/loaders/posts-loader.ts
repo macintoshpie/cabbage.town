@@ -1,30 +1,35 @@
 import type { Loader } from 'astro/loaders';
 import { readFile } from 'node:fs/promises';
 
-interface RawPost {
-  id: string;
-  title: string;
-  slug: string;
-  markdown: string;
-  author: string;
-  createdAt: string;
-  updatedAt: string;
-  tags: string[];
-  category: string;
-  excerpt: string;
-  recordingKey?: string;
+interface RawRecording {
+  key: string;
+  post?: {
+    id: string;
+    title: string;
+    slug: string;
+    markdown: string;
+    author: string;
+    createdAt: string;
+    updatedAt: string;
+    tags: string[];
+    category: string;
+    excerpt: string;
+  };
 }
 
 export function postsLoader(): Loader {
   return {
     name: 'posts-loader',
     async load({ store, renderMarkdown, parseData, generateDigest }) {
-      const raw = await readFile('src/data/posts.json', 'utf-8');
-      const posts: RawPost[] = JSON.parse(raw);
+      const raw = await readFile('src/data/recordings.json', 'utf-8');
+      const recordings: RawRecording[] = JSON.parse(raw);
 
       store.clear();
 
-      for (const post of posts) {
+      for (const rec of recordings) {
+        if (!rec.post) continue;
+        const post = rec.post;
+
         const data = await parseData({
           id: post.id,
           data: {
@@ -36,7 +41,7 @@ export function postsLoader(): Loader {
             tags: post.tags,
             category: post.category,
             excerpt: post.excerpt,
-            recordingKey: post.recordingKey,
+            recordingKey: rec.key,
           },
         });
 

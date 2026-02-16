@@ -1,4 +1,3 @@
-import type { CollectionEntry } from 'astro:content';
 import recordingsData from '../data/recordings.json';
 
 export type DeduplicatedShow = {
@@ -7,6 +6,7 @@ export type DeduplicatedShow = {
   dj: string;
   date: string;
   keys: string[];
+  postSlug?: string;
 };
 
 export function getDeduplicatedShows(): DeduplicatedShow[] {
@@ -31,6 +31,7 @@ export function getDeduplicatedShows(): DeduplicatedShow[] {
       dj: rec.dj,
       date: rec.date,
       keys: [rec.key],
+      postSlug: (rec as any).post?.slug,
     });
   }
 
@@ -56,22 +57,4 @@ export function shortDate(date: string): string {
 
 export function getRecordingsByKey() {
   return new Map(recordingsData.map(r => [r.key, r]));
-}
-
-export function buildPostMap(posts: CollectionEntry<'posts'>[]) {
-  const map = new Map<string, CollectionEntry<'posts'>>();
-  for (const post of posts) {
-    if (post.data.recordingKey) {
-      map.set(post.data.recordingKey, post);
-    }
-  }
-  return map;
-}
-
-export function findPost(entry: DeduplicatedShow, postsByRecordingKey: Map<string, CollectionEntry<'posts'>>) {
-  for (const key of entry.keys) {
-    const post = postsByRecordingKey.get(key);
-    if (post) return post;
-  }
-  return null;
 }

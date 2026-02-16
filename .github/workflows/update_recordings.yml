@@ -56,7 +56,7 @@ jobs:
         run: |
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'actions@github.com'
-          git add site/src/data/posts.json site/src/data/recordings.json site/public/playlists/*.m3u
+          git add site/src/data/recordings.json site/public/playlists/*.m3u
 
           # Only commit and push if there are changes
           if git diff --staged --quiet; then
