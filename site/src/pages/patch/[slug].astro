@@ -23,34 +23,209 @@ const formatDate = (date: Date) =>
 ---
 
 <Layout title={`${post.data.title} — cabbage.town`}>
-  <div class="main">
-    <div class="content" style="max-width: 700px; width: 100%;">
-      <nav><a class="back-link" href="/">&larr; back to cabbage.town</a></nav>
-      {recording && (
-        <div class="recording-card" x-data>
-          <button
-            class="recording-play-btn-post"
-            data-url={recording.url}
-            data-title={post.data.title}
-            data-dj={recording.dj}
-            data-date={recording.date}
-            @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
-            aria-label="Play recording"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"></polygon></svg>
-            <span>Listen to recording</span>
-          </button>
+  <div class="patch-page">
+    <nav class="patch-nav">
+      <a class="patch-back" href="/">&larr; cabbage.town</a>
+    </nav>
+    <article class="patch-card" x-data>
+      <div class="patch-header">
+        <div class="patch-header-top">
+          <h1 class="patch-title">{post.data.title}</h1>
+          {recording && (
+            <button
+              class="patch-play-btn"
+              data-url={recording.url}
+              data-title={post.data.title}
+              data-dj={recording.dj}
+              data-date={recording.date}
+              @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
+              aria-label="Play recording"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"></polygon></svg>
+              <span>Listen</span>
+            </button>
+          )}
         </div>
-      )}
-      <article class="post-container">
-        <div class="post-header">
-          <h1 class="post-title">{post.data.title}</h1>
-          <p class="post-meta">{post.data.author} &mdash; {formatDate(post.data.createdAt)}</p>
-        </div>
-        <div class="post-content">
-          <Content />
-        </div>
-      </article>
-    </div>
+        <p class="patch-meta">{post.data.author} &mdash; {formatDate(post.data.createdAt)}</p>
+      </div>
+      <div class="patch-content">
+        <Content />
+      </div>
+    </article>
   </div>
 </Layout>
+
+<style>
+  .patch-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 16px;
+  }
+
+  .patch-nav {
+    width: 100%;
+    max-width: 700px;
+    padding: 16px 0;
+  }
+
+  .patch-back {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.85em;
+  }
+
+  .patch-back:hover {
+    color: white;
+    text-decoration: underline;
+  }
+
+  .patch-card {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    max-width: 700px;
+    box-sizing: border-box;
+  }
+
+  .patch-header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .patch-header-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    justify-content: space-between;
+  }
+
+  .patch-title {
+    font-family: 'Cooper Black Regular', monospace;
+    font-size: 1.6em;
+    line-height: 1.2;
+    color: #1a1a1a;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .patch-play-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--daorange);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85em;
+    font-weight: bold;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .patch-play-btn:hover {
+    opacity: 0.85;
+  }
+
+  .patch-meta {
+    color: #999;
+    font-size: 0.85em;
+    margin-top: 8px;
+  }
+
+  .patch-content {
+    line-height: 1.7;
+    color: #333;
+  }
+
+  .patch-content :global(h1),
+  .patch-content :global(h2),
+  .patch-content :global(h3) {
+    font-family: 'Cooper Black Regular', monospace;
+    color: #1a1a1a;
+    margin-top: 24px;
+    margin-bottom: 12px;
+  }
+
+  .patch-content :global(h1) { font-size: 1.5em; }
+  .patch-content :global(h2) { font-size: 1.3em; }
+  .patch-content :global(h3) { font-size: 1.1em; }
+
+  .patch-content :global(p) {
+    margin-bottom: 14px;
+  }
+
+  .patch-content :global(a) {
+    color: var(--daorange);
+    text-decoration: underline;
+  }
+
+  .patch-content :global(a:hover) {
+    opacity: 0.8;
+  }
+
+  .patch-content :global(strong) {
+    font-weight: bold;
+  }
+
+  .patch-content :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 16px 0;
+  }
+
+  .patch-content :global(code) {
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  .patch-content :global(pre) {
+    background: #f4f4f4;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+
+  .patch-content :global(pre code) {
+    background: none;
+    padding: 0;
+  }
+
+  .patch-content :global(ul),
+  .patch-content :global(ol) {
+    margin-bottom: 14px;
+    padding-left: 24px;
+  }
+
+  .patch-content :global(li) {
+    margin-bottom: 6px;
+  }
+
+  @media (max-width: 480px) {
+    .patch-card {
+      padding: 20px;
+      border-radius: 16px;
+    }
+
+    .patch-title {
+      font-size: 1.3em;
+    }
+
+    .patch-header-top {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .patch-play-btn {
+      align-self: flex-start;
+    }
+  }
+</style>

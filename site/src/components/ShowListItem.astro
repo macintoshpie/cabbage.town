@@ -1,0 +1,101 @@
+---
+interface Props {
+  displayName: string;
+  colorClass: string;
+  date: string;
+  recUrl?: string;
+  dj: string;
+  postSlug?: string;
+  /** Extra attributes to put on the outer div (e.g. data-dj, x-show) */
+  extraAttrs?: Record<string, string>;
+}
+
+import { shortDate } from '../lib/shows';
+
+const { displayName, colorClass, date, recUrl, dj, postSlug, extraAttrs = {} } = Astro.props;
+---
+
+<div class="show-list-item" {...extraAttrs}>
+  {recUrl && (
+    <button
+      class={`recording-play-btn ${colorClass ? colorClass + '-bg' : ''}`}
+      data-url={recUrl}
+      data-title={displayName}
+      data-dj={dj}
+      data-date={date}
+      @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
+      aria-label={`Play ${displayName}`}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"></polygon></svg>
+    </button>
+  )}
+  {postSlug ? (
+    <a href={`/patch/${postSlug}`} class={`show-list-title-link ${colorClass}`}>
+      {displayName}
+      <svg class="show-notes-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </a>
+  ) : (
+    <span class={`show-list-title ${colorClass}`}>{displayName}</span>
+  )}
+  <span class="show-list-date">{shortDate(date)}</span>
+</div>
+
+<style>
+  .show-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .show-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .show-list-title,
+  .show-list-title-link {
+    font-weight: bold;
+    font-size: 0.9em;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .show-list-title-link {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .show-list-title-link:hover {
+    text-decoration: underline;
+  }
+
+  .show-notes-icon {
+    flex-shrink: 0;
+    color: #bbb;
+  }
+
+  .show-list-title-link:hover .show-notes-icon {
+    color: var(--daorange);
+  }
+
+  .show-list-date {
+    font-size: 0.75em;
+    color: #aaa;
+    flex-shrink: 0;
+  }
+
+  /* DJ-colored play buttons */
+  :global(.mulch-channel-bg) { background: rgb(141, 61, 61) !important; }
+  :global(.reginajingles-channel-bg) { background: rgb(53, 174, 43) !important; }
+  :global(.ben-bg) { background: rgb(0, 111, 166) !important; }
+  :global(.terminus-bg) { background: rgb(180, 32, 234) !important; }
+  :global(.nlt-bg) { background: rgb(116, 22, 184) !important; }
+  :global(.home-cooking-bg) { background: rgb(174, 52, 4) !important; }
+  :global(.posted-up-bg) { background: rgb(168, 168, 168) !important; }
+</style>

@@ -1,84 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ShowPill from '../components/ShowPill.astro';
+import ShowListItem from '../components/ShowListItem.astro';
 import Hero from '../assets/hero.svg';
 import { getCollection } from 'astro:content';
-import recordingsData from '../data/recordings.json';
+import { getDeduplicatedShows, getDjColorClass, getRecordingsByKey, buildPostMap, findPost } from '../lib/shows';
 
-// Load posts and build a Map<recordingKey, post> for matching
 const posts = await getCollection('posts');
-const postsByRecordingKey = new Map<string, typeof posts[number]>();
-for (const post of posts) {
-  if (post.data.recordingKey) {
-    postsByRecordingKey.set(post.data.recordingKey, post);
-  }
-}
-
-// Sort recordings by lastModified desc
-const recordings = [...recordingsData].sort(
-  (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
-);
-
-// Build a key → recording map for URL lookups
-const recordingsByKey = new Map(recordingsData.map(r => [r.key, r]));
-
-// Deduplicate by show + date (same show on same day = one entry)
-type DeduplicatedShow = {
-  show: string;
-  displayName: string;
-  dj: string;
-  date: string;
-  keys: string[];
-};
-
-const deduped: DeduplicatedShow[] = [];
-const seen = new Set<string>();
-
-for (const rec of recordings) {
-  const groupKey = `${rec.show}::${rec.date}`;
-  if (seen.has(groupKey)) {
-    // Add this key to existing entry
-    const existing = deduped.find(d => `${d.show}::${d.date}` === groupKey);
-    if (existing) existing.keys.push(rec.key);
-    continue;
-  }
-  seen.add(groupKey);
-  deduped.push({
-    show: rec.show,
-    displayName: rec.displayName,
-    dj: rec.dj,
-    date: rec.date,
-    keys: [rec.key],
-  });
-}
-
-// Map show names to DJ color classes
-function getDjColorClass(show: string): string {
-  const s = show.toLowerCase();
-  if (s.includes('mulch')) return 'mulch-channel';
-  if (s.includes('reginajingles')) return 'reginajingles-channel';
-  if (s.includes('wild') || s.includes('chicago')) return 'ben';
-  if (s.includes('terminus')) return 'terminus';
-  if (s.includes('late nights') || s.includes('nights like')) return 'nlt';
-  if (s.includes('home cooking')) return 'home-cooking';
-  if (s.includes('posted')) return 'posted-up';
-  return '';
-}
-
-// Format "February 12, 2026" → "Feb 12"
-function shortDate(date: string): string {
-  const d = new Date(date);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-// Find matching post for a show entry
-function findPost(entry: DeduplicatedShow) {
-  for (const key of entry.keys) {
-    const post = postsByRecordingKey.get(key);
-    if (post) return post;
-  }
-  return null;
-}
+const postsByRecordingKey = buildPostMap(posts);
+const deduped = getDeduplicatedShows();
+const recordingsByKey = getRecordingsByKey();
 ---
 
 <Layout title="cabbage.town">
@@ -113,33 +44,17 @@ function findPost(entry: DeduplicatedShow) {
           <div class="show-list">
             {deduped.slice(0, 10).map((entry) => {
               const colorClass = getDjColorClass(entry.show);
-              const post = findPost(entry);
+              const post = findPost(entry, postsByRecordingKey);
               const rec = recordingsByKey.get(entry.keys[0]);
               return (
-                <div class="show-list-item">
-                  {rec && (
-                    <button
-                      class={`recording-play-btn ${colorClass ? colorClass + '-bg' : ''}`}
-                      data-url={rec.url}
-                      data-title={entry.displayName}
-                      data-dj={entry.dj}
-                      data-date={entry.date}
-                      @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
-                      aria-label={`Play ${entry.displayName}`}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"></polygon></svg>
-                    </button>
-                  )}
-                  {post ? (
-                    <a href={`/patch/${post.data.slug}`} class={`show-list-title-link ${colorClass}`}>
-                      {entry.displayName}
-                      <svg class="show-notes-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </a>
-                  ) : (
-                    <span class={`show-list-title ${colorClass}`}>{entry.displayName}</span>
-                  )}
-                  <span class="show-list-date">{shortDate(entry.date)}</span>
-                </div>
+                <ShowListItem
+                  displayName={entry.displayName}
+                  colorClass={colorClass}
+                  date={entry.date}
+                  dj={entry.dj}
+                  recUrl={rec?.url}
+                  postSlug={post?.data.slug}
+                />
               );
             })}
           </div>
@@ -456,63 +371,6 @@ function findPost(entry: DeduplicatedShow) {
     flex-direction: column;
   }
 
-  .show-list-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
-  }
-
-  .show-list-item:last-child {
-    border-bottom: none;
-  }
-
-  .show-list-title,
-  .show-list-title-link {
-    font-weight: bold;
-    font-size: 0.9em;
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .show-list-title-link {
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .show-list-title-link:hover {
-    text-decoration: underline;
-  }
-
-  .show-notes-icon {
-    flex-shrink: 0;
-    color: #bbb;
-  }
-
-  .show-list-title-link:hover .show-notes-icon {
-    color: var(--daorange);
-  }
-
-  .show-list-date {
-    font-size: 0.75em;
-    color: #aaa;
-    flex-shrink: 0;
-  }
-
-  /* DJ-colored play buttons */
-  :global(.mulch-channel-bg) { background: rgb(141, 61, 61) !important; }
-  :global(.reginajingles-channel-bg) { background: rgb(53, 174, 43) !important; }
-  :global(.ben-bg) { background: rgb(0, 111, 166) !important; }
-  :global(.terminus-bg) { background: rgb(180, 32, 234) !important; }
-  :global(.nlt-bg) { background: rgb(116, 22, 184) !important; }
-  :global(.home-cooking-bg) { background: rgb(174, 52, 4) !important; }
-  :global(.posted-up-bg) { background: rgb(168, 168, 168) !important; }
 
   .see-all-link {
     display: block;
