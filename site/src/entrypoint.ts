@@ -35,7 +35,7 @@ interface PlayerStore {
   // Web Audio analyser (persists across navigations)
   _audioCtx: AudioContext | null;
   _analyser: AnalyserNode | null;
-  _sourceMap: WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>;
+  _sourceMap: WeakMap<HTMLAudioElement, AudioNode>;
   _freqData: Uint8Array | null;
   _connectedEl: HTMLAudioElement | null;
 
@@ -243,6 +243,7 @@ export default (Alpine: Alpine) => {
       });
       navigator.mediaSession.setActionHandler('play', () => this.playRadio());
       navigator.mediaSession.setActionHandler('pause', () => this.stopRadio());
+      navigator.mediaSession.setActionHandler('seekto', null);
       navigator.mediaSession.playbackState = 'playing';
     },
 
@@ -271,6 +272,8 @@ export default (Alpine: Alpine) => {
       recording.src = url;
       recording.load();
 
+      let mediaSessionReady = false;
+
       recording.onloadeddata = () => recording.play();
 
       recording.onplay = () => {
@@ -278,7 +281,12 @@ export default (Alpine: Alpine) => {
         this.isPlaying = true;
         this.metadata = { title, date: `${dj} \u2014 ${date}`, artwork: getDjArtwork(dj) };
         this.duration = recording.duration || 0;
-        this._setupRecordingMediaSession(title, dj);
+        if (!mediaSessionReady) {
+          this._setupRecordingMediaSession(title, dj);
+          mediaSessionReady = true;
+        } else if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = 'playing';
+        }
       };
 
       recording.onpause = () => {
@@ -293,19 +301,18 @@ export default (Alpine: Alpine) => {
       recording.ontimeupdate = () => {
         if (this.type === 'recording') {
           this.currentTime = recording.currentTime;
-          if ('mediaSession' in navigator && recording.duration) {
-            navigator.mediaSession.setPositionState({
-              duration: recording.duration,
-              position: recording.currentTime,
-              playbackRate: 1,
-            });
-          }
         }
       };
 
-      recording.onloadedmetadata = () => {
-        if (this.type === 'recording') {
+      recording.ondurationchange = () => {
+        if (this.type === 'recording' && 'mediaSession' in navigator
+            && recording.duration && isFinite(recording.duration)) {
           this.duration = recording.duration;
+          navigator.mediaSession.setPositionState({
+            duration: recording.duration,
+            position: recording.currentTime,
+            playbackRate: 1,
+          });
         }
       };
 
@@ -366,6 +373,13 @@ export default (Alpine: Alpine) => {
       const recording = this._getRecording();
       if (recording && this.type === 'recording') {
         recording.currentTime = time;
+        if ('mediaSession' in navigator && recording.duration && isFinite(recording.duration)) {
+          navigator.mediaSession.setPositionState({
+            duration: recording.duration,
+            position: time,
+            playbackRate: 1,
+          });
+        }
       }
     },
 
