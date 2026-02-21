@@ -1,3 +1,8 @@
+---
+import PlayIcon from '../assets/icons/PlayIcon.svg';
+import PauseIcon from '../assets/icons/PauseIcon.svg';
+import StopIcon from '../assets/icons/StopIcon.svg';
+---
 <!-- Persistent audio elements -->
 <audio id="radio" crossorigin="anonymous" transition:persist="radio-audio"></audio>
 <audio id="recordingPlayer" crossorigin="anonymous" transition:persist="recording-audio"></audio>
@@ -48,22 +53,15 @@
   <button class="player-play-btn" @click="$store.player.togglePlayback()">
     <!-- Live playing → stop square -->
     <template x-if="$store.player.isPlaying && $store.player.type === 'live'">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="5" y="5" width="14" height="14" rx="2"></rect>
-      </svg>
+      <StopIcon width={26} height={26} />
     </template>
     <!-- Recording playing → pause bars -->
     <template x-if="$store.player.isPlaying && $store.player.type === 'recording'">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-        <rect x="6" y="4" width="4" height="16" rx="1"></rect>
-        <rect x="14" y="4" width="4" height="16" rx="1"></rect>
-      </svg>
+      <PauseIcon width={26} height={26} />
     </template>
     <!-- Not playing → play triangle -->
     <template x-if="!$store.player.isPlaying">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-        <polygon points="7,3 21,12 7,21"></polygon>
-      </svg>
+      <PlayIcon width={26} height={26} />
     </template>
   </button>
 </div>

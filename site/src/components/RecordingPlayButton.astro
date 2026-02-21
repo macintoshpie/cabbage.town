@@ -1,0 +1,29 @@
+---
+import PlayIcon from '../assets/icons/PlayIcon.svg';
+import PauseIcon from '../assets/icons/PauseIcon.svg';
+
+interface Props {
+  url: string;
+  title: string;
+  dj: string;
+  date: string;
+  size?: number;
+  class?: string;
+}
+
+const { url, title, dj, date, size = 14, class: className = '' } = Astro.props;
+const isPlayingExpr = `$store.player._currentRecordingUrl === '${url}' && $store.player.isPlaying`;
+---
+
+<button
+  class={`recording-play-btn ${className}`}
+  data-url={url}
+  data-title={title}
+  data-dj={dj}
+  data-date={date}
+  @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
+  :aria-label={`${isPlayingExpr} ? 'Pause ${title}' : 'Play ${title}'`}
+>
+  <PlayIcon width={size} height={size} x-show={`!(${isPlayingExpr})`} />
+  <PauseIcon width={size} height={size} x-show={isPlayingExpr} x-cloak />
+</button>

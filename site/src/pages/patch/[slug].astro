@@ -2,6 +2,8 @@
 import Layout from '../../layouts/Layout.astro';
 import { getCollection, render } from 'astro:content';
 import recordingsData from '../../data/recordings.json';
+import PlayIcon from '../../assets/icons/PlayIcon.svg';
+import PauseIcon from '../../assets/icons/PauseIcon.svg';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
@@ -39,10 +41,11 @@ const formatDate = (date: Date) =>
               data-dj={recording.dj}
               data-date={recording.date}
               @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
-              aria-label="Play recording"
+              :aria-label={`$store.player._currentRecordingUrl === '${recording.url}' && $store.player.isPlaying ? 'Pause recording' : 'Play recording'`}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"></polygon></svg>
-              <span>Listen</span>
+              <PlayIcon width={18} height={18} x-show={`!($store.player._currentRecordingUrl === '${recording.url}' && $store.player.isPlaying)`} />
+              <PauseIcon width={18} height={18} x-show={`$store.player._currentRecordingUrl === '${recording.url}' && $store.player.isPlaying`} x-cloak />
+              <span x-text={`$store.player._currentRecordingUrl === '${recording.url}' && $store.player.isPlaying ? 'Pause' : 'Listen'`}>Listen</span>
             </button>
           )}
         </div>
