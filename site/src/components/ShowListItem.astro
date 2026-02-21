@@ -25,9 +25,10 @@ const { displayName, colorClass, date, recUrl, dj, postSlug, excerpt, extraAttrs
       data-dj={dj}
       data-date={date}
       @click="$store.player.playRecording($el.dataset.url, $el.dataset.title, $el.dataset.dj, $el.dataset.date)"
-      aria-label={`Play ${displayName}`}
+      :aria-label={`$store.player._currentRecordingUrl === '${recUrl}' && $store.player.isPlaying ? 'Pause ${displayName}' : 'Play ${displayName}'`}
     >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"></polygon></svg>
+      <svg x-show={`!($store.player._currentRecordingUrl === '${recUrl}' && $store.player.isPlaying)`} width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"></polygon></svg>
+      <svg x-show={`$store.player._currentRecordingUrl === '${recUrl}' && $store.player.isPlaying`} x-cloak width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="3" width="4" height="18" rx="1"></rect><rect x="15" y="3" width="4" height="18" rx="1"></rect></svg>
     </button>
   )}
   <div class="show-list-info">
