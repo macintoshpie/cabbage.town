@@ -287,6 +287,13 @@ export default (Alpine: Alpine) => {
       recording.ontimeupdate = () => {
         if (this.type === 'recording') {
           this.currentTime = recording.currentTime;
+          if ('mediaSession' in navigator && recording.duration) {
+            navigator.mediaSession.setPositionState({
+              duration: recording.duration,
+              position: recording.currentTime,
+              playbackRate: 1,
+            });
+          }
         }
       };
 
@@ -323,6 +330,12 @@ export default (Alpine: Alpine) => {
       });
       navigator.mediaSession.setActionHandler('pause', () => {
         this._getRecording()?.pause();
+      });
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        const recording = this._getRecording();
+        if (recording && details.seekTime != null) {
+          recording.currentTime = details.seekTime;
+        }
       });
       navigator.mediaSession.playbackState = 'playing';
     },
