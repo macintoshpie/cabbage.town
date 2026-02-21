@@ -150,10 +150,11 @@ const recordingsByKey = getRecordingsByKey();
     const Alpine = (window as any).Alpine;
     if (Alpine) {
       Alpine.effect(() => {
-        const isPlaying = Alpine.store('player').isPlaying;
-        playIcon.style.display = isPlaying ? 'none' : '';
-        playBtn.style.cursor = isPlaying ? 'default' : 'pointer';
-        playBtn.style.pointerEvents = isPlaying ? 'none' : '';
+        const store = Alpine.store('player');
+        const liveActive = store.isPlaying && store.type === 'live';
+        playIcon.style.display = liveActive ? 'none' : '';
+        playBtn.style.cursor = liveActive ? 'default' : 'pointer';
+        playBtn.style.pointerEvents = liveActive ? 'none' : '';
       });
     }
   }
