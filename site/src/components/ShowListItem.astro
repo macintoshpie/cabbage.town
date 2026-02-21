@@ -6,13 +6,14 @@ interface Props {
   recUrl?: string;
   dj: string;
   postSlug?: string;
+  excerpt?: string;
   /** Extra attributes to put on the outer div (e.g. data-dj, x-show) */
   extraAttrs?: Record<string, string>;
 }
 
 import { shortDate } from '../lib/shows';
 
-const { displayName, colorClass, date, recUrl, dj, postSlug, extraAttrs = {} } = Astro.props;
+const { displayName, colorClass, date, recUrl, dj, postSlug, excerpt, extraAttrs = {} } = Astro.props;
 ---
 
 <div class="show-list-item" {...extraAttrs}>
@@ -29,15 +30,22 @@ const { displayName, colorClass, date, recUrl, dj, postSlug, extraAttrs = {} } =
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"></polygon></svg>
     </button>
   )}
-  {postSlug ? (
-    <a href={`/patch/${postSlug}`} class={`show-list-title-link ${colorClass}`}>
-      {displayName}
-      <svg class="show-notes-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-    </a>
-  ) : (
-    <span class={`show-list-title ${colorClass}`}>{displayName}</span>
-  )}
-  <span class="show-list-date">{shortDate(date)}</span>
+  <div class="show-list-info">
+    <div class="show-list-row">
+      {postSlug ? (
+        <a href={`/patch/${postSlug}`} class={`show-list-title-link ${colorClass}`}>
+          {displayName}
+          <svg class="show-notes-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </a>
+      ) : (
+        <span class={`show-list-title ${colorClass}`}>{displayName}</span>
+      )}
+      <span class="show-list-date">{shortDate(date)}</span>
+    </div>
+    {excerpt && (
+      <span class="show-list-excerpt">{excerpt}</span>
+    )}
+  </div>
 </div>
 
 <style>
@@ -51,6 +59,19 @@ const { displayName, colorClass, date, recUrl, dj, postSlug, extraAttrs = {} } =
 
   .show-list-item:last-child {
     border-bottom: none;
+  }
+
+  .show-list-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .show-list-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .show-list-title,
@@ -69,6 +90,15 @@ const { displayName, colorClass, date, recUrl, dj, postSlug, extraAttrs = {} } =
     display: flex;
     align-items: center;
     gap: 5px;
+  }
+
+  .show-list-excerpt {
+    font-size: 0.75em;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
   }
 
   .show-list-title-link:hover {

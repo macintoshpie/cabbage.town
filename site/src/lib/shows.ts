@@ -7,6 +7,7 @@ export type DeduplicatedShow = {
   date: string;
   keys: string[];
   postSlug?: string;
+  postExcerpt?: string;
 };
 
 export function getDeduplicatedShows(): DeduplicatedShow[] {
@@ -32,6 +33,7 @@ export function getDeduplicatedShows(): DeduplicatedShow[] {
       date: rec.date,
       keys: [rec.key],
       postSlug: (rec as any).post?.slug,
+      postExcerpt: (rec as any).post?.excerpt,
     });
   }
 
