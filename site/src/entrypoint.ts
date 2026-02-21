@@ -103,7 +103,6 @@ export default (Alpine: Alpine) => {
         this._analyser.fftSize = 256;
         this._analyser.smoothingTimeConstant = 0.88;
         this._freqData = new Uint8Array(this._analyser.frequencyBinCount);
-        this._analyser.connect(this._audioCtx.destination);
       }
       return { ctx: this._audioCtx!, analyser: this._analyser! };
     },
@@ -115,7 +114,14 @@ export default (Alpine: Alpine) => {
 
       let source = this._sourceMap.get(el);
       if (!source) {
-        source = ctx.createMediaElementSource(el);
+        if (typeof (el as any).captureStream === 'function') {
+          // captureStream: audio plays directly from element, we just tap in for analysis
+          source = ctx.createMediaStreamSource((el as any).captureStream());
+        } else {
+          // Fallback: createMediaElementSource hijacks audio, must route through AudioContext
+          source = ctx.createMediaElementSource(el);
+          analyser.connect(ctx.destination);
+        }
         this._sourceMap.set(el, source);
       }
       source.connect(analyser);
