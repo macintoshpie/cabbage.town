@@ -118,9 +118,9 @@ export default (Alpine: Alpine) => {
           // captureStream: audio plays directly from element, we just tap in for analysis
           source = ctx.createMediaStreamSource((el as any).captureStream());
         } else {
-          // Fallback: createMediaElementSource hijacks audio, must route through AudioContext
-          source = ctx.createMediaElementSource(el);
-          analyser.connect(ctx.destination);
+          // captureStream not available — skip analyser to avoid hijacking audio output
+          // (createMediaElementSource would break background/lock screen playback)
+          return;
         }
         this._sourceMap.set(el, source);
       }
