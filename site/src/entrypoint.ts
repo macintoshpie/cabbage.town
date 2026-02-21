@@ -1,5 +1,14 @@
 import type { Alpine } from 'alpinejs';
 
+const DJ_ARTWORK: Record<string, string> = {
+  'ted': '/album-art/mulch-channel.jpg',
+};
+
+function getDjArtwork(dj: string): string {
+  const key = dj.toLowerCase().replace(/^dj\s+/, '');
+  return DJ_ARTWORK[key] || '/cabbage-star.png';
+}
+
 const STREAMER_MAP: Record<string, { name: string; dj: string }> = {
   'DJ Ted': { name: 'mulch channel', dj: 'dj ted' },
   'DJ Chicago Style': { name: 'IS WiLD hour', dj: 'DJ CHICAGO STYLE' },
@@ -206,16 +215,16 @@ export default (Alpine: Alpine) => {
         this.metadata = {
           title: `LIVE: ${this.nowPlaying.streamerDetails.name} w/ ${this.nowPlaying.streamerDetails.dj}`,
           date: `${this.nowPlaying.artist} - ${this.nowPlaying.title}`,
-          artwork: this.nowPlaying.art || '/the-cabbage.png',
+          artwork: this.nowPlaying.art || '/cabbage-star.png',
         };
       } else if (this.nowPlaying) {
         this.metadata = {
           title: 'Live Radio',
           date: `${this.nowPlaying.artist} - ${this.nowPlaying.title}`,
-          artwork: this.nowPlaying.art || '/the-cabbage.png',
+          artwork: this.nowPlaying.art || '/cabbage-star.png',
         };
       } else {
-        this.metadata = { title: 'Live Radio', date: 'cabbage.town', artwork: '/the-cabbage.png' };
+        this.metadata = { title: 'Live Radio', date: 'cabbage.town', artwork: '/cabbage-star.png' };
       }
     },
 
@@ -224,7 +233,7 @@ export default (Alpine: Alpine) => {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: this.metadata.title,
         artist: 'cabbage.town',
-        artwork: [{ src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }],
+        artwork: [{ src: '/cabbage-star.png', sizes: '512x512', type: 'image/png' }],
       });
       navigator.mediaSession.setActionHandler('play', () => this.playRadio());
       navigator.mediaSession.setActionHandler('pause', () => this.stopRadio());
@@ -261,7 +270,7 @@ export default (Alpine: Alpine) => {
       recording.onplay = () => {
         this.type = 'recording';
         this.isPlaying = true;
-        this.metadata = { title, date: `${dj} \u2014 ${date}`, artwork: '/the-cabbage.png' };
+        this.metadata = { title, date: `${dj} \u2014 ${date}`, artwork: getDjArtwork(dj) };
         this.duration = recording.duration || 0;
         this._setupRecordingMediaSession(title, dj);
       };
@@ -303,10 +312,11 @@ export default (Alpine: Alpine) => {
 
     _setupRecordingMediaSession(title: string, dj: string) {
       if (!('mediaSession' in navigator)) return;
+      const art = getDjArtwork(dj);
       navigator.mediaSession.metadata = new MediaMetadata({
         title,
         artist: dj || 'cabbage.town',
-        artwork: [{ src: '/the-cabbage.png', sizes: '512x512', type: 'image/png' }],
+        artwork: [{ src: art, type: art.endsWith('.png') ? 'image/png' : 'image/jpeg' }],
       });
       navigator.mediaSession.setActionHandler('play', () => {
         this._getRecording()?.play();

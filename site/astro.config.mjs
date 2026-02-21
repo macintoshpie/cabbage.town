@@ -6,4 +6,5 @@ import alpinejs from '@astrojs/alpinejs';
 export default defineConfig({
   site: 'https://cabbage.town',
   integrations: [alpinejs({ entrypoint: '/src/entrypoint' })],
+  devToolbar: { enabled: false },
 });
