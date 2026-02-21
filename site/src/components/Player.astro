@@ -35,15 +35,20 @@ import StopIcon from '../assets/icons/StopIcon.svg';
     <template x-if="$store.player.type === 'recording'">
       <div class="player-scrubber">
         <span class="player-time" x-text="$store.player.formatTime($store.player.currentTime)"></span>
-        <input
-          type="range"
-          class="player-scrubber-input"
-          min="0"
-          :max="$store.player.duration"
-          :value="$store.player.currentTime"
-          @input="$store.player.seekTo(Number($event.target.value))"
-          :style="`background: linear-gradient(to right, var(--daorange) ${$store.player.duration > 0 ? ($store.player.currentTime / $store.player.duration * 100) : 0}%, rgba(178, 68, 218, 0.2) ${$store.player.duration > 0 ? ($store.player.currentTime / $store.player.duration * 100) : 0}%)`"
-        />
+        <div class="player-track">
+          <div
+            class="player-progress"
+            :style="`width: ${$store.player.duration > 0 ? ($store.player.currentTime / $store.player.duration * 100) : 0}%`"
+          ></div>
+          <input
+            type="range"
+            class="player-scrubber-input"
+            min="0"
+            :max="$store.player.duration"
+            :value="$store.player.currentTime"
+            @input="$store.player.seekTo(Number($event.target.value))"
+          />
+        </div>
         <span class="player-time" x-text="$store.player.formatTime($store.player.duration)"></span>
       </div>
     </template>
@@ -147,35 +152,67 @@ import StopIcon from '../assets/icons/StopIcon.svg';
     text-align: center;
   }
 
+  .player-track {
+    flex-grow: 1;
+    position: relative;
+    height: 6px;
+    background: rgba(178, 68, 218, 0.2);
+    border-radius: 3px;
+  }
+
+  .player-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--daorange);
+    border-radius: 3px;
+    pointer-events: none;
+  }
+
   .player-scrubber-input {
     -webkit-appearance: none;
     appearance: none;
-    flex-grow: 1;
-    height: 6px;
-    border-radius: 3px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
     cursor: pointer;
     outline: none;
+    margin: 0;
   }
 
   .player-scrubber-input::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 14px;
     height: 14px;
-    background: var(--daorange);
+    background: var(--dayellow);
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    border: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .player-track:hover .player-scrubber-input::-webkit-slider-thumb {
+    opacity: 1;
   }
 
   .player-scrubber-input::-moz-range-thumb {
     width: 14px;
     height: 14px;
-    background: var(--daorange);
+    background: var(--dayellow);
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    border: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .player-track:hover .player-scrubber-input::-moz-range-thumb {
+    opacity: 1;
   }
 
   .player-play-btn {
@@ -212,6 +249,12 @@ import StopIcon from '../assets/icons/StopIcon.svg';
     .player-play-btn {
       width: 42px;
       height: 42px;
+    }
+    .player-scrubber-input::-webkit-slider-thumb {
+      opacity: 1;
+    }
+    .player-scrubber-input::-moz-range-thumb {
+      opacity: 1;
     }
   }
 </style>
