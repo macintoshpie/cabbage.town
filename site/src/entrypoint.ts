@@ -131,9 +131,10 @@ export default (Alpine: Alpine) => {
       }
 
       let url = 'https://radio.cabbage.town:8000/radio.mp3';
-      if (navigator.userAgent.includes('Firefox')) {
-        url += '?refresh=' + Date.now();
-      }
+      // for some reason safari started making requests that would result in a 302 with _ic2= appended to the url
+      // which would get blocked by CORS.
+      // Here's a hack to just do it ourselves, i couldn't figure out how to fix it on the server.
+      url += '?_ic2=' + Date.now();
 
       radio.src = url;
       radio.load();
