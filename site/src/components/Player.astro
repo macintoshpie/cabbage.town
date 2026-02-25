@@ -14,12 +14,17 @@ import StopIcon from '../assets/icons/StopIcon.svg';
   transition:persist="player-footer"
 >
   <!-- Artwork -->
-  <img
-    class="player-artwork player-artwork-spinning"
+  <div
+    class="player-artwork"
     :class="{ 'player-artwork-paused': !$store.player.isPlaying }"
-    :src="$store.player.metadata.artwork || '/cabbage-star.png'"
-    alt=""
-  />
+  >
+    <img
+      class="player-artwork-img"
+      :class="{ 'player-artwork-img-paused': !$store.player.isPlaying }"
+      :src="$store.player.metadata.artwork || '/cabbage-star.png'"
+      alt=""
+    />
+  </div>
 
   <!-- Info + scrubber -->
   <div class="player-info">
@@ -107,21 +112,26 @@ import StopIcon from '../assets/icons/StopIcon.svg';
   .player-artwork {
     width: 64px;
     height: 64px;
-    border-radius: 12px;
-    object-fit: cover;
+    border-radius: 50%;
     flex-shrink: 0;
     background: rgba(178, 68, 218, 0.1);
     transition: border-radius 0.4s ease;
-  }
-
-  .player-artwork-spinning {
-    border-radius: 50%;
-    animation: spin 3s linear infinite;
-    animation-play-state: running;
+    overflow: hidden;
   }
 
   .player-artwork-paused {
     border-radius: 12px;
+  }
+
+  .player-artwork-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    animation: spin 3s linear infinite;
+  }
+
+  .player-artwork-img-paused {
     animation-play-state: paused;
   }
 
@@ -262,7 +272,6 @@ import StopIcon from '../assets/icons/StopIcon.svg';
     .player-artwork {
       width: 52px;
       height: 52px;
-      border-radius: 10px;
     }
     .player-artwork-paused {
       border-radius: 10px;
