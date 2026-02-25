@@ -103,12 +103,20 @@ type chattedMsg struct {
 	Text string `json:"text"`
 }
 
+// identity stores persistent state for a token across reconnections.
+type identity struct {
+	name string
+	x    float64
+	y    float64
+}
+
 // Client represents a single WebSocket connection.
 type Client struct {
 	hub      *Hub
 	conn     *websocket.Conn
 	send     chan []byte
 	id       string
+	token    string
 	name     string
 	x        float64
 	y        float64
@@ -118,13 +126,15 @@ type Client struct {
 
 // Hub manages all connected clients and broadcasts.
 type Hub struct {
-	mu      sync.RWMutex
-	clients map[string]*Client
+	mu         sync.RWMutex
+	clients    map[string]*Client
+	identities map[string]*identity // token → persistent identity
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		clients: make(map[string]*Client),
+		clients:    make(map[string]*Client),
+		identities: make(map[string]*identity),
 	}
 }
 
@@ -211,6 +221,16 @@ const (
 
 func (c *Client) readPump() {
 	defer func() {
+		// Save final position for reconnection
+		if c.token != "" {
+			c.hub.mu.Lock()
+			if ident, ok := c.hub.identities[c.token]; ok {
+				ident.x = c.x
+				ident.y = c.y
+			}
+			c.hub.mu.Unlock()
+		}
+
 		c.hub.removeClient(c.id)
 		c.conn.Close()
 
@@ -327,17 +347,43 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	startX := 0.3 + rand.Float64()*0.4
-	startY := 0.5 + rand.Float64()*0.3
+	// Parse persistent identity token
+	token := r.URL.Query().Get("token")
+	if len(token) > 64 {
+		token = ""
+	}
+
+	var name string
+	var startX, startY float64
+
+	h.mu.Lock()
+	if token != "" {
+		if ident, ok := h.identities[token]; ok {
+			name = ident.name
+			startX = ident.x
+			startY = ident.y
+		} else {
+			name = generateName()
+			startX = 0.3 + rand.Float64()*0.4
+			startY = 0.5 + rand.Float64()*0.3
+			h.identities[token] = &identity{name: name, x: startX, y: startY}
+		}
+	} else {
+		name = generateName()
+		startX = 0.3 + rand.Float64()*0.4
+		startY = 0.5 + rand.Float64()*0.3
+	}
+	h.mu.Unlock()
 
 	client := &Client{
-		hub:  h,
-		conn: conn,
-		send: make(chan []byte, sendBufSize),
-		id:   fmt.Sprintf("u%d", time.Now().UnixNano()),
-		name: generateName(),
-		x:    startX,
-		y:    startY,
+		hub:   h,
+		conn:  conn,
+		send:  make(chan []byte, sendBufSize),
+		id:    fmt.Sprintf("u%d", time.Now().UnixNano()),
+		token: token,
+		name:  name,
+		x:     startX,
+		y:     startY,
 	}
 
 	// Start writePump before adding to hub so it's ready to drain send channel

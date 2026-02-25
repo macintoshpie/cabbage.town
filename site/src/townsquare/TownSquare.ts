@@ -15,6 +15,15 @@ export class TownSquare {
   private chatSendHandler: (e: Event) => void;
 
   constructor(wsUrl: string) {
+    // Persistent identity token
+    const TOKEN_KEY = 'ts-token';
+    let token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      token = crypto.randomUUID();
+      localStorage.setItem(TOKEN_KEY, token);
+    }
+    const sep = wsUrl.includes('?') ? '&' : '?';
+    wsUrl = `${wsUrl}${sep}token=${encodeURIComponent(token)}`;
     // Create full-viewport canvas overlay
     this.canvas = document.createElement('canvas');
     this.canvas.style.position = 'fixed';
