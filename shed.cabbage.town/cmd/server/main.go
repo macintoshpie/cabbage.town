@@ -24,6 +24,7 @@ import (
 	"golang.org/x/time/rate"
 
 	"cabbage.town/shed.cabbage.town/pkg/bucket"
+	"cabbage.town/shed.cabbage.town/pkg/townsquare"
 )
 
 const (
@@ -1678,7 +1679,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		fmt.Println("CORS request", r.Header.Get("Origin"))
 		// Allow requests from localhost:8000
 		origin := r.Header.Get("Origin")
-		if origin == "http://localhost:8000" || origin == "http://127.0.0.1:8000" || origin == "http://[::1]:8000" || origin == "https://birthday.cabbage.town" {
+		if origin == "http://localhost:8000" || origin == "http://127.0.0.1:8000" || origin == "http://[::1]:8000" || origin == "https://birthday.cabbage.town" || origin == "http://localhost:4321" || origin == "https://cabbage.town" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -1712,6 +1713,10 @@ func setupRoutes() *mux.Router {
 	r.HandleFunc("/login", loginHandler).Methods("POST").Name("login")
 	r.HandleFunc("/logout", logoutHandler).Methods("GET").Name("logout")
 	// r.HandleFunc("/api/birthday", uploadBirthdayImageHandler).Methods("POST").Name("birthday-upload")
+
+	// Town Square WebSocket
+	tsHub := townsquare.NewHub()
+	r.HandleFunc("/ws/townsquare", tsHub.ServeWS)
 
 	// Protected routes with rate limiting
 	protected := r.NewRoute().Subrouter()

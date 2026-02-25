@@ -86,6 +86,24 @@ const recordingsByKey = getRecordingsByKey();
 </Layout>
 
 <script>
+  import { TownSquare } from '../townsquare/TownSquare';
+
+  let townSquareInstance: TownSquare | null = null;
+
+  function initTownSquare() {
+    // Clean up previous instance (SPA navigation)
+    if (townSquareInstance) {
+      townSquareInstance.stop();
+      townSquareInstance = null;
+    }
+
+    const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = location.hostname === 'localhost' ? 'localhost:8080' : 'shed.cabbage.town';
+    const wsUrl = `${wsProtocol}//${wsHost}/ws/townsquare`;
+
+    townSquareInstance = new TownSquare(wsUrl);
+  }
+
   // Animate hero eye
   const EYE_CENTER_X = 244;
   const EYE_CENTER_Y = 223;
@@ -275,6 +293,7 @@ const recordingsByKey = getRecordingsByKey();
     initEye();
     initPlayButton();
     initWaveAnalyser();
+    initTownSquare();
   });
 </script>
 
