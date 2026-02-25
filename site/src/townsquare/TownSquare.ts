@@ -11,6 +11,8 @@ export class TownSquare {
   private lastMoveSent = 0;
   private clickHandler: (e: MouseEvent) => void;
   private resizeHandler: () => void;
+  private keyHandler: (e: KeyboardEvent) => void;
+  private chatSendHandler: (e: Event) => void;
 
   constructor(wsUrl: string) {
     // Create full-viewport canvas overlay
@@ -36,6 +38,22 @@ export class TownSquare {
     this.clickHandler = (e: MouseEvent) => this.handleClick(e);
     window.addEventListener('click', this.clickHandler);
 
+    // Chat: listen for sends from ChatBar component, T key opens it
+    this.chatSendHandler = (e: Event) => {
+      this.ws.sendChat((e as CustomEvent).detail);
+    };
+    window.addEventListener('ts-send-chat', this.chatSendHandler);
+
+    this.keyHandler = (e: KeyboardEvent) => {
+      if (e.key === 't' || e.key === 'T') {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        e.preventDefault();
+        window.dispatchEvent(new Event('ts-open-chat'));
+      }
+    };
+    window.addEventListener('keydown', this.keyHandler);
+
     // Connect WebSocket
     this.ws = new TownSquareWS(wsUrl, {
       onMessage: (msg) => this.handleMessage(msg),
@@ -53,7 +71,7 @@ export class TownSquare {
   private handleClick(e: MouseEvent) {
     // Don't intercept clicks on interactive elements
     const target = e.target as HTMLElement;
-    if (target.closest('#playButton') || target.closest('#eye') || target.closest('a') || target.closest('button')) return;
+    if (target.closest('#playButton') || target.closest('#eye') || target.closest('a') || target.closest('button') || target.closest('[data-chat-ui]')) return;
 
     if (!this.localId) return;
 
@@ -92,6 +110,10 @@ export class TownSquare {
       case 'leave':
         this.renderer.removeSprite(msg.id);
         break;
+
+      case 'chatted':
+        this.renderer.showChat(msg.id, msg.text);
+        break;
     }
   }
 
@@ -100,6 +122,8 @@ export class TownSquare {
     this.renderer.stop();
     window.removeEventListener('resize', this.resizeHandler);
     window.removeEventListener('click', this.clickHandler);
+    window.removeEventListener('keydown', this.keyHandler);
+    window.removeEventListener('ts-send-chat', this.chatSendHandler);
     this.canvas.remove();
   }
 }

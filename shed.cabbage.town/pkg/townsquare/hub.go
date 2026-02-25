@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -93,6 +94,17 @@ type clientMoveMsg struct {
 	Y    float64 `json:"y"`
 }
 
+type clientChatMsg struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type chattedMsg struct {
+	Type string `json:"type"`
+	ID   string `json:"id"`
+	Text string `json:"text"`
+}
+
 // Client represents a single WebSocket connection.
 type Client struct {
 	hub      *Hub
@@ -103,6 +115,7 @@ type Client struct {
 	x        float64
 	y        float64
 	lastMove time.Time
+	lastChat time.Time
 }
 
 // Hub manages all connected clients and broadcasts.
@@ -195,6 +208,8 @@ const (
 	maxMessageSize = 512
 	sendBufSize    = 32
 	moveThrottle   = 100 * time.Millisecond
+	chatThrottle   = 1 * time.Second
+	maxChatLen     = 140
 )
 
 func (c *Client) readPump() {
@@ -248,6 +263,34 @@ func (c *Client) readPump() {
 				Y:    c.y,
 			})
 			c.hub.broadcast(data, c.id)
+
+		case "chat":
+			now := time.Now()
+			if now.Sub(c.lastChat) < chatThrottle {
+				continue
+			}
+
+			var cm clientChatMsg
+			if err := json.Unmarshal(message, &cm); err != nil {
+				continue
+			}
+
+			text := strings.TrimSpace(cm.Text)
+			if text == "" {
+				continue
+			}
+			if len(text) > maxChatLen {
+				text = text[:maxChatLen]
+			}
+
+			c.lastChat = now
+
+			data, _ := json.Marshal(chattedMsg{
+				Type: "chatted",
+				ID:   c.id,
+				Text: text,
+			})
+			c.hub.broadcastAll(data)
 		}
 	}
 }

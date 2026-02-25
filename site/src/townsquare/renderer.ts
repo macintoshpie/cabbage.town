@@ -9,6 +9,9 @@ export interface Sprite {
   currentY: number;
   opacity: number;   // 0–1, used for fade-in
   isLocal: boolean;
+  chatText: string | null;
+  chatExpiry: number;   // timestamp when bubble starts fading
+  chatOpacity: number;  // 1.0 → 0.0 fade
 }
 
 const LERP_FACTOR = 0.12;
@@ -17,6 +20,15 @@ const PIXEL_SCALE = 3; // each sprite pixel = 3 canvas pixels
 const NAME_FONT = '11px monospace';
 const NAME_COLOR = 'rgba(255,255,255,0.9)';
 const NAME_SHADOW = 'rgba(0,0,0,0.5)';
+const BUBBLE_FONT = '11px monospace';
+const BUBBLE_LINE_CHARS = 20;
+const BUBBLE_PAD_X = 6;
+const BUBBLE_PAD_Y = 4;
+const BUBBLE_LINE_H = 14;
+const BUBBLE_RADIUS = 4;
+const BUBBLE_POINTER_H = 5;
+const BUBBLE_HOLD_MS = 10_000;
+const BUBBLE_FADE_SPEED = 0.03;
 
 export class Renderer {
   private canvas: HTMLCanvasElement;
@@ -38,6 +50,9 @@ export class Renderer {
       currentX: x, currentY: y,
       opacity: 0,
       isLocal,
+      chatText: null,
+      chatExpiry: 0,
+      chatOpacity: 0,
     });
   }
 
@@ -55,6 +70,15 @@ export class Renderer {
 
   removeSprite(id: string) {
     this.sprites.delete(id);
+  }
+
+  showChat(id: string, text: string) {
+    const s = this.sprites.get(id);
+    if (s) {
+      s.chatText = text;
+      s.chatExpiry = Date.now() + BUBBLE_HOLD_MS;
+      s.chatOpacity = 1;
+    }
   }
 
   start() {
@@ -108,6 +132,24 @@ export class Renderer {
       this.ctx.globalAlpha = s.opacity;
       this.drawCabbage(px, py);
       this.drawName(s.name, px, py, s.isLocal);
+
+      // Chat bubble
+      if (s.chatText) {
+        const now = Date.now();
+        if (now > s.chatExpiry) {
+          s.chatOpacity -= BUBBLE_FADE_SPEED;
+          if (s.chatOpacity <= 0) {
+            s.chatText = null;
+            s.chatOpacity = 0;
+          }
+        }
+        if (s.chatText) {
+          const spriteH = SPRITE_H * PIXEL_SCALE;
+          const bubbleY = py - spriteH - 22;
+          this.drawBubble(s.chatText, px, bubbleY, s.chatOpacity * s.opacity);
+        }
+      }
+
       this.ctx.globalAlpha = 1;
     }
 
@@ -150,5 +192,95 @@ export class Renderer {
     // Text (highlight local player)
     this.ctx.fillStyle = isLocal ? '#ffd700' : NAME_COLOR;
     this.ctx.fillText(name, cx, textY);
+  }
+
+  private drawBubble(text: string, cx: number, cy: number, opacity: number) {
+    if (opacity <= 0) return;
+
+    // Word-wrap text into lines, hard-breaking long words with hyphens
+    const lines: string[] = [];
+    let line = '';
+    for (const word of text.split(' ')) {
+      // Word fits on current line
+      if (line.length + word.length + (line ? 1 : 0) <= BUBBLE_LINE_CHARS) {
+        line = line ? line + ' ' + word : word;
+        continue;
+      }
+      // Word fits on a new line by itself
+      if (word.length <= BUBBLE_LINE_CHARS) {
+        if (line) lines.push(line);
+        line = word;
+        continue;
+      }
+      // Word is too long — hard-break with hyphens
+      let remaining = word;
+      while (remaining.length > 0) {
+        const space = BUBBLE_LINE_CHARS - (line ? line.length + 1 : 0);
+        if (remaining.length <= space) {
+          line = line ? line + ' ' + remaining : remaining;
+          remaining = '';
+        } else if (space > 1) {
+          const chunk = remaining.slice(0, space - 1) + '-';
+          line = line ? line + ' ' + chunk : chunk;
+          remaining = remaining.slice(space - 1);
+          lines.push(line);
+          line = '';
+        } else {
+          if (line) lines.push(line);
+          line = '';
+        }
+      }
+    }
+    if (line) lines.push(line);
+
+    this.ctx.font = BUBBLE_FONT;
+
+    // Measure max line width
+    let maxW = 0;
+    for (const l of lines) {
+      const w = this.ctx.measureText(l).width;
+      if (w > maxW) maxW = w;
+    }
+
+    const boxW = maxW + BUBBLE_PAD_X * 2;
+    const boxH = lines.length * BUBBLE_LINE_H + BUBBLE_PAD_Y * 2;
+    const boxX = cx - boxW / 2;
+    const boxY = cy - boxH;
+
+    const prevAlpha = this.ctx.globalAlpha;
+    this.ctx.globalAlpha = opacity;
+
+    // Background rounded rect
+    this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    this.ctx.beginPath();
+    this.ctx.moveTo(boxX + BUBBLE_RADIUS, boxY);
+    this.ctx.lineTo(boxX + boxW - BUBBLE_RADIUS, boxY);
+    this.ctx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + BUBBLE_RADIUS);
+    this.ctx.lineTo(boxX + boxW, boxY + boxH - BUBBLE_RADIUS);
+    this.ctx.quadraticCurveTo(boxX + boxW, boxY + boxH, boxX + boxW - BUBBLE_RADIUS, boxY + boxH);
+    this.ctx.lineTo(boxX + BUBBLE_RADIUS, boxY + boxH);
+    this.ctx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - BUBBLE_RADIUS);
+    this.ctx.lineTo(boxX, boxY + BUBBLE_RADIUS);
+    this.ctx.quadraticCurveTo(boxX, boxY, boxX + BUBBLE_RADIUS, boxY);
+    this.ctx.closePath();
+    this.ctx.fill();
+
+    // Pointer triangle
+    this.ctx.beginPath();
+    this.ctx.moveTo(cx - 4, boxY + boxH);
+    this.ctx.lineTo(cx, boxY + boxH + BUBBLE_POINTER_H);
+    this.ctx.lineTo(cx + 4, boxY + boxH);
+    this.ctx.closePath();
+    this.ctx.fill();
+
+    // Text
+    this.ctx.fillStyle = '#fff';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'top';
+    for (let i = 0; i < lines.length; i++) {
+      this.ctx.fillText(lines[i], cx, boxY + BUBBLE_PAD_Y + i * BUBBLE_LINE_H);
+    }
+
+    this.ctx.globalAlpha = prevAlpha;
   }
 }

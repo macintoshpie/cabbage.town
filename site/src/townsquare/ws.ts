@@ -2,7 +2,8 @@ export type ServerMessage =
   | { type: 'welcome'; id: string; name: string; x: number; y: number; users: UserInfo[] }
   | { type: 'join'; id: string; name: string; x: number; y: number }
   | { type: 'moved'; id: string; x: number; y: number }
-  | { type: 'leave'; id: string };
+  | { type: 'leave'; id: string }
+  | { type: 'chatted'; id: string; text: string };
 
 export interface UserInfo {
   id: string;
@@ -83,6 +84,12 @@ export class TownSquareWS {
   sendMove(x: number, y: number) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'move', x, y }));
+    }
+  }
+
+  sendChat(text: string) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'chat', text }));
     }
   }
 
