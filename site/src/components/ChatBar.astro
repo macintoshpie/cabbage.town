@@ -33,6 +33,7 @@ import ChatIcon from '../assets/icons/ChatIcon.svg';
         const text = $refs.chatInput.value.trim();
         if (text) { $dispatch('ts-send-chat', text); }
         $refs.chatInput.value = '';
+        $refs.chatInput.blur();
         open = false;
       "
       @keydown.escape="open = false"
