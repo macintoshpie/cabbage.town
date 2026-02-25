@@ -95,6 +95,7 @@ const recordingsByKey = getRecordingsByKey();
   function initEye() {
     const svg = document.querySelector('.hero-img') as SVGSVGElement | null;
     const pupilGroup = document.getElementById('pupilGroup');
+    const eyeGroup = document.getElementById('eye');
     if (!svg || !pupilGroup) return;
 
     let targetX = 0, targetY = 0;
@@ -135,6 +136,28 @@ const recordingsByKey = getRecordingsByKey();
         requestAnimationFrame(tick);
       }
     });
+
+    // Randomized eye blink
+    if (eyeGroup) {
+      eyeGroup.style.transformOrigin = '210px 234px';
+
+      function doBlink() {
+        if (!eyeGroup) return;
+        eyeGroup.style.transition = 'transform 0.07s ease-in';
+        eyeGroup.style.transform = 'scaleY(0.08)';
+
+        setTimeout(() => {
+          if (!eyeGroup) return;
+          eyeGroup.style.transition = 'transform 0.1s ease-out';
+          eyeGroup.style.transform = 'scaleY(1)';
+        }, 70);
+
+        // Next blink in 2.5–6 seconds
+        setTimeout(doBlink, 2500 + Math.random() * 3500);
+      }
+
+      setTimeout(doBlink, 2000 + Math.random() * 2000);
+    }
   }
 
   function initPlayButton() {

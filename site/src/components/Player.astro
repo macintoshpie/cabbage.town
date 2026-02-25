@@ -16,6 +16,7 @@ import StopIcon from '../assets/icons/StopIcon.svg';
   <!-- Artwork -->
   <img
     class="player-artwork"
+    :class="{ 'player-artwork-spinning': $store.player.isPlaying }"
     :src="$store.player.metadata.artwork || '/cabbage-star.png'"
     alt=""
   />
@@ -110,6 +111,17 @@ import StopIcon from '../assets/icons/StopIcon.svg';
     object-fit: cover;
     flex-shrink: 0;
     background: rgba(178, 68, 218, 0.1);
+    transition: border-radius 0.4s ease;
+  }
+
+  .player-artwork-spinning {
+    border-radius: 50%;
+    animation: spin 3s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   .player-info {

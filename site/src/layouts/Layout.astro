@@ -19,6 +19,22 @@ const { title } = Astro.props;
     <slot />
     <Player />
   </body>
+
+  <script>
+    function _cabbageKeyHandler(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        const store = (window as any).Alpine?.store('player');
+        if (store) store.togglePlayback();
+      }
+    }
+
+    document.removeEventListener('keydown', _cabbageKeyHandler);
+    document.addEventListener('keydown', _cabbageKeyHandler);
+  </script>
 </html>
 
 <style is:global>
