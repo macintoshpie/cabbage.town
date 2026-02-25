@@ -15,8 +15,8 @@ import StopIcon from '../assets/icons/StopIcon.svg';
 >
   <!-- Artwork -->
   <img
-    class="player-artwork"
-    :class="{ 'player-artwork-spinning': $store.player.isPlaying }"
+    class="player-artwork player-artwork-spinning"
+    :class="{ 'player-artwork-paused': !$store.player.isPlaying }"
     :src="$store.player.metadata.artwork || '/cabbage-star.png'"
     alt=""
   />
@@ -117,6 +117,12 @@ import StopIcon from '../assets/icons/StopIcon.svg';
   .player-artwork-spinning {
     border-radius: 50%;
     animation: spin 3s linear infinite;
+    animation-play-state: running;
+  }
+
+  .player-artwork-paused {
+    border-radius: 12px;
+    animation-play-state: paused;
   }
 
   @keyframes spin {
@@ -256,6 +262,9 @@ import StopIcon from '../assets/icons/StopIcon.svg';
     .player-artwork {
       width: 52px;
       height: 52px;
+      border-radius: 10px;
+    }
+    .player-artwork-paused {
       border-radius: 10px;
     }
     .player-play-btn {
