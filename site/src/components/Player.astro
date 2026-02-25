@@ -16,7 +16,6 @@ import StopIcon from '../assets/icons/StopIcon.svg';
   <!-- Artwork -->
   <img
     class="player-artwork"
-    :class="{ 'player-artwork-spinning': $store.player.isPlaying }"
     :src="$store.player.metadata.artwork || '/cabbage-star.png'"
     alt=""
   />
@@ -73,11 +72,77 @@ import StopIcon from '../assets/icons/StopIcon.svg';
 </div>
 
 <script>
+  function getRotationDeg(el: HTMLElement): number {
+    const transform = getComputedStyle(el).transform;
+    if (!transform || transform === 'none') return 0;
+    const match = transform.match(/matrix\((.+)\)/);
+    if (!match) return 0;
+    const [a, b] = match[1].split(',').map(Number);
+    let deg = Math.atan2(b, a) * (180 / Math.PI);
+    if (deg < 0) deg += 360;
+    return deg;
+  }
+
+  function initArtworkSpin(artwork: HTMLElement) {
+    const Alpine = (window as any).Alpine;
+    if (!Alpine) return;
+
+    let spinning = false;
+
+    Alpine.effect(() => {
+      const playing: boolean = Alpine.store('player').isPlaying;
+
+      if (playing && !spinning) {
+        spinning = true;
+        // Clear any wind-down transition, start fresh
+        artwork.style.transition = 'border-radius 0.4s ease';
+        artwork.style.borderRadius = '50%';
+        artwork.style.transform = '';
+        // Let the border-radius transition settle, then kick off the spin
+        requestAnimationFrame(() => {
+          artwork.style.animation = 'spin 3s linear infinite';
+        });
+      } else if (!playing && spinning) {
+        spinning = false;
+        // Freeze at current angle
+        const angle = getRotationDeg(artwork);
+        artwork.style.animation = 'none';
+        artwork.style.transform = `rotate(${angle}deg)`;
+
+        // Wind down to nearest upright (shortest path to 0/360)
+        const target = angle <= 180 ? 0 : 360;
+        requestAnimationFrame(() => {
+          artwork.style.transition =
+            'transform 0.6s cubic-bezier(0.33, 0, 0.15, 1), border-radius 0.4s ease';
+          artwork.style.transform = `rotate(${target}deg)`;
+          artwork.style.borderRadius = '';
+        });
+
+        // Clean up inline transform after wind-down finishes
+        const cleanup = (e: TransitionEvent) => {
+          if (e.propertyName !== 'transform') return;
+          artwork.removeEventListener('transitionend', cleanup);
+          if (!spinning) {
+            artwork.style.transform = '';
+            artwork.style.transition = '';
+          }
+        };
+        artwork.addEventListener('transitionend', cleanup);
+      }
+    });
+  }
+
   document.addEventListener('astro:page-load', () => {
     requestAnimationFrame(() => {
       const store = (window as any).Alpine?.store('player');
       if (!store) return;
       store.startNowPlayingPolling();
+
+      const artwork = document.querySelector('.player-artwork') as HTMLElement | null;
+      if (artwork && !(artwork as any)._spinInit) {
+        (artwork as any)._spinInit = true;
+        initArtworkSpin(artwork);
+      }
     });
   });
 </script>
@@ -112,11 +177,6 @@ import StopIcon from '../assets/icons/StopIcon.svg';
     flex-shrink: 0;
     background: rgba(178, 68, 218, 0.1);
     transition: border-radius 0.4s ease;
-  }
-
-  .player-artwork-spinning {
-    border-radius: 50%;
-    animation: spin 3s linear infinite;
   }
 
   @keyframes spin {
