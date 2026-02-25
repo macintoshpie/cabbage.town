@@ -91,7 +91,7 @@ import StopIcon from '../assets/icons/StopIcon.svg';
   /* Floating player pill */
   .player-pill {
     position: fixed;
-    bottom: 16px;
+    bottom: calc(16px + 100vh - 100dvh);
     left: 50%;
     transform: translateX(-50%);
     box-sizing: border-box;
@@ -263,7 +263,7 @@ import StopIcon from '../assets/icons/StopIcon.svg';
 
   @media (max-width: 480px) {
     .player-pill {
-      bottom: 10px;
+      bottom: calc(10px + 100vh - 100dvh);
       width: calc(100% - 20px);
       padding: 10px;
       gap: 10px;

@@ -44,7 +44,7 @@ import ChatIcon from '../assets/icons/ChatIcon.svg';
 <style>
   .ts-chat-wrap {
     position: fixed;
-    bottom: 108px;
+    bottom: calc(108px + 100vh - 100dvh);
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 32px);
@@ -116,7 +116,7 @@ import ChatIcon from '../assets/icons/ChatIcon.svg';
 
   @media (max-width: 480px) {
     .ts-chat-wrap {
-      bottom: 90px;
+      bottom: calc(90px + 100vh - 100dvh);
       width: calc(100% - 20px);
     }
   }
