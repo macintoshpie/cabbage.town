@@ -5,18 +5,15 @@ import ChatIcon from '../assets/icons/ChatIcon.svg';
 <div
   class="ts-chat-wrap"
   x-data="{ open: false }"
-  @ts-open-chat.window="open = true; $nextTick(() => $refs.chatInput.focus())"
+  @ts-open-chat.window="open = true; $refs.chatInput.focus()"
   @click.outside="open = false"
   data-chat-ui
 >
   <!-- Chat button -->
   <button
     class="ts-chat-btn"
-    x-show="!open"
-    x-transition:enter="ts-btn-enter"
-    x-transition:enter-start="ts-btn-hidden"
-    x-transition:enter-end="ts-btn-visible"
-    @click.stop="open = true; $nextTick(() => $refs.chatInput.focus())"
+    :class="{ 'ts-hidden': open }"
+    @click.stop="open = true; $refs.chatInput.focus()"
   >
     <ChatIcon width={18} height={18} />
   </button>
@@ -24,13 +21,7 @@ import ChatIcon from '../assets/icons/ChatIcon.svg';
   <!-- Input bar -->
   <div
     class="ts-chat-input-bar"
-    x-show="open"
-    x-transition:enter="ts-slide-enter"
-    x-transition:enter-start="ts-slide-start"
-    x-transition:enter-end="ts-slide-end"
-    x-transition:leave="ts-slide-enter"
-    x-transition:leave-start="ts-slide-end"
-    x-transition:leave-end="ts-slide-start"
+    :class="{ 'ts-open': open }"
   >
     <input
       type="text"
@@ -58,20 +49,14 @@ import ChatIcon from '../assets/icons/ChatIcon.svg';
     width: calc(100% - 32px);
     max-width: 700px;
     z-index: 1001;
-    display: flex;
-    justify-content: flex-end;
     pointer-events: none;
-  }
-
-  .ts-chat-wrap > * {
-    pointer-events: auto;
   }
 
   .ts-chat-btn {
     position: absolute;
     right: 0;
-    top: 50%;
-    transform: translateY(-100%);
+    bottom: 0;
+    pointer-events: auto;
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -85,10 +70,15 @@ import ChatIcon from '../assets/icons/ChatIcon.svg';
     align-items: center;
     justify-content: center;
     opacity: 0.5;
-    transition: opacity 0.3s;
+    transition: opacity 0.15s;
   }
   .ts-chat-btn:hover {
     opacity: 1;
+  }
+  .ts-chat-btn.ts-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
   }
 
   .ts-chat-input-bar {
@@ -100,6 +90,15 @@ import ChatIcon from '../assets/icons/ChatIcon.svg';
     border-radius: 16px;
     padding: 8px 12px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .ts-chat-input-bar.ts-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
   }
 
   .ts-chat-input-bar input {
@@ -107,35 +106,11 @@ import ChatIcon from '../assets/icons/ChatIcon.svg';
     border: none;
     background: transparent;
     outline: none;
-    font: 14px/1.4 monospace;
+    font: 16px/1.4 monospace;
     color: #1a1a1a;
   }
   .ts-chat-input-bar input::placeholder {
     color: #999;
-  }
-
-  /* Button fade-in is delayed so it doesn't overlap the bar's fade-out */
-  .ts-btn-enter {
-    transition: opacity 0.15s 0.15s;
-  }
-  .ts-btn-hidden {
-    opacity: 0;
-  }
-  .ts-btn-visible {
-    opacity: 0.5;
-  }
-
-  /* Alpine x-transition classes */
-  .ts-slide-enter {
-    transition: opacity 0.15s, transform 0.15s;
-  }
-  .ts-slide-start {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  .ts-slide-end {
-    opacity: 1;
-    transform: translateY(0);
   }
 
   @media (max-width: 480px) {

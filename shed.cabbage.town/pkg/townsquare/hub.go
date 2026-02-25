@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -45,7 +44,6 @@ var nouns = []string{
 	"collard", "radicchio", "shallot", "scallion", "daikon",
 }
 
-var nameCounter atomic.Uint64
 
 // Message types
 type msgType struct {
@@ -131,10 +129,9 @@ func NewHub() *Hub {
 }
 
 func generateName() string {
-	n := nameCounter.Add(1)
 	adj := adjectives[rand.Intn(len(adjectives))]
 	noun := nouns[rand.Intn(len(nouns))]
-	return fmt.Sprintf("%s %s #%d", adj, noun, n)
+	return fmt.Sprintf("%s %s", adj, noun)
 }
 
 func clamp01(v float64) float64 {
