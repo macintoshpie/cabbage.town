@@ -31,6 +31,12 @@ const dayAbbr = day.slice(0, 3).toUpperCase();
     font-family: 'Courier New', Courier, monospace;
     max-width: 100%;
     box-sizing: border-box;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .show-pill:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   }
 
   .show-pill-left {
