@@ -1,5 +1,23 @@
 [
   {
+    "key": "recordings/ted/stream_20260330-210024.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260330-210024.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "March 30, 2026",
+    "lastModified": "2026-03-30T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
+    "key": "recordings/ted/stream_20260330-211104.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260330-211104.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "March 30, 2026",
+    "lastModified": "2026-03-30T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
     "key": "recordings/brennan/stream_20260326-205942.mp3",
     "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20260326-205942.mp3",
     "dj": "Nights Like These",
