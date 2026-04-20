@@ -1,5 +1,26 @@
 [
   {
+    "key": "recordings/seth/stream_20260419-192100.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/seth/stream_20260419-192100.mp3",
+    "dj": "Seth",
+    "show": "Home Cooking Show",
+    "date": "April 19, 2026",
+    "lastModified": "2026-04-19T00:00:00Z",
+    "displayName": "Home Cooking Show 14 Radon Recordings Set 3",
+    "post": {
+      "id": "2026-04-19-232430-home-cooking-show-14-radon-recordings-set-3",
+      "title": "Home Cooking Show 14 Radon Recordings Set 3",
+      "slug": "home-cooking-show-14-radon-recordings-set-3",
+      "markdown": "**Home Cooking Show 14**\nRadon Recordings 3rd set\nAt Seth’s request, we gathered 25 examples of songs recorded in our basement studio in Cabbagetown over the past 14 years. We call the studio Radon Recordings because we had to mitigate high levels of radon gas down there when we bought the house. It’s perfectly safe now! \nWe are honored to have worked with all kinds of awesome talent. For the most part, we just try to capture the sound they have in their heads. Every now and then we take liberties and add instrumentation and/or production ideas. Mostly we are just farming sounds. \nHearing these songs all together in one place makes me appreciate this bounty even more. We have lots more projects coming in 2026. Maybe we can populate another radio show at the end of the year! \nSteve Seachrist \u0026 Katie Butler \nradonrecordings.com \nJosias Reynolds - Madrid\nKevn Kinney - WIth The People\nMariama Tatum - Day One\nMicrobang - Doctors Orders\nPiners - Good Trouble\nSilver in the Smoke - Hang Me\n",
+      "author": "Seth and Steve",
+      "createdAt": "2026-04-19T23:24:30.003448128Z",
+      "updatedAt": "2026-04-19T23:24:30.003448128Z",
+      "tags": [],
+      "category": "",
+      "excerpt": "Home Cooking Show 14 Radon Recordings 3rd set At Seth’s request, we gathered 25 examples of songs recorded in our basement studio in Cabbagetown over the past 14 years. We call the studio Radon..."
+    }
+  },
+  {
     "key": "recordings/brennan/stream_20260416-205849.mp3",
     "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20260416-205849.mp3",
     "dj": "Nights Like These",
