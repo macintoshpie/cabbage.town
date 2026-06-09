@@ -1,5 +1,41 @@
 [
   {
+    "key": "recordings/ted/stream_20260608-210052.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260608-210052.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "June 8, 2026",
+    "lastModified": "2026-06-08T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
+    "key": "recordings/ted/stream_20260608-214243.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260608-214243.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "June 8, 2026",
+    "lastModified": "2026-06-08T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
+    "key": "recordings/ted/stream_20260608-215240.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260608-215240.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "June 8, 2026",
+    "lastModified": "2026-06-08T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
+    "key": "recordings/ted/stream_20260608-215247.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260608-215247.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "June 8, 2026",
+    "lastModified": "2026-06-08T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
     "key": "recordings/ted/stream_20260601-211930.mp3",
     "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260601-211930.mp3",
     "dj": "dj ted",
