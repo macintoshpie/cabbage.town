@@ -1,5 +1,23 @@
 [
   {
+    "key": "recordings/brennan/stream_20260618-200309.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20260618-200309.mp3",
+    "dj": "Nights Like These",
+    "show": "Late Nights Like These",
+    "date": "June 18, 2026",
+    "lastModified": "2026-06-18T00:00:00Z",
+    "displayName": "Late Nights Like These"
+  },
+  {
+    "key": "recordings/brennan/stream_20260618-205414.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/brennan/stream_20260618-205414.mp3",
+    "dj": "Nights Like These",
+    "show": "Late Nights Like These",
+    "date": "June 18, 2026",
+    "lastModified": "2026-06-18T00:00:00Z",
+    "displayName": "Late Nights Like These"
+  },
+  {
     "key": "recordings/ted/stream_20260615-213854.mp3",
     "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260615-213854.mp3",
     "dj": "dj ted",
