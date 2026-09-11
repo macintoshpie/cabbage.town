@@ -1,5 +1,14 @@
 [
   {
+    "key": "recordings/ted/stream_20260910-205316.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260910-205316.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "September 10, 2026",
+    "lastModified": "2026-09-10T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
     "key": "recordings/ben/stream_20260908-195803.mp3",
     "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ben/stream_20260908-195803.mp3",
     "dj": "DJ CHICAGO STYLE",
