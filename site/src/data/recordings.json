@@ -1,5 +1,14 @@
 [
   {
+    "key": "recordings/ted/stream_20261017-150228.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20261017-150228.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "October 17, 2026",
+    "lastModified": "2026-10-17T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
     "key": "recordings/ted/stream_20260921-211515.mp3",
     "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20260921-211515.mp3",
     "dj": "dj ted",
