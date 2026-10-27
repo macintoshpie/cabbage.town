@@ -4,9 +4,9 @@ import ShowPill from '../components/ShowPill.astro';
 import ShowListItem from '../components/ShowListItem.astro';
 import ChatBar from '../components/ChatBar.astro';
 import Hero from '../assets/hero.svg';
-import { getDeduplicatedShows, getDjColorClass, getRecordingsByKey } from '../lib/shows';
+import { getHomepageShows, getDjColorClass, getRecordingsByKey } from '../lib/shows';
 
-const deduped = getDeduplicatedShows();
+const recentShows = getHomepageShows();
 const recordingsByKey = getRecordingsByKey();
 ---
 
@@ -41,7 +41,7 @@ const recordingsByKey = getRecordingsByKey();
         <h3 class="section-header cooper">recent shows</h3>
         <div class="card recent-shows-card" x-data>
           <div class="show-list">
-            {deduped.slice(0, 10).map((entry) => {
+            {recentShows.map((entry) => {
               const colorClass = getDjColorClass(entry.show);
               const rec = recordingsByKey.get(entry.keys[0]);
               return (
