@@ -40,6 +40,38 @@ export function getDeduplicatedShows(): DeduplicatedShow[] {
   return deduped;
 }
 
+/** DJs that shouldn't appear in the homepage "recent shows" list. Matched case-insensitively. */
+const HOMEPAGE_EXCLUDED_DJS = ['the cabbage'];
+
+/**
+ * Picks shows for the homepage by round-robin over DJs: one show per DJ
+ * (ordered by each DJ's most recent show), then a second per DJ, and so on
+ * until `limit` is reached. The result is re-sorted newest-first so it still
+ * reads as a "recent shows" list, just with more variety across DJs.
+ */
+export function getHomepageShows(limit = 10): DeduplicatedShow[] {
+  const excluded = new Set(HOMEPAGE_EXCLUDED_DJS.map(d => d.toLowerCase()));
+  const deduped = getDeduplicatedShows().filter(e => !excluded.has(e.dj.toLowerCase()));
+
+  // Map preserves insertion order, so DJs are ordered by their most recent show.
+  const byDj = new Map<string, DeduplicatedShow[]>();
+  for (const entry of deduped) {
+    const key = entry.dj.toLowerCase();
+    if (!byDj.has(key)) byDj.set(key, []);
+    byDj.get(key)!.push(entry);
+  }
+
+  const picked: DeduplicatedShow[] = [];
+  const queues = [...byDj.values()];
+  for (let round = 0; picked.length < limit; round++) {
+    const roundPicks = queues.filter(q => q.length > round).map(q => q[round]);
+    if (roundPicks.length === 0) break;
+    picked.push(...roundPicks.slice(0, limit - picked.length));
+  }
+
+  return picked.sort((a, b) => deduped.indexOf(a) - deduped.indexOf(b));
+}
+
 export function getDjColorClass(show: string): string {
   const s = show.toLowerCase();
   if (s.includes('mulch')) return 'mulch-channel';
