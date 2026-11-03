@@ -1,5 +1,32 @@
 [
   {
+    "key": "recordings/ted/stream_20261102-205143.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20261102-205143.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "November 2, 2026",
+    "lastModified": "2026-11-02T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
+    "key": "recordings/ted/stream_20261102-205254.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20261102-205254.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "November 2, 2026",
+    "lastModified": "2026-11-02T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
+    "key": "recordings/ted/stream_20261102-213411.mp3",
+    "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20261102-213411.mp3",
+    "dj": "dj ted",
+    "show": "mulch channel",
+    "date": "November 2, 2026",
+    "lastModified": "2026-11-02T00:00:00Z",
+    "displayName": "mulch channel"
+  },
+  {
     "key": "recordings/ted/stream_20261026-202952.mp3",
     "url": "https://cabbagetown.nyc3.digitaloceanspaces.com/recordings/ted/stream_20261026-202952.mp3",
     "dj": "dj ted",
